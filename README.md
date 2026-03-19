@@ -77,14 +77,67 @@ Phase 1 implementation is complete in the starter scaffold and was verified with
 - `starter/tests/test_schema_and_generator.py`
 - a real PostgreSQL smoke test covering append, OCC collision handling, replay ordering, and checkpoints
 
+## Phase 2 - Domain Logic
+
+Phase 2 adds the domain layer on top of the event store.
+
+The main pieces are:
+
+- `starter/ledger/domain/aggregates/loan_application.py`
+- `starter/ledger/domain/aggregates/agent_session.py`
+- `starter/ledger/commands/handlers.py`
+- `reports/phase_2.md`
+
+This layer is responsible for:
+
+- rebuilding aggregate state by replaying event streams
+- enforcing lifecycle rules before events are written
+- translating commands into canonical events
+- using `expected_version` from replayed aggregate state
+- keeping command validation on the write side, not in projections
+
+The command flow is:
+
+1. load aggregate state from the stream
+2. validate business rules
+3. load related authoritative streams when cross-stream checks are needed
+4. create canonical event objects
+5. append with OCC
+
+Implemented Phase 2 handlers cover:
+
+- application submission
+- document uploads
+- credit / fraud / compliance / decision requests
+- decision generation
+- human review completion
+- approval / decline finalization
+- agent session bootstrap
+
+Key rules now enforced in the domain layer include:
+
+- invalid state transitions are rejected
+- required documents must be uploaded before credit analysis
+- compliance hard blocks prevent forward progress
+- confidence below `0.60` forces `REFER`
+- approval amounts cannot exceed the requested amount or the credit recommendation
+- human overrides require an override reason
+- agent sessions must start with the Gas Town bootstrap event
+
+Phase 2 verification:
+
+- `starter/tests/phase2/test_domain_logic.py`
+- replay and aggregate reconstruction checks
+- command rejection checks
+- concurrency rejection check for competing decision writes
+
 ## Next Dependencies
 
 Once Phase 1 is stable, the next files that build directly on this layer are:
 
 - `starter/ledger/registry/client.py`
-- `starter/ledger/domain/aggregates/loan_application.py`
 - `starter/ledger/agents/base_agent.py`
 - `starter/ledger/agents/stub_agents.py`
 - `starter/ledger/projections/`
 
-Those pieces all assume the EventStore guarantees implemented in Phase 1 are correct.
+Those pieces now build on both Phase 1 and Phase 2 guarantees: durable history, replayable aggregate state, and domain-safe command handling.
