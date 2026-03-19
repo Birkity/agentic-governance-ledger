@@ -160,6 +160,22 @@ class EventStore:
             event = self.upcasters.upcast(event)
         return event
 
+    @staticmethod
+    def _coerce_recorded_at(value: Any, fallback: datetime | None = None) -> datetime:
+        if value is None:
+            return fallback or datetime.now(timezone.utc)
+        if isinstance(value, datetime):
+            if value.tzinfo is None:
+                return value.replace(tzinfo=timezone.utc)
+            return value.astimezone(timezone.utc)
+        if isinstance(value, str):
+            normalized = value.replace("Z", "+00:00")
+            parsed = datetime.fromisoformat(normalized)
+            if parsed.tzinfo is None:
+                return parsed.replace(tzinfo=timezone.utc)
+            return parsed.astimezone(timezone.utc)
+        raise TypeError(f"Unsupported recorded_at value: {value!r}")
+
     async def stream_version(self, stream_id: str) -> int:
         pool = self._require_pool()
         async with pool.acquire() as conn:
@@ -231,7 +247,7 @@ class EventStore:
                         event.get("event_version", 1),
                         dict(event.get("payload") or {}),
                         event_metadata,
-                        event.get("recorded_at", now),
+                        self._coerce_recorded_at(event.get("recorded_at"), now),
                     )
                     positions.append(stream_position)
 
@@ -331,6 +347,49 @@ class EventStore:
             )
         return self._row_to_event(row) if row else None
 
+    async def get_event_by_global_position(
+        self,
+        global_position: int,
+    ) -> StoredEvent | None:
+        pool = self._require_pool()
+        async with pool.acquire() as conn:
+            row = await conn.fetchrow(
+                """
+                SELECT event_id, stream_id, stream_position, global_position,
+                       event_type, event_version, payload, metadata, recorded_at
+                FROM events
+                WHERE global_position = $1
+                """,
+                global_position,
+            )
+        return self._row_to_event(row) if row else None
+
+    async def latest_event(self) -> StoredEvent | None:
+        pool = self._require_pool()
+        async with pool.acquire() as conn:
+            row = await conn.fetchrow(
+                """
+                SELECT event_id, stream_id, stream_position, global_position,
+                       event_type, event_version, payload, metadata, recorded_at
+                FROM events
+                ORDER BY global_position DESC
+                LIMIT 1
+                """
+            )
+        return self._row_to_event(row) if row else None
+
+    async def latest_global_position(self) -> int:
+        latest = await self.latest_event()
+        return int(latest["global_position"]) if latest else -1
+
+    async def load_all_after(
+        self,
+        after_position: int,
+        batch_size: int = 500,
+    ) -> AsyncGenerator[StoredEvent, None]:
+        async for event in self.load_all(from_position=after_position, batch_size=batch_size):
+            yield event
+
     async def save_checkpoint(self, projection_name: str, position: int) -> None:
         pool = self._require_pool()
         async with pool.acquire() as conn:
@@ -358,6 +417,30 @@ class EventStore:
                 projection_name,
             )
         return row["last_position"] if row else 0
+
+    async def has_checkpoint(self, projection_name: str) -> bool:
+        pool = self._require_pool()
+        async with pool.acquire() as conn:
+            row = await conn.fetchrow(
+                """
+                SELECT 1
+                FROM projection_checkpoints
+                WHERE projection_name = $1
+                """,
+                projection_name,
+            )
+        return row is not None
+
+    async def clear_checkpoint(self, projection_name: str) -> None:
+        pool = self._require_pool()
+        async with pool.acquire() as conn:
+            await conn.execute(
+                """
+                DELETE FROM projection_checkpoints
+                WHERE projection_name = $1
+                """,
+                projection_name,
+            )
 
 
 class UpcasterRegistry:
@@ -417,6 +500,7 @@ class InMemoryEventStore:
         self._global: list[StoredEvent] = []
         self._checkpoints: dict[str, int] = {}
         self._locks: dict[str, _asyncio.Lock] = _defaultdict(_asyncio.Lock)
+        self._projection_state: dict[str, dict[str, Any]] = {}
 
     async def stream_version(self, stream_id: str) -> int:
         return self._versions.get(stream_id, -1)
@@ -458,7 +542,10 @@ class InMemoryEventStore:
                         **base_metadata,
                         **dict(event.get("metadata") or {}),
                     },
-                    "recorded_at": datetime.now(timezone.utc),
+                    "recorded_at": EventStore._coerce_recorded_at(
+                        event.get("recorded_at"),
+                        datetime.now(timezone.utc),
+                    ),
                 }
                 self._streams[stream_id].append(stored)
                 self._global.append(stored)
@@ -506,8 +593,55 @@ class InMemoryEventStore:
                 return loaded
         return None
 
+    async def get_event_by_global_position(
+        self,
+        global_position: int,
+    ) -> StoredEvent | None:
+        for event in self._global:
+            if event["global_position"] == global_position:
+                loaded = dict(event)
+                if self.upcasters is not None:
+                    loaded = self.upcasters.upcast(loaded)
+                return loaded
+        return None
+
+    async def latest_event(self) -> StoredEvent | None:
+        if not self._global:
+            return None
+        latest = dict(self._global[-1])
+        if self.upcasters is not None:
+            latest = self.upcasters.upcast(latest)
+        return latest
+
+    async def latest_global_position(self) -> int:
+        latest = await self.latest_event()
+        return int(latest["global_position"]) if latest else -1
+
+    async def load_all_after(
+        self,
+        after_position: int,
+        batch_size: int = 500,
+    ) -> AsyncGenerator[StoredEvent, None]:
+        yielded = 0
+        for event in self._global:
+            if event["global_position"] <= after_position:
+                continue
+            loaded = dict(event)
+            if self.upcasters is not None:
+                loaded = self.upcasters.upcast(loaded)
+            yield loaded
+            yielded += 1
+            if yielded >= batch_size:
+                break
+
     async def save_checkpoint(self, projection_name: str, position: int) -> None:
         self._checkpoints[projection_name] = position
 
     async def load_checkpoint(self, projection_name: str) -> int:
         return self._checkpoints.get(projection_name, 0)
+
+    async def has_checkpoint(self, projection_name: str) -> bool:
+        return projection_name in self._checkpoints
+
+    async def clear_checkpoint(self, projection_name: str) -> None:
+        self._checkpoints.pop(projection_name, None)
