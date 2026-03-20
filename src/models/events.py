@@ -25,6 +25,68 @@ import json
 from pydantic import BaseModel, Field
 
 
+class DomainError(Exception):
+    """Raised when a domain invariant or business rule is violated."""
+
+
+class OptimisticConcurrencyError(Exception):
+    """Raised when expected_version doesn't match the current stream version."""
+
+    def __init__(self, stream_id: str, expected: int, actual: int):
+        self.stream_id = stream_id
+        self.expected = expected
+        self.actual = actual
+        super().__init__(f"OCC on '{stream_id}': expected v{expected}, actual v{actual}")
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "error_type": self.__class__.__name__,
+            "stream_id": self.stream_id,
+            "expected_version": self.expected,
+            "actual_version": self.actual,
+            "suggested_action": "reload_stream_and_retry",
+        }
+
+
+class StoredEvent(BaseModel):
+    """Stored-event wrapper returned by the event store load paths."""
+
+    event_id: UUID
+    stream_id: str
+    stream_position: int
+    global_position: int | None = None
+    event_type: str
+    event_version: int = 1
+    payload: dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    recorded_at: datetime
+
+    def __getitem__(self, key: str) -> Any:
+        return getattr(self, key)
+
+    def get(self, key: str, default: Any = None) -> Any:
+        return getattr(self, key, default)
+
+    def with_payload(self, payload: dict[str, Any], version: int | None = None) -> "StoredEvent":
+        return self.model_copy(
+            update={
+                "payload": payload,
+                "event_version": version if version is not None else self.event_version,
+            }
+        )
+
+
+class StreamMetadata(BaseModel):
+    """Metadata row for an event stream."""
+
+    stream_id: str
+    aggregate_type: str
+    current_version: int
+    created_at: datetime | None = None
+    archived_at: datetime | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
 # ─── ENUMS ───────────────────────────────────────────────────────────────────
 
 class RiskTier(str, Enum):
@@ -55,6 +117,8 @@ class DocumentType(str, Enum):
     INCOME_STATEMENT = "income_statement"
     BALANCE_SHEET = "balance_sheet"
     CASH_FLOW_STATEMENT = "cash_flow_statement"
+    FINANCIAL_WORKBOOK = "financial_workbook"
+    FINANCIAL_SUMMARY = "financial_summary"
     BANK_STATEMENTS = "bank_statements"
     TAX_RETURNS = "tax_returns"
 
@@ -128,6 +192,7 @@ class FinancialFacts(BaseModel):
     debt_to_ebitda: float | None = None
     interest_coverage: float | None = None
     gross_margin: float | None = None
+    ebitda_margin: float | None = None
     net_margin: float | None = None
     # Provenance
     fiscal_year_end: str | None = None       # "2024-12-31"
