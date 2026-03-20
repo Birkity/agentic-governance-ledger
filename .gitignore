@@ -3,4 +3,9 @@ TRP1 Week5 Support Document_ The Ledger - Agentic Document-to-Decision Platform.
 __pycache__/
 *.py[cod]
 .pytest_cache/
-src/pytest-cache-files-*/
+.venv/
+.uv-cache/
+.tmp/
+.env
+documents/
+data/
