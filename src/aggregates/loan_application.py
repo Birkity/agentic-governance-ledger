@@ -1,0 +1,233 @@
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from decimal import Decimal
+from enum import Enum
+from typing import Iterable
+
+from src.models.events import DomainError, StoredEvent
+
+
+class LoanLifecycleState(str, Enum):
+    NEW = "NEW"
+    SUBMITTED = "SUBMITTED"
+    AWAITING_ANALYSIS = "AWAITING_ANALYSIS"
+    ANALYSIS_COMPLETE = "ANALYSIS_COMPLETE"
+    COMPLIANCE_REVIEW = "COMPLIANCE_REVIEW"
+    PENDING_DECISION = "PENDING_DECISION"
+    APPROVED_PENDING_HUMAN = "APPROVED_PENDING_HUMAN"
+    DECLINED_PENDING_HUMAN = "DECLINED_PENDING_HUMAN"
+    PENDING_HUMAN_REVIEW = "PENDING_HUMAN_REVIEW"
+    FINAL_APPROVED = "FINAL_APPROVED"
+    FINAL_DECLINED = "FINAL_DECLINED"
+    DECLINED_COMPLIANCE = "DECLINED_COMPLIANCE"
+
+
+VALID_TRANSITIONS: dict[LoanLifecycleState, set[LoanLifecycleState]] = {
+    LoanLifecycleState.NEW: {LoanLifecycleState.SUBMITTED},
+    LoanLifecycleState.SUBMITTED: {LoanLifecycleState.AWAITING_ANALYSIS},
+    LoanLifecycleState.AWAITING_ANALYSIS: {LoanLifecycleState.ANALYSIS_COMPLETE},
+    LoanLifecycleState.ANALYSIS_COMPLETE: {LoanLifecycleState.COMPLIANCE_REVIEW},
+    LoanLifecycleState.COMPLIANCE_REVIEW: {
+        LoanLifecycleState.PENDING_DECISION,
+        LoanLifecycleState.DECLINED_COMPLIANCE,
+    },
+    LoanLifecycleState.PENDING_DECISION: {
+        LoanLifecycleState.APPROVED_PENDING_HUMAN,
+        LoanLifecycleState.DECLINED_PENDING_HUMAN,
+        LoanLifecycleState.PENDING_HUMAN_REVIEW,
+    },
+    LoanLifecycleState.APPROVED_PENDING_HUMAN: {LoanLifecycleState.FINAL_APPROVED, LoanLifecycleState.FINAL_DECLINED},
+    LoanLifecycleState.DECLINED_PENDING_HUMAN: {LoanLifecycleState.FINAL_APPROVED, LoanLifecycleState.FINAL_DECLINED},
+    LoanLifecycleState.PENDING_HUMAN_REVIEW: {LoanLifecycleState.FINAL_APPROVED, LoanLifecycleState.FINAL_DECLINED},
+}
+
+
+def _to_decimal(value: str | int | float | Decimal | None) -> Decimal | None:
+    if value is None:
+        return None
+    if isinstance(value, Decimal):
+        return value
+    return Decimal(str(value))
+
+
+@dataclass
+class LoanApplicationAggregate:
+    application_id: str
+    version: int = -1
+    state: LoanLifecycleState = LoanLifecycleState.NEW
+    applicant_id: str | None = None
+    requested_amount_usd: Decimal | None = None
+    loan_term_months: int | None = None
+    loan_purpose: str | None = None
+    submission_channel: str | None = None
+    application_reference: str | None = None
+    documents_requested: bool = False
+    documents_uploaded: set[str] = field(default_factory=set)
+    credit_requested: bool = False
+    fraud_requested: bool = False
+    compliance_requested: bool = False
+    decision_requested: bool = False
+    recommendation: str | None = None
+    decision_confidence: float | None = None
+    contributing_sessions: list[str] = field(default_factory=list)
+    approved_amount_usd: Decimal | None = None
+    final_decision: str | None = None
+    human_review_completed: bool = False
+    human_override: bool = False
+    compliance_declined: bool = False
+    decline_reasons: list[str] = field(default_factory=list)
+    events: list[StoredEvent] = field(default_factory=list)
+
+    @classmethod
+    async def load(cls, store, application_id: str) -> "LoanApplicationAggregate":
+        aggregate = cls(application_id=application_id)
+        events = await store.load_stream(f"loan-{application_id}")
+        for event in events:
+            aggregate._apply(event)
+        return aggregate
+
+    def _apply(self, event: StoredEvent) -> None:
+        handler = getattr(self, f"_on_{event.event_type}", None)
+        if handler is not None:
+            handler(event)
+        self.version = event.stream_position
+        self.events.append(event)
+
+    def _transition(self, target: LoanLifecycleState) -> None:
+        if self.state == target:
+            return
+        allowed = VALID_TRANSITIONS.get(self.state, set())
+        if target not in allowed:
+            raise DomainError(f"Invalid transition {self.state.value} -> {target.value}")
+        self.state = target
+
+    def _on_ApplicationSubmitted(self, event: StoredEvent) -> None:
+        self._transition(LoanLifecycleState.SUBMITTED)
+        self.applicant_id = event.payload["applicant_id"]
+        self.requested_amount_usd = _to_decimal(event.payload["requested_amount_usd"])
+        self.loan_term_months = int(event.payload["loan_term_months"])
+        self.loan_purpose = event.payload["loan_purpose"]
+        self.submission_channel = event.payload["submission_channel"]
+        self.application_reference = event.payload["application_reference"]
+
+    def _on_DocumentUploadRequested(self, event: StoredEvent) -> None:
+        self.documents_requested = True
+
+    def _on_DocumentUploaded(self, event: StoredEvent) -> None:
+        self.documents_uploaded.add(event.payload["document_id"])
+
+    def _on_CreditAnalysisRequested(self, event: StoredEvent) -> None:
+        self.credit_requested = True
+        self._transition(LoanLifecycleState.AWAITING_ANALYSIS)
+
+    def _on_FraudScreeningRequested(self, event: StoredEvent) -> None:
+        self.fraud_requested = True
+        self._transition(LoanLifecycleState.ANALYSIS_COMPLETE)
+
+    def _on_ComplianceCheckRequested(self, event: StoredEvent) -> None:
+        self.compliance_requested = True
+        self._transition(LoanLifecycleState.COMPLIANCE_REVIEW)
+
+    def _on_DecisionRequested(self, event: StoredEvent) -> None:
+        self.decision_requested = True
+        self._transition(LoanLifecycleState.PENDING_DECISION)
+
+    def _on_DecisionGenerated(self, event: StoredEvent) -> None:
+        recommendation = event.payload["recommendation"]
+        self.recommendation = recommendation
+        self.decision_confidence = float(event.payload["confidence"])
+        self.contributing_sessions = list(event.payload.get("contributing_sessions", []))
+        if recommendation == "APPROVE":
+            self._transition(LoanLifecycleState.APPROVED_PENDING_HUMAN)
+        elif recommendation == "DECLINE":
+            self._transition(LoanLifecycleState.DECLINED_PENDING_HUMAN)
+        else:
+            self._transition(LoanLifecycleState.PENDING_HUMAN_REVIEW)
+
+    def _on_HumanReviewRequested(self, event: StoredEvent) -> None:
+        if self.state in {
+            LoanLifecycleState.APPROVED_PENDING_HUMAN,
+            LoanLifecycleState.DECLINED_PENDING_HUMAN,
+        }:
+            self.state = LoanLifecycleState.PENDING_HUMAN_REVIEW
+
+    def _on_HumanReviewCompleted(self, event: StoredEvent) -> None:
+        self.human_review_completed = True
+        self.human_override = bool(event.payload["override"])
+        self.final_decision = event.payload["final_decision"]
+
+    def _on_ApplicationApproved(self, event: StoredEvent) -> None:
+        self._transition(LoanLifecycleState.FINAL_APPROVED)
+        self.approved_amount_usd = _to_decimal(event.payload["approved_amount_usd"])
+        self.final_decision = "APPROVE"
+
+    def _on_ApplicationDeclined(self, event: StoredEvent) -> None:
+        if self.state == LoanLifecycleState.COMPLIANCE_REVIEW:
+            self._transition(LoanLifecycleState.DECLINED_COMPLIANCE)
+            self.compliance_declined = True
+        else:
+            self._transition(LoanLifecycleState.FINAL_DECLINED)
+        self.final_decision = "DECLINE"
+        self.decline_reasons = list(event.payload.get("decline_reasons", []))
+
+    def assert_can_submit(self) -> None:
+        if self.state != LoanLifecycleState.NEW:
+            raise DomainError(f"Application {self.application_id} has already been submitted")
+
+    def assert_awaiting_credit_analysis(self) -> None:
+        if self.state != LoanLifecycleState.AWAITING_ANALYSIS or not self.credit_requested:
+            raise DomainError("Loan application is not awaiting credit analysis")
+
+    def assert_awaiting_fraud_screening(self) -> None:
+        if self.state != LoanLifecycleState.ANALYSIS_COMPLETE or not self.fraud_requested:
+            raise DomainError("Loan application is not awaiting fraud screening completion")
+
+    def assert_awaiting_compliance_review(self) -> None:
+        if self.state != LoanLifecycleState.COMPLIANCE_REVIEW or not self.compliance_requested:
+            raise DomainError("Loan application is not in compliance review")
+
+    def assert_pending_decision(self) -> None:
+        if self.state != LoanLifecycleState.PENDING_DECISION or not self.decision_requested:
+            raise DomainError("Loan application is not pending a decision")
+
+    def assert_pending_human_resolution(self) -> None:
+        if self.state not in {
+            LoanLifecycleState.APPROVED_PENDING_HUMAN,
+            LoanLifecycleState.DECLINED_PENDING_HUMAN,
+            LoanLifecycleState.PENDING_HUMAN_REVIEW,
+        }:
+            raise DomainError("Loan application is not awaiting human resolution")
+
+    def assert_valid_orchestrator_decision(
+        self,
+        recommendation: str,
+        confidence: float,
+        compliance_record,
+    ) -> None:
+        self.assert_pending_decision()
+        if confidence < 0.60 and recommendation != "REFER":
+            raise DomainError("Decisions below the confidence floor must be REFER")
+        if compliance_record is None or not compliance_record.completed:
+            raise DomainError("Compliance must be complete before generating a decision")
+        if compliance_record.has_hard_block and recommendation != "DECLINE":
+            raise DomainError("A compliance hard block allows only DECLINE")
+
+    def assert_can_finalize_approval(
+        self,
+        compliance_record,
+        approved_amount_usd: Decimal,
+        max_recommended_limit: Decimal | None,
+    ) -> None:
+        self.assert_pending_human_resolution()
+        if compliance_record is None or not compliance_record.is_cleared_for_approval():
+            raise DomainError("Application cannot be approved before compliance is fully clear")
+        if max_recommended_limit is not None and approved_amount_usd > max_recommended_limit:
+            raise DomainError("Approved amount exceeds the latest agent-assessed maximum limit")
+
+    def assert_contributing_sessions(self, session_ids: Iterable[str]) -> None:
+        session_ids = list(session_ids)
+        if not session_ids:
+            raise DomainError("DecisionGenerated must reference contributing agent sessions")
+        if len(session_ids) != len(set(session_ids)):
+            raise DomainError("DecisionGenerated contains duplicate contributing sessions")

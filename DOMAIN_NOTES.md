@@ -1,13 +1,12 @@
 # DOMAIN_NOTES.md
-## Phase 0 - Domain Reconnaissance
-## The Ledger: Event-Sourced Governance Backbone for Apex Financial Services
+## Domain Notes
 
 ## 1. Scope and synthesis
 
 - the main challenge brief, which defines the Ledger as the append-only event store, CQRS query layer, projection daemon, upcasting path, audit chain, and MCP surface for downstream consumers
 - the support guide, which expands that same architecture into a full document-to-decision platform with a read-only Applicant Registry, a document corpus, five LangGraph agents, seven stream families, seeded data, and narrative failure scenarios
 
-The key Phase 0 conclusion is that Week 5 is not "build an audit log." It is "build the operating model in which history is the system." The event store is not an after-the-fact trace. It is the authoritative record from which state, explanation, recovery, and compliance evidence are derived.
+The core conclusion is not "build an audit log." It is "build the operating model in which history is the system." The event store is not an after-the-fact trace. It is the authoritative record from which state, explanation, recovery, and compliance evidence are derived.
 
 ## 2. Architectural thesis
 
@@ -47,7 +46,7 @@ Agents may query the Applicant Registry, but they never write to it. The event s
 
 The support guide phrases the recovery rule as `AgentSessionStarted` first. The challenge brief phrases the same idea as `AgentContextLoaded` before any decision event. The naming differs, but the architectural requirement is the same: the first persisted event in an agent session must anchor context, model identity, and recovery position before meaningful work begins. If the process crashes after that point, the next process can replay the stream and continue safely.
 
-## 5. Reconciling the two Week 5 documents
+## 5. Reconciling the two source documents
 
 The challenge brief and support guide are aligned, but they speak at different levels of abstraction.
 
@@ -63,7 +62,7 @@ This is not a contradiction. It is progressive disclosure: the challenge brief d
 
 ### 6.1 Event Sourcing vs Event-Driven Architecture
 
-Event-Driven Architecture uses events as messages between components. Event Sourcing uses events as the source of truth. The Week 5 system may use both patterns, but The Ledger itself is event sourced. That means decisions are not reconstructed from "whatever rows happen to be current" or "whatever logs we still have." They are reconstructed from the ordered event history.
+Event-Driven Architecture uses events as messages between components. Event Sourcing uses events as the source of truth. This system may use both patterns, but The Ledger itself is event sourced. That means decisions are not reconstructed from "whatever rows happen to be current" or "whatever logs we still have." They are reconstructed from the ordered event history.
 
 ### 6.2 CQRS
 
@@ -272,7 +271,7 @@ PostgreSQL advisory locks are the core coordination primitive.
 
 It guards against split-brain projection execution where two daemon instances process the same shard at the same time, race checkpoint updates, and either double-apply events or skip positions unpredictably.
 
-### Why this fits Week 5
+### Why this fits the system
 
 The challenge already centers PostgreSQL. Using database-native coordination keeps the system operationally simple and aligned with the same data platform that owns the event store itself.
 
@@ -291,7 +290,7 @@ These are the practical consequences I should carry into Phase 1 and beyond:
 
 The Ledger is the governance backbone for a multi-agent, document-to-decision platform.
 
-The main challenge brief provides the conceptual architecture:
+The conceptual architecture provides:
 
 - event sourcing as the source of truth
 - CQRS for read/write separation
@@ -301,7 +300,7 @@ The main challenge brief provides the conceptual architecture:
 - audit integrity
 - MCP exposure
 
-The support guide adds the operating context that makes the design concrete:
+The operating guide adds the context that makes the design concrete:
 
 - read-only Applicant Registry
 - document corpus
