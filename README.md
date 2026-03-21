@@ -10,11 +10,13 @@ The repository follows the Week 5 submission shape, with the assessed implementa
 - `src/aggregates/`: replay-driven domain aggregates for loans, agent sessions, and compliance records
 - `src/commands/`: Phase 2 command handlers using the load -> validate -> determine -> append flow
 - `src/document_processing/`: document parsing, optional Docling-first PDF extraction, event persistence helpers, and optional Ollama summaries
+- `src/projections/`: Phase 3 read models and the async projection daemon
 - `datagen/`: generator for the Applicant Registry seed data, document corpus, and seed event history
-- `tests/`: Phase 1 in-memory tests, real PostgreSQL tests, concurrency tests, document-processing tests, Phase 2 domain tests, and schema/generator tests
+- `tests/`: Phase 1 in-memory tests, real PostgreSQL tests, concurrency tests, document-processing tests, Phase 2 domain tests, Phase 3 projection tests, and schema/generator tests
 - `scripts/analyze_documents.py`: CLI for analyzing a company package and optionally persisting it into the Event Store
 - `reports/phase_1.md`: Phase 1 implementation report
 - `reports/phase_2.md`: Phase 2 implementation report
+- `reports/phase_3.md`: Phase 3 implementation report
 
 ## Setup
 
@@ -114,6 +116,48 @@ Implemented handlers:
 
 These checks run on the command side before events are appended, which keeps the ledger replayable and auditable.
 
+## Phase 3
+
+Phase 3 adds the CQRS read side. Projections subscribe to the ordered event stream, build queryable read models, and stay current through an async projection daemon with per-projection checkpoints and lag measurement.
+
+### Implemented Read Models
+
+- `src/projections/application_summary.py`
+  - current state per application
+  - optimized for dashboards and MCP application resources later
+- `src/projections/agent_performance.py`
+  - metrics per agent model version
+  - tracks sessions, analyses, decisions, averages, decision distribution, and override rate
+- `src/projections/compliance_audit.py`
+  - audit-grade compliance record
+  - supports current reads, temporal reads, and rebuild-from-scratch
+
+### Projection Daemon
+
+`src/projections/daemon.py` provides:
+
+- ordered global event consumption
+- per-projection checkpointing
+- retry-then-skip fault tolerance
+- lag reporting through `get_lag()` and `get_all_lags()`
+- restart-safe resume from stored checkpoints
+
+Checkpoint values store the next global position to process, which keeps replay semantics correct for both the PostgreSQL-backed store and the in-memory store used in tests.
+
+### Projection Tables
+
+`src/schema.sql` now includes:
+
+- `application_summary`
+- `agent_performance_ledger`
+- `compliance_audit_current`
+- `compliance_audit_history`
+
+Helper tables for restart-safe incremental processing:
+
+- `agent_session_projection_index`
+- `application_decision_projection_index`
+
 ## Run Tests
 
 Fast local checks:
@@ -126,6 +170,12 @@ Phase 2 domain logic checks:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest tests\phase2\test_domain_logic.py -q
+```
+
+Phase 3 projection checks:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests\test_projections.py -q
 ```
 
 Real PostgreSQL EventStore tests:
@@ -147,6 +197,13 @@ Full Phase 1 + Phase 2 bundle:
 ```powershell
 $env:TEST_DB_URL='postgresql://postgres:YOUR_PASSWORD@localhost/apex_ledger'
 .\.venv\Scripts\python.exe -m pytest tests\phase1\test_event_store.py tests\test_event_store.py tests\test_concurrency.py tests\test_document_processing.py tests\test_schema_and_generator.py tests\phase2\test_domain_logic.py -q
+```
+
+Full Phase 1 + Phase 2 + Phase 3 bundle:
+
+```powershell
+$env:TEST_DB_URL='postgresql://postgres:YOUR_PASSWORD@localhost/apex_ledger'
+.\.venv\Scripts\python.exe -m pytest tests\phase1\test_event_store.py tests\test_event_store.py tests\test_concurrency.py tests\test_document_processing.py tests\test_schema_and_generator.py tests\phase2\test_domain_logic.py tests\test_projections.py -q
 ```
 
 Optional live Ollama smoke test:
@@ -184,4 +241,5 @@ $env:DATABASE_URL='postgresql://postgres:YOUR_PASSWORD@localhost/apex_ledger'
 - `src/event_store.py` is ready for the interim Phase 1 deliverable path.
 - `src/document_processing/` gives us a working bridge from generated documents to structured facts, `docpkg-*` event streams, and optional package summaries.
 - `src/aggregates/` and `src/commands/handlers.py` now provide the replay-driven Phase 2 domain layer with business rule enforcement before append.
-- `reports/phase_1.md` and `reports/phase_2.md` capture the implementation details, test results, and current rubric fit.
+- `src/projections/` now provides all 3 required read models, the async daemon, checkpointing, lag metrics, temporal compliance queries, and rebuild-from-scratch support.
+- `reports/phase_1.md`, `reports/phase_2.md`, and `reports/phase_3.md` capture the implementation details, test results, and current rubric fit.

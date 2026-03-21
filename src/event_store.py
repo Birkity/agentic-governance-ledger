@@ -407,6 +407,22 @@ class EventStore:
             )
         return int(row["last_position"]) if row else 0
 
+    async def latest_global_position(self) -> int | None:
+        if self._pool is None:
+            raise RuntimeError("EventStore.connect() must be called before latest_global_position()")
+
+        async with self._pool.acquire() as conn:
+            value = await conn.fetchval("SELECT MAX(global_position) FROM events")
+        return int(value) if value is not None else None
+
+    async def latest_recorded_at(self) -> datetime | None:
+        if self._pool is None:
+            raise RuntimeError("EventStore.connect() must be called before latest_recorded_at()")
+
+        async with self._pool.acquire() as conn:
+            value = await conn.fetchval("SELECT MAX(recorded_at) FROM events")
+        return value
+
     def _apply_upcasters(self, event: StoredEvent) -> StoredEvent:
         if self.upcasters is None:
             return event
@@ -564,6 +580,17 @@ class InMemoryEventStore:
 
     async def load_checkpoint(self, projection_name: str) -> int:
         return self._checkpoints.get(projection_name, 0)
+
+    async def latest_global_position(self) -> int | None:
+        if not self._global:
+            return None
+        latest = self._global[-1].global_position
+        return int(latest) if latest is not None else None
+
+    async def latest_recorded_at(self) -> datetime | None:
+        if not self._global:
+            return None
+        return self._global[-1].recorded_at
 
     def _apply_upcasters(self, event: StoredEvent) -> StoredEvent:
         if self.upcasters is None:
