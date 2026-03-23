@@ -14,14 +14,19 @@ The repository follows the Week 5 submission shape, with the assessed implementa
 - `src/upcasting/`: Phase 4 read-time schema migration registry and concrete upcasters
 - `src/integrity/`: Phase 4 audit-chain verification and Gas Town recovery helpers
 - `src/mcp/`: Phase 5 FastMCP server, command tools, query resources, and in-process gateway helpers
+- `src/what_if/`: Phase 6 counterfactual replay helpers that branch application history without writing to the real store
+- `src/regulatory/`: Phase 6 regulatory package generation and verification helpers
 - `datagen/`: generator for the Applicant Registry seed data, document corpus, and seed event history
 - `tests/`: Phase 1 in-memory tests, real PostgreSQL tests, concurrency tests, document-processing tests, Phase 2 domain tests, Phase 3 projection tests, and schema/generator tests
 - `scripts/analyze_documents.py`: CLI for analyzing a company package and optionally persisting it into the Event Store
+- `scripts/run_what_if.py`: CLI for running a counterfactual replay against a stored application
+- `scripts/generate_regulatory_package.py`: CLI for producing a self-contained regulatory audit package JSON
 - `reports/phase_1.md`: Phase 1 implementation report
 - `reports/phase_2.md`: Phase 2 implementation report
 - `reports/phase_3.md`: Phase 3 implementation report
 - `phase_4.md`: Phase 4 implementation report
 - `phase_5.md`: Phase 5 implementation report
+- `phase_6.md`: Phase 6 implementation report
 
 ## Setup
 
@@ -245,6 +250,48 @@ $env:DATABASE_URL='postgresql://postgres:YOUR_PASSWORD@localhost/apex_ledger'
 
 For in-process testing, `src/mcp/runtime.py` provides a thin gateway that uses `app.call_tool()` and resource URIs directly, including query-string aware reads for temporal compliance and audit-trail range filtering.
 
+## Phase 6
+
+Phase 6 adds the final counterfactual-analysis and regulator-facing packaging layer.
+
+### What-If Projector
+
+- `src/what_if/projector.py` implements `run_what_if()`
+- it loads all events related to one application, branches at a chosen event type, injects substitute events, skips later events that are causally dependent on the replaced branch, and replays the branch in an isolated in-memory store
+- the real ledger is never mutated during this replay
+- the result includes:
+  - the observed real outcome
+  - the counterfactual projected outcome
+  - divergence events that show which original events were replaced or skipped
+
+### Regulatory Package
+
+- `src/regulatory/package.py` implements `generate_regulatory_package()` and `verify_regulatory_package()`
+- the generator builds a self-contained JSON package with:
+  - the related event stream
+  - the audit stream with `AuditIntegrityCheckRun`
+  - projection states as of an examination date
+  - integrity verification details
+  - a human-readable narrative
+  - agent model metadata such as model versions, input hashes, and confidence values
+- the verifier recomputes the package hash and replays the audit-chain logic from the packaged JSON alone
+
+### Phase 6 Scripts
+
+Run a counterfactual replay:
+
+```powershell
+$env:DATABASE_URL='postgresql://postgres:YOUR_PASSWORD@localhost/apex_ledger'
+.\.venv\Scripts\python.exe scripts\run_what_if.py --application-id YOUR_APP_ID --recommended-limit-usd 750000 --confidence 0.91 --risk-tier LOW
+```
+
+Generate a regulatory package artifact:
+
+```powershell
+$env:DATABASE_URL='postgresql://postgres:YOUR_PASSWORD@localhost/apex_ledger'
+.\.venv\Scripts\python.exe scripts\generate_regulatory_package.py --application-id YOUR_APP_ID
+```
+
 ## Run Tests
 
 Fast local checks:
@@ -276,6 +323,12 @@ Phase 5 MCP lifecycle and resource checks:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest tests\test_mcp_lifecycle.py -q
+```
+
+Phase 6 what-if and regulatory package checks:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests\test_phase6.py -q
 ```
 
 Seed-backed Phase 3 rebuild verification:
@@ -326,6 +379,13 @@ $env:TEST_DB_URL='postgresql://postgres:YOUR_PASSWORD@localhost/apex_ledger'
 .\.venv\Scripts\python.exe -m pytest tests\phase1\test_event_store.py tests\test_event_store.py tests\test_concurrency.py tests\test_document_processing.py tests\test_schema_and_generator.py tests\phase2\test_domain_logic.py tests\test_projections.py tests\test_projection_seed_rebuild.py tests\test_upcasting.py tests\test_integrity.py tests\test_gas_town.py tests\test_mcp_lifecycle.py -q
 ```
 
+Full Phase 1 through Phase 6 bundle:
+
+```powershell
+$env:TEST_DB_URL='postgresql://postgres:YOUR_PASSWORD@localhost/apex_ledger'
+.\.venv\Scripts\python.exe -m pytest tests\phase1\test_event_store.py tests\test_event_store.py tests\test_concurrency.py tests\test_document_processing.py tests\test_schema_and_generator.py tests\phase2\test_domain_logic.py tests\test_projections.py tests\test_projection_seed_rebuild.py tests\test_upcasting.py tests\test_integrity.py tests\test_gas_town.py tests\test_mcp_lifecycle.py tests\test_phase6.py -q
+```
+
 Optional live Ollama smoke test:
 
 ```powershell
@@ -362,6 +422,20 @@ Generate the Phase 3 projection lag artifact:
 .\.venv\Scripts\python.exe scripts\generate_projection_lag_report.py
 ```
 
+Generate a regulatory package artifact:
+
+```powershell
+$env:DATABASE_URL='postgresql://postgres:YOUR_PASSWORD@localhost/apex_ledger'
+.\.venv\Scripts\python.exe scripts\generate_regulatory_package.py --application-id YOUR_APP_ID
+```
+
+Run a stored application through the What-If projector:
+
+```powershell
+$env:DATABASE_URL='postgresql://postgres:YOUR_PASSWORD@localhost/apex_ledger'
+.\.venv\Scripts\python.exe scripts\run_what_if.py --application-id YOUR_APP_ID --recommended-limit-usd 750000 --confidence 0.91 --risk-tier LOW
+```
+
 ## Current Status
 
 - `src/event_store.py` is ready for the interim Phase 1 deliverable path.
@@ -370,4 +444,5 @@ Generate the Phase 3 projection lag artifact:
 - `src/projections/` now provides all 3 required read models, the async daemon, checkpointing, lag metrics, temporal compliance queries, rebuild-from-scratch support, and seed-backed rebuild verification.
 - `src/upcasting/` and `src/integrity/` now provide Phase 4 schema evolution, audit-chain verification, and Gas Town recovery.
 - `src/mcp/` now provides the Phase 5 FastMCP layer with 8 tools, 6 resources, a runnable server entry point, and an MCP-only lifecycle test.
-- `reports/phase_1.md`, `reports/phase_2.md`, and `reports/phase_3.md` plus `phase_4.md` and `phase_5.md` capture the implementation details, test results, and current rubric fit.
+- `src/what_if/` and `src/regulatory/` now provide Phase 6 counterfactual replay and regulator-facing package generation, with JSON-only verification for the generated package.
+- `reports/phase_1.md`, `reports/phase_2.md`, and `reports/phase_3.md` plus `phase_4.md`, `phase_5.md`, and `phase_6.md` capture the implementation details, test results, and current rubric fit.
