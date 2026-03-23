@@ -1,0 +1,1807 @@
+{
+  "package": {
+    "package_version": "1.0",
+    "generated_at": "2026-03-23T16:12:46.034261+00:00",
+    "application_id": "APEX-NARR05",
+    "examination_date": "2026-03-23T16:12:46.020920+00:00",
+    "event_stream": [
+      {
+        "event_id": "281ec19d-178d-4c93-8c23-8a7ba77473d7",
+        "stream_id": "docpkg-APEX-NARR05",
+        "stream_position": 0,
+        "global_position": 0,
+        "event_type": "PackageCreated",
+        "event_version": 1,
+        "payload": {
+          "package_id": "docpkg-APEX-NARR05",
+          "application_id": "APEX-NARR05",
+          "required_documents": [
+            "income_statement",
+            "balance_sheet",
+            "application_proposal",
+            "financial_workbook",
+            "financial_summary"
+          ],
+          "created_at": "2026-03-23T16:12:45.982861Z"
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:12:45.999324Z"
+      },
+      {
+        "event_id": "c5eb62f4-c318-4d42-be41-2634a1a52586",
+        "stream_id": "docpkg-APEX-NARR05",
+        "stream_position": 1,
+        "global_position": 1,
+        "event_type": "DocumentAdded",
+        "event_version": 1,
+        "payload": {
+          "package_id": "docpkg-APEX-NARR05",
+          "document_id": "COMP-068:income_statement",
+          "document_type": "income_statement",
+          "document_format": "pdf",
+          "file_hash": "e0593e44b3eae3022fe8da4a10ab8d8e299c2552826f5e4b368adf17a6ed6362",
+          "added_at": "2026-03-23T16:12:45.984854Z"
+        },
+        "metadata": {
+          "document_path": "C:\\Users\\Ab\\OneDrive\\Desktop\\10 Academy\\Week 5\\agentic-governance-ledger\\documents\\COMP-068\\income_statement_2024.pdf",
+          "parser_used": "pdfplumber"
+        },
+        "recorded_at": "2026-03-23T16:12:45.999419Z"
+      },
+      {
+        "event_id": "d1b1eed5-6aa0-43b2-845b-8616ee42b734",
+        "stream_id": "docpkg-APEX-NARR05",
+        "stream_position": 2,
+        "global_position": 2,
+        "event_type": "DocumentFormatValidated",
+        "event_version": 1,
+        "payload": {
+          "package_id": "docpkg-APEX-NARR05",
+          "document_id": "COMP-068:income_statement",
+          "document_type": "income_statement",
+          "page_count": 1,
+          "detected_format": "pdf",
+          "validated_at": "2026-03-23T16:12:45.984987Z"
+        },
+        "metadata": {
+          "parser_used": "pdfplumber"
+        },
+        "recorded_at": "2026-03-23T16:12:45.999470Z"
+      },
+      {
+        "event_id": "30a6e3df-1d83-4af2-b734-0d213720f063",
+        "stream_id": "docpkg-APEX-NARR05",
+        "stream_position": 3,
+        "global_position": 3,
+        "event_type": "ExtractionStarted",
+        "event_version": 1,
+        "payload": {
+          "package_id": "docpkg-APEX-NARR05",
+          "document_id": "COMP-068:income_statement",
+          "document_type": "income_statement",
+          "pipeline_version": "phase1-document-processor",
+          "extraction_model": "pdfplumber",
+          "started_at": "2026-03-23T16:12:45.984329Z"
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:12:45.999513Z"
+      },
+      {
+        "event_id": "b210a957-9ae4-4ae8-ba98-e3dd1f79b34f",
+        "stream_id": "docpkg-APEX-NARR05",
+        "stream_position": 4,
+        "global_position": 4,
+        "event_type": "ExtractionCompleted",
+        "event_version": 1,
+        "payload": {
+          "package_id": "docpkg-APEX-NARR05",
+          "document_id": "COMP-068:income_statement",
+          "document_type": "income_statement",
+          "facts": {
+            "total_revenue": "1584818",
+            "gross_profit": "511169",
+            "operating_expenses": "401427",
+            "operating_income": "109743",
+            "ebitda": "180890",
+            "depreciation_amortization": "71147",
+            "interest_expense": "67471",
+            "income_before_tax": "42272",
+            "tax_expense": "11727",
+            "net_income": "30544",
+            "total_assets": null,
+            "current_assets": null,
+            "cash_and_equivalents": null,
+            "accounts_receivable": null,
+            "inventory": null,
+            "total_liabilities": null,
+            "current_liabilities": null,
+            "long_term_debt": null,
+            "total_equity": null,
+            "operating_cash_flow": null,
+            "investing_cash_flow": null,
+            "financing_cash_flow": null,
+            "free_cash_flow": null,
+            "debt_to_equity": null,
+            "current_ratio": null,
+            "debt_to_ebitda": null,
+            "interest_coverage": 1.6265210238472825,
+            "gross_margin": 0.322541137215756,
+            "ebitda_margin": 0.1141392891802087,
+            "net_margin": 0.019272875497375722,
+            "fiscal_year_end": null,
+            "currency": "USD",
+            "gaap_compliant": true,
+            "field_confidence": {},
+            "page_references": {},
+            "extraction_notes": [],
+            "balance_sheet_balances": null,
+            "balance_discrepancy_usd": null
+          },
+          "raw_text_length": 518,
+          "tables_extracted": 0,
+          "processing_ms": 0,
+          "completed_at": "2026-03-23T16:12:45.985120Z"
+        },
+        "metadata": {
+          "document_path": "C:\\Users\\Ab\\OneDrive\\Desktop\\10 Academy\\Week 5\\agentic-governance-ledger\\documents\\COMP-068\\income_statement_2024.pdf",
+          "parser_used": "pdfplumber",
+          "structured_data": {},
+          "document_summary": null,
+          "extraction_notes": []
+        },
+        "recorded_at": "2026-03-23T16:12:45.999613Z"
+      },
+      {
+        "event_id": "7fa08a7f-a722-49ae-acc8-69d48e00c3ae",
+        "stream_id": "docpkg-APEX-NARR05",
+        "stream_position": 5,
+        "global_position": 5,
+        "event_type": "QualityAssessmentCompleted",
+        "event_version": 1,
+        "payload": {
+          "package_id": "docpkg-APEX-NARR05",
+          "document_id": "COMP-068:income_statement",
+          "overall_confidence": 0.95,
+          "is_coherent": true,
+          "anomalies": [],
+          "critical_missing_fields": [],
+          "reextraction_recommended": false,
+          "auditor_notes": "Parsed with pdfplumber. Quality assessment is deterministic and based on extraction notes plus package consistency checks.",
+          "assessed_at": "2026-03-23T16:12:45.985262Z"
+        },
+        "metadata": {
+          "document_type": "income_statement",
+          "document_summary": null
+        },
+        "recorded_at": "2026-03-23T16:12:45.999667Z"
+      },
+      {
+        "event_id": "80eaf2c6-f94f-428c-b7e7-314cdf3ab41a",
+        "stream_id": "docpkg-APEX-NARR05",
+        "stream_position": 6,
+        "global_position": 6,
+        "event_type": "DocumentAdded",
+        "event_version": 1,
+        "payload": {
+          "package_id": "docpkg-APEX-NARR05",
+          "document_id": "COMP-068:balance_sheet",
+          "document_type": "balance_sheet",
+          "document_format": "pdf",
+          "file_hash": "868ea399433f552e3a0307bfea78f4de4a206270157bad1793149b26b10f3854",
+          "added_at": "2026-03-23T16:12:45.986619Z"
+        },
+        "metadata": {
+          "document_path": "C:\\Users\\Ab\\OneDrive\\Desktop\\10 Academy\\Week 5\\agentic-governance-ledger\\documents\\COMP-068\\balance_sheet_2024.pdf",
+          "parser_used": "pdfplumber"
+        },
+        "recorded_at": "2026-03-23T16:12:45.999715Z"
+      },
+      {
+        "event_id": "30d424f4-caeb-4a68-92e9-4ca39b0500e7",
+        "stream_id": "docpkg-APEX-NARR05",
+        "stream_position": 7,
+        "global_position": 7,
+        "event_type": "DocumentFormatValidated",
+        "event_version": 1,
+        "payload": {
+          "package_id": "docpkg-APEX-NARR05",
+          "document_id": "COMP-068:balance_sheet",
+          "document_type": "balance_sheet",
+          "page_count": 1,
+          "detected_format": "pdf",
+          "validated_at": "2026-03-23T16:12:45.986678Z"
+        },
+        "metadata": {
+          "parser_used": "pdfplumber"
+        },
+        "recorded_at": "2026-03-23T16:12:45.999757Z"
+      },
+      {
+        "event_id": "026e6220-eb06-4790-baaf-791ead1f0e06",
+        "stream_id": "docpkg-APEX-NARR05",
+        "stream_position": 8,
+        "global_position": 8,
+        "event_type": "ExtractionStarted",
+        "event_version": 1,
+        "payload": {
+          "package_id": "docpkg-APEX-NARR05",
+          "document_id": "COMP-068:balance_sheet",
+          "document_type": "balance_sheet",
+          "pipeline_version": "phase1-document-processor",
+          "extraction_model": "pdfplumber",
+          "started_at": "2026-03-23T16:12:45.986337Z"
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:12:45.999813Z"
+      },
+      {
+        "event_id": "1ad93cf2-bb3c-41a6-a18e-699fd4a91c27",
+        "stream_id": "docpkg-APEX-NARR05",
+        "stream_position": 9,
+        "global_position": 9,
+        "event_type": "ExtractionCompleted",
+        "event_version": 1,
+        "payload": {
+          "package_id": "docpkg-APEX-NARR05",
+          "document_id": "COMP-068:balance_sheet",
+          "document_type": "balance_sheet",
+          "facts": {
+            "total_revenue": null,
+            "gross_profit": null,
+            "operating_expenses": null,
+            "operating_income": null,
+            "ebitda": null,
+            "depreciation_amortization": null,
+            "interest_expense": null,
+            "income_before_tax": null,
+            "tax_expense": null,
+            "net_income": null,
+            "total_assets": "2946906",
+            "current_assets": "1330796",
+            "cash_and_equivalents": "251394",
+            "accounts_receivable": "580151",
+            "inventory": "393137",
+            "total_liabilities": "1271374",
+            "current_liabilities": "786680",
+            "long_term_debt": "1055494",
+            "total_equity": "1675531",
+            "operating_cash_flow": null,
+            "investing_cash_flow": null,
+            "financing_cash_flow": null,
+            "free_cash_flow": null,
+            "debt_to_equity": 0.7587887063862143,
+            "current_ratio": 1.6916611582854528,
+            "debt_to_ebitda": null,
+            "interest_coverage": null,
+            "gross_margin": null,
+            "ebitda_margin": null,
+            "net_margin": null,
+            "fiscal_year_end": null,
+            "currency": "USD",
+            "gaap_compliant": true,
+            "field_confidence": {},
+            "page_references": {},
+            "extraction_notes": [],
+            "balance_sheet_balances": true,
+            "balance_discrepancy_usd": "1"
+          },
+          "raw_text_length": 719,
+          "tables_extracted": 0,
+          "processing_ms": 0,
+          "completed_at": "2026-03-23T16:12:45.986787Z"
+        },
+        "metadata": {
+          "document_path": "C:\\Users\\Ab\\OneDrive\\Desktop\\10 Academy\\Week 5\\agentic-governance-ledger\\documents\\COMP-068\\balance_sheet_2024.pdf",
+          "parser_used": "pdfplumber",
+          "structured_data": {},
+          "document_summary": null,
+          "extraction_notes": []
+        },
+        "recorded_at": "2026-03-23T16:12:45.999901Z"
+      },
+      {
+        "event_id": "1a9eeec2-836a-46cd-8dfd-e706b51d4db7",
+        "stream_id": "docpkg-APEX-NARR05",
+        "stream_position": 10,
+        "global_position": 10,
+        "event_type": "QualityAssessmentCompleted",
+        "event_version": 1,
+        "payload": {
+          "package_id": "docpkg-APEX-NARR05",
+          "document_id": "COMP-068:balance_sheet",
+          "overall_confidence": 0.95,
+          "is_coherent": true,
+          "anomalies": [],
+          "critical_missing_fields": [],
+          "reextraction_recommended": false,
+          "auditor_notes": "Parsed with pdfplumber. Quality assessment is deterministic and based on extraction notes plus package consistency checks.",
+          "assessed_at": "2026-03-23T16:12:45.986882Z"
+        },
+        "metadata": {
+          "document_type": "balance_sheet",
+          "document_summary": null
+        },
+        "recorded_at": "2026-03-23T16:12:45.999951Z"
+      },
+      {
+        "event_id": "15d97a75-0fac-454a-b329-0bde2deb4135",
+        "stream_id": "docpkg-APEX-NARR05",
+        "stream_position": 11,
+        "global_position": 11,
+        "event_type": "DocumentAdded",
+        "event_version": 1,
+        "payload": {
+          "package_id": "docpkg-APEX-NARR05",
+          "document_id": "COMP-068:application_proposal",
+          "document_type": "application_proposal",
+          "document_format": "pdf",
+          "file_hash": "c78b22b041d976e76024ee34c7d9c3aa5352cd37896d2dcd23f105a140b455ce",
+          "added_at": "2026-03-23T16:12:45.988217Z"
+        },
+        "metadata": {
+          "document_path": "C:\\Users\\Ab\\OneDrive\\Desktop\\10 Academy\\Week 5\\agentic-governance-ledger\\documents\\COMP-068\\application_proposal.pdf",
+          "parser_used": "pdfplumber"
+        },
+        "recorded_at": "2026-03-23T16:12:46.000301Z"
+      },
+      {
+        "event_id": "45a0d1d9-5a82-4a80-8041-227085a6c058",
+        "stream_id": "docpkg-APEX-NARR05",
+        "stream_position": 12,
+        "global_position": 12,
+        "event_type": "DocumentFormatValidated",
+        "event_version": 1,
+        "payload": {
+          "package_id": "docpkg-APEX-NARR05",
+          "document_id": "COMP-068:application_proposal",
+          "document_type": "application_proposal",
+          "page_count": 1,
+          "detected_format": "pdf",
+          "validated_at": "2026-03-23T16:12:45.988287Z"
+        },
+        "metadata": {
+          "parser_used": "pdfplumber"
+        },
+        "recorded_at": "2026-03-23T16:12:46.000405Z"
+      },
+      {
+        "event_id": "757742b1-f118-43ca-ae02-787be22a197a",
+        "stream_id": "docpkg-APEX-NARR05",
+        "stream_position": 13,
+        "global_position": 13,
+        "event_type": "ExtractionStarted",
+        "event_version": 1,
+        "payload": {
+          "package_id": "docpkg-APEX-NARR05",
+          "document_id": "COMP-068:application_proposal",
+          "document_type": "application_proposal",
+          "pipeline_version": "phase1-document-processor",
+          "extraction_model": "pdfplumber",
+          "started_at": "2026-03-23T16:12:45.987915Z"
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:12:46.000474Z"
+      },
+      {
+        "event_id": "f04758de-d885-4916-965a-c6a02df941c1",
+        "stream_id": "docpkg-APEX-NARR05",
+        "stream_position": 14,
+        "global_position": 14,
+        "event_type": "ExtractionCompleted",
+        "event_version": 1,
+        "payload": {
+          "package_id": "docpkg-APEX-NARR05",
+          "document_id": "COMP-068:application_proposal",
+          "document_type": "application_proposal",
+          "facts": {
+            "total_revenue": null,
+            "gross_profit": null,
+            "operating_expenses": null,
+            "operating_income": null,
+            "ebitda": null,
+            "depreciation_amortization": null,
+            "interest_expense": null,
+            "income_before_tax": null,
+            "tax_expense": null,
+            "net_income": null,
+            "total_assets": null,
+            "current_assets": null,
+            "cash_and_equivalents": null,
+            "accounts_receivable": null,
+            "inventory": null,
+            "total_liabilities": null,
+            "current_liabilities": null,
+            "long_term_debt": null,
+            "total_equity": null,
+            "operating_cash_flow": null,
+            "investing_cash_flow": null,
+            "financing_cash_flow": null,
+            "free_cash_flow": null,
+            "debt_to_equity": null,
+            "current_ratio": null,
+            "debt_to_ebitda": null,
+            "interest_coverage": null,
+            "gross_margin": null,
+            "ebitda_margin": null,
+            "net_margin": null,
+            "fiscal_year_end": null,
+            "currency": "USD",
+            "gaap_compliant": true,
+            "field_confidence": {},
+            "page_references": {},
+            "extraction_notes": [],
+            "balance_sheet_balances": null,
+            "balance_discrepancy_usd": null
+          },
+          "raw_text_length": 639,
+          "tables_extracted": 0,
+          "processing_ms": 0,
+          "completed_at": "2026-03-23T16:12:45.988351Z"
+        },
+        "metadata": {
+          "document_path": "C:\\Users\\Ab\\OneDrive\\Desktop\\10 Academy\\Week 5\\agentic-governance-ledger\\documents\\COMP-068\\application_proposal.pdf",
+          "parser_used": "pdfplumber",
+          "structured_data": {
+            "legal_entity_name": "Garcia Farmer and Garrett",
+            "business_type": "Partnership",
+            "industry": "Healthcare",
+            "jurisdiction": "NV",
+            "requested_amount_usd": "203584",
+            "purpose": "Expansion",
+            "use_of_proceeds": "open new facility and hire staff to expand market presence"
+          },
+          "document_summary": null,
+          "extraction_notes": []
+        },
+        "recorded_at": "2026-03-23T16:12:46.000623Z"
+      },
+      {
+        "event_id": "90e9f3b4-4b55-4646-ab33-5c6a231b9a35",
+        "stream_id": "docpkg-APEX-NARR05",
+        "stream_position": 15,
+        "global_position": 15,
+        "event_type": "QualityAssessmentCompleted",
+        "event_version": 1,
+        "payload": {
+          "package_id": "docpkg-APEX-NARR05",
+          "document_id": "COMP-068:application_proposal",
+          "overall_confidence": 0.95,
+          "is_coherent": true,
+          "anomalies": [],
+          "critical_missing_fields": [],
+          "reextraction_recommended": false,
+          "auditor_notes": "Parsed with pdfplumber. Quality assessment is deterministic and based on extraction notes plus package consistency checks.",
+          "assessed_at": "2026-03-23T16:12:45.988399Z"
+        },
+        "metadata": {
+          "document_type": "application_proposal",
+          "document_summary": null
+        },
+        "recorded_at": "2026-03-23T16:12:46.000705Z"
+      },
+      {
+        "event_id": "815fbb71-9c6d-4aab-a152-3ae42081a11f",
+        "stream_id": "docpkg-APEX-NARR05",
+        "stream_position": 16,
+        "global_position": 16,
+        "event_type": "DocumentAdded",
+        "event_version": 1,
+        "payload": {
+          "package_id": "docpkg-APEX-NARR05",
+          "document_id": "COMP-068:financial_workbook",
+          "document_type": "financial_workbook",
+          "document_format": "xlsx",
+          "file_hash": "3d2278f808c12d30fda36dc3faae374c684f283f3060c7dfe7461ff63670c6ec",
+          "added_at": "2026-03-23T16:12:45.997634Z"
+        },
+        "metadata": {
+          "document_path": "C:\\Users\\Ab\\OneDrive\\Desktop\\10 Academy\\Week 5\\agentic-governance-ledger\\documents\\COMP-068\\financial_statements.xlsx",
+          "parser_used": "openpyxl"
+        },
+        "recorded_at": "2026-03-23T16:12:46.000775Z"
+      },
+      {
+        "event_id": "dca105bc-c501-4ebd-90a6-73867586c8b1",
+        "stream_id": "docpkg-APEX-NARR05",
+        "stream_position": 17,
+        "global_position": 17,
+        "event_type": "DocumentFormatValidated",
+        "event_version": 1,
+        "payload": {
+          "package_id": "docpkg-APEX-NARR05",
+          "document_id": "COMP-068:financial_workbook",
+          "document_type": "financial_workbook",
+          "page_count": 3,
+          "detected_format": "xlsx",
+          "validated_at": "2026-03-23T16:12:45.997748Z"
+        },
+        "metadata": {
+          "parser_used": "openpyxl"
+        },
+        "recorded_at": "2026-03-23T16:12:46.000836Z"
+      },
+      {
+        "event_id": "c8236c98-1ee8-490a-9009-b5981b305bce",
+        "stream_id": "docpkg-APEX-NARR05",
+        "stream_position": 18,
+        "global_position": 18,
+        "event_type": "ExtractionStarted",
+        "event_version": 1,
+        "payload": {
+          "package_id": "docpkg-APEX-NARR05",
+          "document_id": "COMP-068:financial_workbook",
+          "document_type": "financial_workbook",
+          "pipeline_version": "phase1-document-processor",
+          "extraction_model": "openpyxl",
+          "started_at": "2026-03-23T16:12:45.997083Z"
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:12:46.000891Z"
+      },
+      {
+        "event_id": "eacf0eb1-901d-4ca4-ac97-74ec5fb62c94",
+        "stream_id": "docpkg-APEX-NARR05",
+        "stream_position": 19,
+        "global_position": 19,
+        "event_type": "ExtractionCompleted",
+        "event_version": 1,
+        "payload": {
+          "package_id": "docpkg-APEX-NARR05",
+          "document_id": "COMP-068:financial_workbook",
+          "document_type": "financial_workbook",
+          "facts": {
+            "total_revenue": "1584817.76",
+            "gross_profit": "511169.44",
+            "operating_expenses": "401426.66",
+            "operating_income": "109742.78",
+            "ebitda": "180889.92",
+            "depreciation_amortization": "71147.14",
+            "interest_expense": "67471.22",
+            "income_before_tax": "42271.56",
+            "tax_expense": "11727.41",
+            "net_income": "30544.16",
+            "total_assets": "2946905.56",
+            "current_assets": "1330795.59",
+            "cash_and_equivalents": "251393.99",
+            "accounts_receivable": "580150.71",
+            "inventory": "393136.79",
+            "total_liabilities": "1271374.4",
+            "current_liabilities": null,
+            "long_term_debt": "1055494.32",
+            "total_equity": "1675531.15",
+            "operating_cash_flow": null,
+            "investing_cash_flow": null,
+            "financing_cash_flow": null,
+            "free_cash_flow": null,
+            "debt_to_equity": 0.76,
+            "current_ratio": 1.69,
+            "debt_to_ebitda": 7.03,
+            "interest_coverage": 1.63,
+            "gross_margin": 0.3225414636948541,
+            "ebitda_margin": 0.11413925598612676,
+            "net_margin": 0.019272979373981775,
+            "fiscal_year_end": null,
+            "currency": "USD",
+            "gaap_compliant": true,
+            "field_confidence": {},
+            "page_references": {},
+            "extraction_notes": [],
+            "balance_sheet_balances": true,
+            "balance_discrepancy_usd": "0.01"
+          },
+          "raw_text_length": 0,
+          "tables_extracted": 1,
+          "processing_ms": 0,
+          "completed_at": "2026-03-23T16:12:45.997865Z"
+        },
+        "metadata": {
+          "document_path": "C:\\Users\\Ab\\OneDrive\\Desktop\\10 Academy\\Week 5\\agentic-governance-ledger\\documents\\COMP-068\\financial_statements.xlsx",
+          "parser_used": "openpyxl",
+          "structured_data": {},
+          "document_summary": null,
+          "extraction_notes": []
+        },
+        "recorded_at": "2026-03-23T16:12:46.001030Z"
+      },
+      {
+        "event_id": "d3ea3a37-8d03-4ade-aae7-1432d2c2618f",
+        "stream_id": "docpkg-APEX-NARR05",
+        "stream_position": 20,
+        "global_position": 20,
+        "event_type": "QualityAssessmentCompleted",
+        "event_version": 1,
+        "payload": {
+          "package_id": "docpkg-APEX-NARR05",
+          "document_id": "COMP-068:financial_workbook",
+          "overall_confidence": 0.95,
+          "is_coherent": true,
+          "anomalies": [],
+          "critical_missing_fields": [],
+          "reextraction_recommended": false,
+          "auditor_notes": "Parsed with openpyxl. Quality assessment is deterministic and based on extraction notes plus package consistency checks.",
+          "assessed_at": "2026-03-23T16:12:45.997944Z"
+        },
+        "metadata": {
+          "document_type": "financial_workbook",
+          "document_summary": null
+        },
+        "recorded_at": "2026-03-23T16:12:46.001114Z"
+      },
+      {
+        "event_id": "772ecb89-ec3c-4ef2-afbf-20f4a06e636f",
+        "stream_id": "docpkg-APEX-NARR05",
+        "stream_position": 21,
+        "global_position": 21,
+        "event_type": "DocumentAdded",
+        "event_version": 1,
+        "payload": {
+          "package_id": "docpkg-APEX-NARR05",
+          "document_id": "COMP-068:financial_summary",
+          "document_type": "financial_summary",
+          "document_format": "csv",
+          "file_hash": "a0fb09c03037aa79208808ea75c37fae9050f11f50ade7b814959aa789d29eb6",
+          "added_at": "2026-03-23T16:12:45.998617Z"
+        },
+        "metadata": {
+          "document_path": "C:\\Users\\Ab\\OneDrive\\Desktop\\10 Academy\\Week 5\\agentic-governance-ledger\\documents\\COMP-068\\financial_summary.csv",
+          "parser_used": "csv"
+        },
+        "recorded_at": "2026-03-23T16:12:46.001181Z"
+      },
+      {
+        "event_id": "32751194-36ce-4eb9-b8b2-324de6aab581",
+        "stream_id": "docpkg-APEX-NARR05",
+        "stream_position": 22,
+        "global_position": 22,
+        "event_type": "DocumentFormatValidated",
+        "event_version": 1,
+        "payload": {
+          "package_id": "docpkg-APEX-NARR05",
+          "document_id": "COMP-068:financial_summary",
+          "document_type": "financial_summary",
+          "page_count": 31,
+          "detected_format": "csv",
+          "validated_at": "2026-03-23T16:12:45.998799Z"
+        },
+        "metadata": {
+          "parser_used": "csv"
+        },
+        "recorded_at": "2026-03-23T16:12:46.001236Z"
+      },
+      {
+        "event_id": "17b39192-5777-46ad-acdb-32446649d04e",
+        "stream_id": "docpkg-APEX-NARR05",
+        "stream_position": 23,
+        "global_position": 23,
+        "event_type": "ExtractionStarted",
+        "event_version": 1,
+        "payload": {
+          "package_id": "docpkg-APEX-NARR05",
+          "document_id": "COMP-068:financial_summary",
+          "document_type": "financial_summary",
+          "pipeline_version": "phase1-document-processor",
+          "extraction_model": "csv",
+          "started_at": "2026-03-23T16:12:45.998334Z"
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:12:46.001292Z"
+      },
+      {
+        "event_id": "bb894b88-4251-4577-9d42-528f2e03cd12",
+        "stream_id": "docpkg-APEX-NARR05",
+        "stream_position": 24,
+        "global_position": 24,
+        "event_type": "ExtractionCompleted",
+        "event_version": 1,
+        "payload": {
+          "package_id": "docpkg-APEX-NARR05",
+          "document_id": "COMP-068:financial_summary",
+          "document_type": "financial_summary",
+          "facts": {
+            "total_revenue": "1584817.76",
+            "gross_profit": "511169.44",
+            "operating_expenses": "401426.66",
+            "operating_income": "109742.78",
+            "ebitda": "180889.92",
+            "depreciation_amortization": "71147.14",
+            "interest_expense": "67471.22",
+            "income_before_tax": "42271.56",
+            "tax_expense": "11727.41",
+            "net_income": "30544.16",
+            "total_assets": "2946905.56",
+            "current_assets": "1330795.59",
+            "cash_and_equivalents": "251393.99",
+            "accounts_receivable": "580150.71",
+            "inventory": "393136.79",
+            "total_liabilities": "1271374.4",
+            "current_liabilities": "786679.71",
+            "long_term_debt": "1055494.32",
+            "total_equity": "1675531.15",
+            "operating_cash_flow": "39323.16",
+            "investing_cash_flow": "-55574.83",
+            "financing_cash_flow": "-83832.83",
+            "free_cash_flow": "-16251.67",
+            "debt_to_equity": 0.76,
+            "current_ratio": 1.69,
+            "debt_to_ebitda": 7.03,
+            "interest_coverage": 1.63,
+            "gross_margin": 0.32,
+            "ebitda_margin": 0.11,
+            "net_margin": 0.02,
+            "fiscal_year_end": null,
+            "currency": "USD",
+            "gaap_compliant": true,
+            "field_confidence": {},
+            "page_references": {},
+            "extraction_notes": [],
+            "balance_sheet_balances": true,
+            "balance_discrepancy_usd": "0.01"
+          },
+          "raw_text_length": 0,
+          "tables_extracted": 1,
+          "processing_ms": 0,
+          "completed_at": "2026-03-23T16:12:45.998975Z"
+        },
+        "metadata": {
+          "document_path": "C:\\Users\\Ab\\OneDrive\\Desktop\\10 Academy\\Week 5\\agentic-governance-ledger\\documents\\COMP-068\\financial_summary.csv",
+          "parser_used": "csv",
+          "structured_data": {},
+          "document_summary": null,
+          "extraction_notes": []
+        },
+        "recorded_at": "2026-03-23T16:12:46.001420Z"
+      },
+      {
+        "event_id": "b6ae7bac-8965-496e-9a5c-dcb474a62c0c",
+        "stream_id": "docpkg-APEX-NARR05",
+        "stream_position": 25,
+        "global_position": 25,
+        "event_type": "QualityAssessmentCompleted",
+        "event_version": 1,
+        "payload": {
+          "package_id": "docpkg-APEX-NARR05",
+          "document_id": "COMP-068:financial_summary",
+          "overall_confidence": 0.95,
+          "is_coherent": true,
+          "anomalies": [],
+          "critical_missing_fields": [],
+          "reextraction_recommended": false,
+          "auditor_notes": "Parsed with csv. Quality assessment is deterministic and based on extraction notes plus package consistency checks.",
+          "assessed_at": "2026-03-23T16:12:45.999042Z"
+        },
+        "metadata": {
+          "document_type": "financial_summary",
+          "document_summary": null
+        },
+        "recorded_at": "2026-03-23T16:12:46.001503Z"
+      },
+      {
+        "event_id": "fa1e8ed6-7190-4bbd-b05c-589b1b7fdea3",
+        "stream_id": "docpkg-APEX-NARR05",
+        "stream_position": 26,
+        "global_position": 26,
+        "event_type": "PackageReadyForAnalysis",
+        "event_version": 1,
+        "payload": {
+          "package_id": "docpkg-APEX-NARR05",
+          "application_id": "APEX-NARR05",
+          "documents_processed": 5,
+          "has_quality_flags": false,
+          "quality_flag_count": 0,
+          "ready_at": "2026-03-23T16:12:45.999115Z"
+        },
+        "metadata": {
+          "field_sources": {
+            "total_revenue": "income_statement",
+            "gross_profit": "income_statement",
+            "operating_expenses": "income_statement",
+            "operating_income": "income_statement",
+            "ebitda": "income_statement",
+            "depreciation_amortization": "income_statement",
+            "interest_expense": "income_statement",
+            "income_before_tax": "income_statement",
+            "tax_expense": "income_statement",
+            "net_income": "income_statement",
+            "interest_coverage": "income_statement",
+            "gross_margin": "income_statement",
+            "ebitda_margin": "income_statement",
+            "net_margin": "income_statement",
+            "total_assets": "balance_sheet",
+            "current_assets": "balance_sheet",
+            "cash_and_equivalents": "balance_sheet",
+            "accounts_receivable": "balance_sheet",
+            "inventory": "balance_sheet",
+            "total_liabilities": "balance_sheet",
+            "current_liabilities": "balance_sheet",
+            "long_term_debt": "balance_sheet",
+            "total_equity": "balance_sheet",
+            "debt_to_equity": "balance_sheet",
+            "current_ratio": "balance_sheet",
+            "balance_sheet_balances": "balance_sheet",
+            "balance_discrepancy_usd": "balance_sheet",
+            "debt_to_ebitda": "financial_workbook",
+            "operating_cash_flow": "financial_summary",
+            "investing_cash_flow": "financial_summary",
+            "financing_cash_flow": "financial_summary",
+            "free_cash_flow": "financial_summary"
+          },
+          "consistency_notes": [],
+          "package_summary": null
+        },
+        "recorded_at": "2026-03-23T16:12:46.001622Z"
+      },
+      {
+        "event_id": "80892d0b-3ec2-4be1-ac4d-f0592bb0ae2c",
+        "stream_id": "loan-APEX-NARR05",
+        "stream_position": 0,
+        "global_position": 27,
+        "event_type": "ApplicationSubmitted",
+        "event_version": 1,
+        "payload": {
+          "application_id": "APEX-NARR05",
+          "applicant_id": "COMP-068",
+          "requested_amount_usd": "950000",
+          "loan_purpose": "expansion",
+          "loan_term_months": 36,
+          "submission_channel": "relationship_manager",
+          "contact_email": "comp-068@example.com",
+          "contact_name": "Garcia Farmer and Garrett",
+          "submitted_at": "2026-03-23T16:12:46.002826Z",
+          "application_reference": "APEX-NARR05"
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:12:46.003198Z"
+      },
+      {
+        "event_id": "9dc6b333-292b-49bd-b3de-53ae7daa8ccb",
+        "stream_id": "loan-APEX-NARR05",
+        "stream_position": 1,
+        "global_position": 28,
+        "event_type": "DocumentUploadRequested",
+        "event_version": 1,
+        "payload": {
+          "application_id": "APEX-NARR05",
+          "required_document_types": [
+            "application_proposal",
+            "income_statement",
+            "balance_sheet"
+          ],
+          "deadline": "2026-03-30T16:12:46.002826Z",
+          "requested_by": "system"
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:12:46.003277Z"
+      },
+      {
+        "event_id": "f6e605bd-deb5-4948-b9d2-cb7ff0bc6e86",
+        "stream_id": "loan-APEX-NARR05",
+        "stream_position": 2,
+        "global_position": 29,
+        "event_type": "CreditAnalysisRequested",
+        "event_version": 1,
+        "payload": {
+          "application_id": "APEX-NARR05",
+          "requested_at": "2026-03-23T16:12:46.003678+00:00",
+          "requested_by": "document_processing",
+          "priority": "NORMAL"
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:12:46.003756Z"
+      },
+      {
+        "event_id": "9dac9ac8-ed77-46c1-810d-0c0938458ab7",
+        "stream_id": "agent-credit_analysis-sess-credit",
+        "stream_position": 0,
+        "global_position": 30,
+        "event_type": "AgentSessionStarted",
+        "event_version": 1,
+        "payload": {
+          "session_id": "sess-credit",
+          "agent_type": "credit_analysis",
+          "agent_id": "credit-agent-068",
+          "application_id": "APEX-NARR05",
+          "model_version": "credit-v1",
+          "langgraph_graph_version": "graph-v1",
+          "context_source": "fresh",
+          "context_token_count": 512,
+          "started_at": "2026-03-23T16:12:46.003825Z"
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:12:46.003960Z"
+      },
+      {
+        "event_id": "a17118f6-4b75-4a3b-b344-cb26952c6a6e",
+        "stream_id": "credit-APEX-NARR05",
+        "stream_position": 0,
+        "global_position": 31,
+        "event_type": "CreditAnalysisCompleted",
+        "event_version": 2,
+        "payload": {
+          "application_id": "APEX-NARR05",
+          "session_id": "sess-credit",
+          "decision": {
+            "risk_tier": "HIGH",
+            "recommended_limit_usd": "750000",
+            "confidence": 0.82,
+            "rationale": "High leverage and declining revenue trend support an automated decline recommendation.",
+            "key_concerns": [],
+            "data_quality_caveats": [],
+            "policy_overrides_applied": []
+          },
+          "model_version": "credit-v1",
+          "model_deployment_id": "credit-dep-v1",
+          "input_data_hash": "credit-input-068",
+          "analysis_duration_ms": 640,
+          "regulatory_basis": [],
+          "completed_at": "2026-03-23T16:12:46.006637Z"
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:12:46.006819Z"
+      },
+      {
+        "event_id": "2d0033bf-cdeb-4c63-a586-72d5c409ff1e",
+        "stream_id": "loan-APEX-NARR05",
+        "stream_position": 3,
+        "global_position": 32,
+        "event_type": "FraudScreeningRequested",
+        "event_version": 1,
+        "payload": {
+          "application_id": "APEX-NARR05",
+          "requested_at": "2026-03-23T16:12:46.006637Z",
+          "triggered_by_event_id": "credit-APEX-NARR05:0"
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:12:46.006942Z"
+      },
+      {
+        "event_id": "5e28ce63-2bfe-4378-9c2a-f0f750ddbc6a",
+        "stream_id": "agent-credit_analysis-sess-credit",
+        "stream_position": 1,
+        "global_position": 33,
+        "event_type": "AgentOutputWritten",
+        "event_version": 1,
+        "payload": {
+          "session_id": "sess-credit",
+          "agent_type": "credit_analysis",
+          "application_id": "APEX-NARR05",
+          "events_written": [
+            {
+              "stream_id": "credit-APEX-NARR05",
+              "event_type": "CreditAnalysisCompleted",
+              "stream_position": 0
+            }
+          ],
+          "output_summary": "CreditAnalysisCompleted recorded",
+          "written_at": "2026-03-23T16:12:46.006982Z"
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:12:46.007082Z"
+      },
+      {
+        "event_id": "d2b00348-c65a-46e7-8dfe-4b84388b2b2e",
+        "stream_id": "agent-fraud_detection-sess-fraud",
+        "stream_position": 0,
+        "global_position": 34,
+        "event_type": "AgentSessionStarted",
+        "event_version": 1,
+        "payload": {
+          "session_id": "sess-fraud",
+          "agent_type": "fraud_detection",
+          "agent_id": "fraud-comp-068",
+          "application_id": "APEX-NARR05",
+          "model_version": "fraud-v1",
+          "langgraph_graph_version": "graph-v1",
+          "context_source": "fresh",
+          "context_token_count": 512,
+          "started_at": "2026-03-23T16:12:46.007769Z"
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:12:46.007909Z"
+      },
+      {
+        "event_id": "2c78d749-6f0c-498b-add9-dc7e716f737c",
+        "stream_id": "fraud-APEX-NARR05",
+        "stream_position": 0,
+        "global_position": 37,
+        "event_type": "FraudScreeningCompleted",
+        "event_version": 1,
+        "payload": {
+          "application_id": "APEX-NARR05",
+          "session_id": "sess-fraud",
+          "fraud_score": 0.08,
+          "risk_level": "LOW",
+          "anomalies_found": 0,
+          "recommendation": "CLEAR",
+          "screening_model_version": "fraud-v1",
+          "input_data_hash": "fraud-apex-narr05",
+          "completed_at": "2026-03-23T16:12:46.008827Z"
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:12:46.008957Z"
+      },
+      {
+        "event_id": "33e86204-32b6-49ae-b90e-c7b6fe8f629f",
+        "stream_id": "loan-APEX-NARR05",
+        "stream_position": 4,
+        "global_position": 38,
+        "event_type": "ComplianceCheckRequested",
+        "event_version": 1,
+        "payload": {
+          "application_id": "APEX-NARR05",
+          "requested_at": "2026-03-23T16:12:46.008827+00:00",
+          "triggered_by_event_id": "fraud-APEX-NARR05:0",
+          "regulation_set_version": "2026-Q1",
+          "rules_to_evaluate": [
+            "REG-001",
+            "REG-002",
+            "REG-003",
+            "REG-004",
+            "REG-005",
+            "REG-006"
+          ]
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:12:46.009050Z"
+      },
+      {
+        "event_id": "a9b34e95-e1af-4ba2-8f54-6a62002fdf4b",
+        "stream_id": "agent-fraud_detection-sess-fraud",
+        "stream_position": 3,
+        "global_position": 39,
+        "event_type": "AgentOutputWritten",
+        "event_version": 1,
+        "payload": {
+          "session_id": "sess-fraud",
+          "agent_type": "fraud_detection",
+          "application_id": "APEX-NARR05",
+          "events_written": [
+            {
+              "stream_id": "fraud-APEX-NARR05",
+              "event_type": "FraudScreeningCompleted",
+              "stream_position": 0
+            }
+          ],
+          "output_summary": "FraudScreeningCompleted recorded",
+          "written_at": "2026-03-23T16:12:46.009087Z"
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:12:46.009223Z"
+      },
+      {
+        "event_id": "c42547b7-c912-4a79-8d23-903667560464",
+        "stream_id": "agent-fraud_detection-sess-fraud",
+        "stream_position": 4,
+        "global_position": 40,
+        "event_type": "AgentSessionCompleted",
+        "event_version": 1,
+        "payload": {
+          "session_id": "sess-fraud",
+          "agent_type": "fraud_detection",
+          "application_id": "APEX-NARR05",
+          "total_nodes_executed": 3,
+          "total_llm_calls": 1,
+          "total_tokens_used": 900,
+          "total_cost_usd": 0.11,
+          "total_duration_ms": 650,
+          "next_agent_triggered": "compliance",
+          "completed_at": "2026-03-23T16:12:46.009253Z"
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:12:46.009353Z"
+      },
+      {
+        "event_id": "513dd115-a3fa-4b25-a598-9ca105e31a6d",
+        "stream_id": "agent-compliance-sess-compliance",
+        "stream_position": 0,
+        "global_position": 41,
+        "event_type": "AgentSessionStarted",
+        "event_version": 1,
+        "payload": {
+          "session_id": "sess-compliance",
+          "agent_type": "compliance",
+          "agent_id": "compliance-comp-068",
+          "application_id": "APEX-NARR05",
+          "model_version": "compliance-v1",
+          "langgraph_graph_version": "graph-v1",
+          "context_source": "fresh",
+          "context_token_count": 512,
+          "started_at": "2026-03-23T16:12:46.009956Z"
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:12:46.010085Z"
+      },
+      {
+        "event_id": "9fa081a7-a8f0-4483-801d-750993e87078",
+        "stream_id": "compliance-APEX-NARR05",
+        "stream_position": 0,
+        "global_position": 43,
+        "event_type": "ComplianceCheckInitiated",
+        "event_version": 1,
+        "payload": {
+          "application_id": "APEX-NARR05",
+          "session_id": "sess-compliance",
+          "regulation_set_version": "2026-Q1",
+          "rules_to_evaluate": [
+            "REG-001",
+            "REG-002",
+            "REG-003",
+            "REG-004",
+            "REG-005",
+            "REG-006"
+          ],
+          "initiated_at": "2026-03-23T16:12:46.011837Z"
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:12:46.012388Z"
+      },
+      {
+        "event_id": "4fdc27eb-ac38-4a5b-b5e1-dc98f4e3b78c",
+        "stream_id": "compliance-APEX-NARR05",
+        "stream_position": 1,
+        "global_position": 44,
+        "event_type": "ComplianceRulePassed",
+        "event_version": 1,
+        "payload": {
+          "application_id": "APEX-NARR05",
+          "session_id": "sess-compliance",
+          "rule_id": "REG-001",
+          "rule_name": "AML",
+          "rule_version": "1",
+          "evidence_hash": "e1",
+          "evaluation_notes": "Customer cleared sanctions screening.",
+          "evaluated_at": "2026-03-23T16:12:46.011837Z"
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:12:46.012469Z"
+      },
+      {
+        "event_id": "90e7a48c-fb3e-4df8-92cf-b1f32cb22a6f",
+        "stream_id": "compliance-APEX-NARR05",
+        "stream_position": 2,
+        "global_position": 45,
+        "event_type": "ComplianceRulePassed",
+        "event_version": 1,
+        "payload": {
+          "application_id": "APEX-NARR05",
+          "session_id": "sess-compliance",
+          "rule_id": "REG-002",
+          "rule_name": "OFAC",
+          "rule_version": "1",
+          "evidence_hash": "e2",
+          "evaluation_notes": "No OFAC match.",
+          "evaluated_at": "2026-03-23T16:12:46.011837Z"
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:12:46.012542Z"
+      },
+      {
+        "event_id": "6873cc4e-b125-4d2f-aeb4-97bb28cca7c5",
+        "stream_id": "compliance-APEX-NARR05",
+        "stream_position": 3,
+        "global_position": 46,
+        "event_type": "ComplianceRulePassed",
+        "event_version": 1,
+        "payload": {
+          "application_id": "APEX-NARR05",
+          "session_id": "sess-compliance",
+          "rule_id": "REG-003",
+          "rule_name": "Jurisdiction",
+          "rule_version": "1",
+          "evidence_hash": "e3",
+          "evaluation_notes": "Jurisdiction allowed.",
+          "evaluated_at": "2026-03-23T16:12:46.011837Z"
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:12:46.012611Z"
+      },
+      {
+        "event_id": "79f20437-959f-410d-aad6-b4c22b5a0017",
+        "stream_id": "compliance-APEX-NARR05",
+        "stream_position": 4,
+        "global_position": 47,
+        "event_type": "ComplianceRulePassed",
+        "event_version": 1,
+        "payload": {
+          "application_id": "APEX-NARR05",
+          "session_id": "sess-compliance",
+          "rule_id": "REG-004",
+          "rule_name": "Entity Type",
+          "rule_version": "1",
+          "evidence_hash": "e4",
+          "evaluation_notes": "Entity type is eligible.",
+          "evaluated_at": "2026-03-23T16:12:46.011837Z"
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:12:46.012744Z"
+      },
+      {
+        "event_id": "d929b8e7-1541-49c0-b818-2bb42ddd987a",
+        "stream_id": "compliance-APEX-NARR05",
+        "stream_position": 5,
+        "global_position": 48,
+        "event_type": "ComplianceRulePassed",
+        "event_version": 1,
+        "payload": {
+          "application_id": "APEX-NARR05",
+          "session_id": "sess-compliance",
+          "rule_id": "REG-005",
+          "rule_name": "Operating History",
+          "rule_version": "1",
+          "evidence_hash": "e5",
+          "evaluation_notes": "Operating history satisfies the policy.",
+          "evaluated_at": "2026-03-23T16:12:46.011837Z"
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:12:46.012928Z"
+      },
+      {
+        "event_id": "25abcdd7-ca29-4775-a9e6-fe8a948657c0",
+        "stream_id": "compliance-APEX-NARR05",
+        "stream_position": 6,
+        "global_position": 49,
+        "event_type": "ComplianceRuleNoted",
+        "event_version": 1,
+        "payload": {
+          "application_id": "APEX-NARR05",
+          "session_id": "sess-compliance",
+          "rule_id": "REG-006",
+          "rule_name": "CRA",
+          "note_type": "CRA",
+          "note_text": "CRA consideration recorded.",
+          "evaluated_at": "2026-03-23T16:12:46.011837Z"
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:12:46.013000Z"
+      },
+      {
+        "event_id": "88b433fb-5c58-405a-89e1-a2ea73bfa037",
+        "stream_id": "compliance-APEX-NARR05",
+        "stream_position": 7,
+        "global_position": 50,
+        "event_type": "ComplianceCheckCompleted",
+        "event_version": 1,
+        "payload": {
+          "application_id": "APEX-NARR05",
+          "session_id": "sess-compliance",
+          "rules_evaluated": 6,
+          "rules_passed": 5,
+          "rules_failed": 0,
+          "rules_noted": 1,
+          "has_hard_block": false,
+          "overall_verdict": "CLEAR",
+          "completed_at": "2026-03-23T16:12:46.011837Z"
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:12:46.013066Z"
+      },
+      {
+        "event_id": "e6122170-0bd9-487c-89c8-fa79adc382cb",
+        "stream_id": "loan-APEX-NARR05",
+        "stream_position": 5,
+        "global_position": 51,
+        "event_type": "DecisionRequested",
+        "event_version": 1,
+        "payload": {
+          "application_id": "APEX-NARR05",
+          "requested_at": "2026-03-23T16:12:46.011837Z",
+          "all_analyses_complete": true,
+          "triggered_by_event_id": "compliance-APEX-NARR05:7"
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:12:46.013281Z"
+      },
+      {
+        "event_id": "088e259e-0e94-468d-a79c-6b580ec54f07",
+        "stream_id": "agent-compliance-sess-compliance",
+        "stream_position": 2,
+        "global_position": 52,
+        "event_type": "AgentOutputWritten",
+        "event_version": 1,
+        "payload": {
+          "session_id": "sess-compliance",
+          "agent_type": "compliance",
+          "application_id": "APEX-NARR05",
+          "events_written": [
+            {
+              "stream_id": "compliance-APEX-NARR05",
+              "event_type": "ComplianceCheckCompleted",
+              "stream_position": 7
+            }
+          ],
+          "output_summary": "ComplianceCheckCompleted recorded",
+          "written_at": "2026-03-23T16:12:46.013369Z"
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:12:46.013542Z"
+      },
+      {
+        "event_id": "dccfc138-9811-4a92-a2d1-6a2f2130fd63",
+        "stream_id": "agent-compliance-sess-compliance",
+        "stream_position": 3,
+        "global_position": 53,
+        "event_type": "AgentSessionCompleted",
+        "event_version": 1,
+        "payload": {
+          "session_id": "sess-compliance",
+          "agent_type": "compliance",
+          "application_id": "APEX-NARR05",
+          "total_nodes_executed": 3,
+          "total_llm_calls": 1,
+          "total_tokens_used": 900,
+          "total_cost_usd": 0.0,
+          "total_duration_ms": 650,
+          "next_agent_triggered": "decision_orchestrator",
+          "completed_at": "2026-03-23T16:12:46.013584Z"
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:12:46.013720Z"
+      },
+      {
+        "event_id": "6ea64bb2-9541-4606-9cdb-14cd6760847f",
+        "stream_id": "agent-decision_orchestrator-sess-orch",
+        "stream_position": 0,
+        "global_position": 54,
+        "event_type": "AgentSessionStarted",
+        "event_version": 1,
+        "payload": {
+          "session_id": "sess-orch",
+          "agent_type": "decision_orchestrator",
+          "agent_id": "orch-agent-068",
+          "application_id": "APEX-NARR05",
+          "model_version": "orch-v1",
+          "langgraph_graph_version": "graph-v1",
+          "context_source": "fresh",
+          "context_token_count": 512,
+          "started_at": "2026-03-23T16:12:46.013798Z"
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:12:46.013939Z"
+      },
+      {
+        "event_id": "8d2b98ca-4b65-4b80-8962-4f272f7f4c84",
+        "stream_id": "loan-APEX-NARR05",
+        "stream_position": 6,
+        "global_position": 55,
+        "event_type": "DecisionGenerated",
+        "event_version": 2,
+        "payload": {
+          "application_id": "APEX-NARR05",
+          "orchestrator_session_id": "sess-orch",
+          "recommendation": "DECLINE",
+          "confidence": 0.82,
+          "approved_amount_usd": null,
+          "conditions": [],
+          "executive_summary": "Automated decline recommendation due to high credit risk despite clean compliance.",
+          "key_risks": [
+            "high leverage",
+            "declining revenue trajectory"
+          ],
+          "contributing_sessions": [
+            "agent-credit_analysis-sess-credit",
+            "agent-fraud_detection-sess-fraud",
+            "agent-compliance-sess-compliance"
+          ],
+          "model_versions": {
+            "decision_orchestrator": "orch-v1"
+          },
+          "generated_at": "2026-03-23T16:12:46.016709Z"
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:12:46.016932Z"
+      },
+      {
+        "event_id": "842d08c6-4701-4713-9eb2-459f2a18dfe6",
+        "stream_id": "agent-decision_orchestrator-sess-orch",
+        "stream_position": 1,
+        "global_position": 56,
+        "event_type": "AgentOutputWritten",
+        "event_version": 1,
+        "payload": {
+          "session_id": "sess-orch",
+          "agent_type": "decision_orchestrator",
+          "application_id": "APEX-NARR05",
+          "events_written": [
+            {
+              "stream_id": "loan-APEX-NARR05",
+              "event_type": "DecisionGenerated",
+              "stream_position": 6
+            }
+          ],
+          "output_summary": "DecisionGenerated recorded",
+          "written_at": "2026-03-23T16:12:46.017002Z"
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:12:46.017161Z"
+      },
+      {
+        "event_id": "9074e4fd-46e7-430b-8a15-33404812227c",
+        "stream_id": "loan-APEX-NARR05",
+        "stream_position": 7,
+        "global_position": 57,
+        "event_type": "HumanReviewRequested",
+        "event_version": 1,
+        "payload": {
+          "application_id": "APEX-NARR05",
+          "reason": "Relationship manager requested manual adjudication.",
+          "decision_event_id": "8d2b98ca-4b65-4b80-8962-4f272f7f4c84",
+          "assigned_to": "loan-operations",
+          "requested_at": "2026-03-23T16:12:46.017777Z"
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:12:46.017898Z"
+      },
+      {
+        "event_id": "421afde9-1ee0-4b25-bad4-d8d6ca8076c0",
+        "stream_id": "loan-APEX-NARR05",
+        "stream_position": 8,
+        "global_position": 58,
+        "event_type": "HumanReviewCompleted",
+        "event_version": 1,
+        "payload": {
+          "application_id": "APEX-NARR05",
+          "reviewer_id": "LO-Sarah-Chen",
+          "override": true,
+          "original_recommendation": "DECLINE",
+          "final_decision": "APPROVE",
+          "override_reason": "15-year customer, prior repayment history, collateral offered",
+          "reviewed_at": "2026-03-23T16:12:46.019680Z"
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:12:46.019991Z"
+      },
+      {
+        "event_id": "bdc5990e-1fb8-46e6-b66f-d77b1f562b4c",
+        "stream_id": "loan-APEX-NARR05",
+        "stream_position": 9,
+        "global_position": 59,
+        "event_type": "ApplicationApproved",
+        "event_version": 1,
+        "payload": {
+          "application_id": "APEX-NARR05",
+          "approved_amount_usd": "750000",
+          "interest_rate_pct": 9.1,
+          "term_months": 36,
+          "conditions": [
+            "Monthly revenue reporting for 12 months",
+            "Personal guarantee from CEO"
+          ],
+          "approved_by": "LO-Sarah-Chen",
+          "effective_date": "2026-03-23",
+          "approved_at": "2026-03-23T16:12:46.019680Z"
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:12:46.020048Z"
+      }
+    ],
+    "audit_stream": [
+      {
+        "event_id": "129ebd5d-8a70-4334-9bb3-8fa4f3150ed3",
+        "stream_id": "audit-loan-APEX-NARR05",
+        "stream_position": 0,
+        "global_position": 60,
+        "event_type": "AuditIntegrityCheckRun",
+        "event_version": 1,
+        "payload": {
+          "entity_type": "loan",
+          "entity_id": "APEX-NARR05",
+          "check_timestamp": "2026-03-23T16:12:46.021307Z",
+          "events_verified_count": 10,
+          "integrity_hash": "162445e4f4fbe36fbf73ecbbb7cb0d5c9441e3bd4c0dffeb583ffba2450a7b53",
+          "previous_hash": null,
+          "chain_valid": true,
+          "tamper_detected": false
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:12:46.021442Z"
+      }
+    ],
+    "projection_states_as_of": {
+      "application_summary": {
+        "application_id": "APEX-NARR05",
+        "state": "FINAL_APPROVED",
+        "applicant_id": "COMP-068",
+        "requested_amount_usd": "950000",
+        "approved_amount_usd": "750000",
+        "risk_tier": "HIGH",
+        "fraud_score": 0.08,
+        "compliance_status": "CLEAR",
+        "decision": "APPROVE",
+        "agent_sessions_completed": [
+          "sess-fraud",
+          "sess-compliance"
+        ],
+        "last_event_type": "ApplicationApproved",
+        "last_event_at": "2026-03-23T16:12:46.020048+00:00",
+        "human_reviewer_id": "LO-Sarah-Chen",
+        "final_decision_at": "2026-03-23T16:12:46.019680+00:00"
+      },
+      "compliance_audit": {
+        "application_id": "APEX-NARR05",
+        "session_id": "sess-compliance",
+        "regulation_set_version": "2026-Q1",
+        "required_rules": [
+          "REG-001",
+          "REG-002",
+          "REG-003",
+          "REG-004",
+          "REG-005",
+          "REG-006"
+        ],
+        "passed_rules": [
+          {
+            "rule_id": "REG-001",
+            "rule_name": "AML",
+            "rule_version": "1",
+            "evidence_hash": "e1",
+            "evaluation_notes": "Customer cleared sanctions screening.",
+            "evaluated_at": "2026-03-23T16:12:46.011837Z"
+          },
+          {
+            "rule_id": "REG-002",
+            "rule_name": "OFAC",
+            "rule_version": "1",
+            "evidence_hash": "e2",
+            "evaluation_notes": "No OFAC match.",
+            "evaluated_at": "2026-03-23T16:12:46.011837Z"
+          },
+          {
+            "rule_id": "REG-003",
+            "rule_name": "Jurisdiction",
+            "rule_version": "1",
+            "evidence_hash": "e3",
+            "evaluation_notes": "Jurisdiction allowed.",
+            "evaluated_at": "2026-03-23T16:12:46.011837Z"
+          },
+          {
+            "rule_id": "REG-004",
+            "rule_name": "Entity Type",
+            "rule_version": "1",
+            "evidence_hash": "e4",
+            "evaluation_notes": "Entity type is eligible.",
+            "evaluated_at": "2026-03-23T16:12:46.011837Z"
+          },
+          {
+            "rule_id": "REG-005",
+            "rule_name": "Operating History",
+            "rule_version": "1",
+            "evidence_hash": "e5",
+            "evaluation_notes": "Operating history satisfies the policy.",
+            "evaluated_at": "2026-03-23T16:12:46.011837Z"
+          }
+        ],
+        "failed_rules": [],
+        "noted_rules": [
+          {
+            "rule_id": "REG-006",
+            "rule_name": "CRA",
+            "note_type": "CRA",
+            "note_text": "CRA consideration recorded.",
+            "evaluated_at": "2026-03-23T16:12:46.011837Z"
+          }
+        ],
+        "hard_block_rules": [],
+        "completed": true,
+        "overall_verdict": "CLEAR",
+        "last_event_type": "ComplianceCheckCompleted",
+        "as_of": "2026-03-23T16:12:46.013066+00:00",
+        "checkpoint_position": 48,
+        "snapshot_version": 8
+      },
+      "agent_performance": [
+        {
+          "agent_type": "credit_analysis",
+          "agent_id": "credit-agent-068",
+          "model_version": "credit-v1",
+          "total_sessions": 1,
+          "analyses_completed": 1,
+          "decisions_generated": 0,
+          "avg_confidence_score": 0.82,
+          "avg_duration_ms": 640.0,
+          "approve_count": 0,
+          "decline_count": 0,
+          "refer_count": 0,
+          "human_override_count": 0,
+          "approve_rate": 0.0,
+          "decline_rate": 0.0,
+          "refer_rate": 0.0,
+          "human_override_rate": 0.0,
+          "first_seen_at": "2026-03-23T16:12:46.003960+00:00",
+          "last_seen_at": "2026-03-23T16:12:46.006819+00:00",
+          "confidence_samples": 1,
+          "duration_samples": 1
+        },
+        {
+          "agent_type": "fraud_detection",
+          "agent_id": "fraud-comp-068",
+          "model_version": "fraud-v1",
+          "total_sessions": 1,
+          "analyses_completed": 1,
+          "decisions_generated": 0,
+          "avg_confidence_score": null,
+          "avg_duration_ms": null,
+          "approve_count": 0,
+          "decline_count": 0,
+          "refer_count": 0,
+          "human_override_count": 0,
+          "approve_rate": 0.0,
+          "decline_rate": 0.0,
+          "refer_rate": 0.0,
+          "human_override_rate": 0.0,
+          "first_seen_at": "2026-03-23T16:12:46.007909+00:00",
+          "last_seen_at": "2026-03-23T16:12:46.008957+00:00",
+          "confidence_samples": 0,
+          "duration_samples": 0
+        },
+        {
+          "agent_type": "compliance",
+          "agent_id": "compliance-comp-068",
+          "model_version": "compliance-v1",
+          "total_sessions": 1,
+          "analyses_completed": 1,
+          "decisions_generated": 0,
+          "avg_confidence_score": null,
+          "avg_duration_ms": null,
+          "approve_count": 0,
+          "decline_count": 0,
+          "refer_count": 0,
+          "human_override_count": 0,
+          "approve_rate": 0.0,
+          "decline_rate": 0.0,
+          "refer_rate": 0.0,
+          "human_override_rate": 0.0,
+          "first_seen_at": "2026-03-23T16:12:46.010085+00:00",
+          "last_seen_at": "2026-03-23T16:12:46.013066+00:00",
+          "confidence_samples": 0,
+          "duration_samples": 0
+        },
+        {
+          "agent_type": "decision_orchestrator",
+          "agent_id": "orch-agent-068",
+          "model_version": "orch-v1",
+          "total_sessions": 1,
+          "analyses_completed": 0,
+          "decisions_generated": 1,
+          "avg_confidence_score": 0.82,
+          "avg_duration_ms": null,
+          "approve_count": 0,
+          "decline_count": 1,
+          "refer_count": 0,
+          "human_override_count": 1,
+          "approve_rate": 0.0,
+          "decline_rate": 1.0,
+          "refer_rate": 0.0,
+          "human_override_rate": 1.0,
+          "first_seen_at": "2026-03-23T16:12:46.013939+00:00",
+          "last_seen_at": "2026-03-23T16:12:46.019991+00:00",
+          "confidence_samples": 1,
+          "duration_samples": 0
+        }
+      ]
+    },
+    "integrity_verification": {
+      "source_stream_id": "loan-APEX-NARR05",
+      "audit_stream_id": "audit-loan-APEX-NARR05",
+      "events_verified": 10,
+      "chain_valid": true,
+      "tamper_detected": false,
+      "latest_integrity_hash": "162445e4f4fbe36fbf73ecbbb7cb0d5c9441e3bd4c0dffeb583ffba2450a7b53",
+      "previous_hash": null
+    },
+    "narrative": [
+      "2026-03-23T16:12:45.999324+00:00: PackageCreated was recorded.",
+      "2026-03-23T16:12:45.999419+00:00: DocumentAdded was recorded.",
+      "2026-03-23T16:12:45.999470+00:00: DocumentFormatValidated was recorded.",
+      "2026-03-23T16:12:45.999513+00:00: ExtractionStarted was recorded.",
+      "2026-03-23T16:12:45.999613+00:00: ExtractionCompleted was recorded.",
+      "2026-03-23T16:12:45.999667+00:00: QualityAssessmentCompleted was recorded.",
+      "2026-03-23T16:12:45.999715+00:00: DocumentAdded was recorded.",
+      "2026-03-23T16:12:45.999757+00:00: DocumentFormatValidated was recorded.",
+      "2026-03-23T16:12:45.999813+00:00: ExtractionStarted was recorded.",
+      "2026-03-23T16:12:45.999901+00:00: ExtractionCompleted was recorded.",
+      "2026-03-23T16:12:45.999951+00:00: QualityAssessmentCompleted was recorded.",
+      "2026-03-23T16:12:46.000301+00:00: DocumentAdded was recorded.",
+      "2026-03-23T16:12:46.000405+00:00: DocumentFormatValidated was recorded.",
+      "2026-03-23T16:12:46.000474+00:00: ExtractionStarted was recorded.",
+      "2026-03-23T16:12:46.000623+00:00: ExtractionCompleted was recorded.",
+      "2026-03-23T16:12:46.000705+00:00: QualityAssessmentCompleted was recorded.",
+      "2026-03-23T16:12:46.000775+00:00: DocumentAdded was recorded.",
+      "2026-03-23T16:12:46.000836+00:00: DocumentFormatValidated was recorded.",
+      "2026-03-23T16:12:46.000891+00:00: ExtractionStarted was recorded.",
+      "2026-03-23T16:12:46.001030+00:00: ExtractionCompleted was recorded.",
+      "2026-03-23T16:12:46.001114+00:00: QualityAssessmentCompleted was recorded.",
+      "2026-03-23T16:12:46.001181+00:00: DocumentAdded was recorded.",
+      "2026-03-23T16:12:46.001236+00:00: DocumentFormatValidated was recorded.",
+      "2026-03-23T16:12:46.001292+00:00: ExtractionStarted was recorded.",
+      "2026-03-23T16:12:46.001420+00:00: ExtractionCompleted was recorded.",
+      "2026-03-23T16:12:46.001503+00:00: QualityAssessmentCompleted was recorded.",
+      "2026-03-23T16:12:46.001622+00:00: PackageReadyForAnalysis was recorded.",
+      "2026-03-23T16:12:46.003198+00:00: Application APEX-NARR05 was submitted for $950000.",
+      "2026-03-23T16:12:46.003277+00:00: DocumentUploadRequested was recorded.",
+      "2026-03-23T16:12:46.003756+00:00: CreditAnalysisRequested was recorded.",
+      "2026-03-23T16:12:46.003960+00:00: Agent session sess-credit started for credit_analysis.",
+      "2026-03-23T16:12:46.006819+00:00: Credit analysis completed with risk tier HIGH and confidence 0.82.",
+      "2026-03-23T16:12:46.006942+00:00: FraudScreeningRequested was recorded.",
+      "2026-03-23T16:12:46.007082+00:00: AgentOutputWritten was recorded.",
+      "2026-03-23T16:12:46.007909+00:00: Agent session sess-fraud started for fraud_detection.",
+      "2026-03-23T16:12:46.008957+00:00: Fraud screening completed with score 0.08.",
+      "2026-03-23T16:12:46.009050+00:00: ComplianceCheckRequested was recorded.",
+      "2026-03-23T16:12:46.009223+00:00: AgentOutputWritten was recorded.",
+      "2026-03-23T16:12:46.009353+00:00: AgentSessionCompleted was recorded.",
+      "2026-03-23T16:12:46.010085+00:00: Agent session sess-compliance started for compliance.",
+      "2026-03-23T16:12:46.012388+00:00: ComplianceCheckInitiated was recorded.",
+      "2026-03-23T16:12:46.012469+00:00: ComplianceRulePassed was recorded.",
+      "2026-03-23T16:12:46.012542+00:00: ComplianceRulePassed was recorded.",
+      "2026-03-23T16:12:46.012611+00:00: ComplianceRulePassed was recorded.",
+      "2026-03-23T16:12:46.012744+00:00: ComplianceRulePassed was recorded.",
+      "2026-03-23T16:12:46.012928+00:00: ComplianceRulePassed was recorded.",
+      "2026-03-23T16:12:46.013000+00:00: ComplianceRuleNoted was recorded.",
+      "2026-03-23T16:12:46.013066+00:00: Compliance review finished with verdict CLEAR.",
+      "2026-03-23T16:12:46.013281+00:00: DecisionRequested was recorded.",
+      "2026-03-23T16:12:46.013542+00:00: AgentOutputWritten was recorded.",
+      "2026-03-23T16:12:46.013720+00:00: AgentSessionCompleted was recorded.",
+      "2026-03-23T16:12:46.013939+00:00: Agent session sess-orch started for decision_orchestrator.",
+      "2026-03-23T16:12:46.016932+00:00: The orchestrator recommended DECLINE with confidence 0.82.",
+      "2026-03-23T16:12:46.017161+00:00: AgentOutputWritten was recorded.",
+      "2026-03-23T16:12:46.017898+00:00: HumanReviewRequested was recorded.",
+      "2026-03-23T16:12:46.019991+00:00: Human review ended with override; final decision was APPROVE.",
+      "2026-03-23T16:12:46.020048+00:00: The application was approved for $750000."
+    ],
+    "agent_model_metadata": [
+      {
+        "session_id": "sess-credit",
+        "agent_type": "credit_analysis",
+        "agent_id": "credit-agent-068",
+        "model_version": "credit-v1",
+        "context_source": "fresh",
+        "event_type": "CreditAnalysisCompleted",
+        "input_data_hash": "credit-input-068",
+        "confidence": 0.82,
+        "recorded_at": "2026-03-23T16:12:46.006819Z"
+      },
+      {
+        "session_id": "sess-fraud",
+        "agent_type": "fraud_detection",
+        "agent_id": "fraud-comp-068",
+        "model_version": "fraud-v1",
+        "context_source": "fresh",
+        "event_type": "FraudScreeningCompleted",
+        "input_data_hash": "fraud-apex-narr05",
+        "confidence": null,
+        "recorded_at": "2026-03-23T16:12:46.008957Z"
+      },
+      {
+        "session_id": "sess-compliance",
+        "agent_type": "compliance",
+        "agent_id": "compliance-comp-068",
+        "model_version": "compliance-v1",
+        "context_source": "fresh",
+        "event_type": "ComplianceCheckCompleted",
+        "input_data_hash": null,
+        "confidence": null,
+        "recorded_at": "2026-03-23T16:12:46.013066Z"
+      },
+      {
+        "session_id": "sess-orch",
+        "agent_type": "decision_orchestrator",
+        "agent_id": "orch-agent-068",
+        "model_version": "orch-v1",
+        "context_source": "fresh",
+        "event_type": "DecisionGenerated",
+        "input_data_hash": null,
+        "confidence": 0.82,
+        "recorded_at": "2026-03-23T16:12:46.016932Z",
+        "model_versions": {
+          "decision_orchestrator": "orch-v1"
+        }
+      }
+    ],
+    "package_hash": "7b0b22d9252918ebc98590c405a93c64c697a7880a58a4075b55c591b6ef37df"
+  },
+  "verification": {
+    "package_hash_valid": true,
+    "audit_chain_valid": true,
+    "latest_integrity_hash_matches": true,
+    "tamper_detected": false,
+    "ok": true
+  }
+}

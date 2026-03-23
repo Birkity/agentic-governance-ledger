@@ -1,0 +1,14 @@
+Sentinel Cost Attribution Report
+Generated at: 2026-03-23T16:12:52.856916+00:00
+Methodology: deterministic offline estimate derived from prompt budget assumptions, data quality caveats, requested amount, and applicant risk profile.
+Applications processed: 29 seed + 5 narrative = 34 total
+
+Total API cost for all 34 applications: $23.06
+Average cost per application: avg $0.68, range $0.59-$0.79
+Cost by agent:
+- DocProc $3.81
+- Credit $9.21
+- Fraud $3.28
+- Compliance $0.00
+- Orchestrator $6.76
+Most expensive single call: APEX-0023 Credit Analysis: $0.32

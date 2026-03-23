@@ -1,0 +1,507 @@
+{
+  "application_id": "APEX-NARR05",
+  "branch_event_type": "CreditAnalysisCompleted",
+  "branch_stream_id": "credit-APEX-NARR05",
+  "branch_event_id": "a17118f6-4b75-4a3b-b344-cb26952c6a6e",
+  "total_real_events": 57,
+  "total_counterfactual_events": 44,
+  "injected_events": [
+    {
+      "event_type": "CreditAnalysisCompleted",
+      "event_version": 2,
+      "payload": {
+        "application_id": "APEX-NARR05",
+        "session_id": "sess-credit",
+        "decision": {
+          "risk_tier": "MEDIUM",
+          "recommended_limit_usd": "950000",
+          "confidence": 0.88,
+          "rationale": "Counterfactual replay assumes leverage improved to medium risk.",
+          "key_concerns": [],
+          "data_quality_caveats": [],
+          "policy_overrides_applied": []
+        },
+        "model_version": "credit-whatif-v1",
+        "model_deployment_id": "credit-whatif-dep",
+        "input_data_hash": "whatif-input-narr05",
+        "analysis_duration_ms": 5,
+        "regulatory_basis": [],
+        "completed_at": "2026-03-23T16:12:46.039364Z"
+      },
+      "recorded_at": null,
+      "metadata": {},
+      "stream_id": "credit-APEX-NARR05"
+    }
+  ],
+  "divergence_events": [
+    {
+      "kind": "replaced",
+      "event_type": "CreditAnalysisCompleted",
+      "stream_id": "credit-APEX-NARR05",
+      "stream_position": 0,
+      "event_id": "a17118f6-4b75-4a3b-b344-cb26952c6a6e"
+    },
+    {
+      "kind": "skipped_dependent",
+      "event_type": "FraudScreeningRequested",
+      "stream_id": "loan-APEX-NARR05",
+      "stream_position": 3,
+      "event_id": "2d0033bf-cdeb-4c63-a586-72d5c409ff1e"
+    },
+    {
+      "kind": "skipped_dependent",
+      "event_type": "AgentOutputWritten",
+      "stream_id": "agent-credit_analysis-sess-credit",
+      "stream_position": 1,
+      "event_id": "5e28ce63-2bfe-4378-9c2a-f0f750ddbc6a"
+    },
+    {
+      "kind": "skipped_dependent",
+      "event_type": "ComplianceCheckRequested",
+      "stream_id": "loan-APEX-NARR05",
+      "stream_position": 4,
+      "event_id": "33e86204-32b6-49ae-b90e-c7b6fe8f629f"
+    },
+    {
+      "kind": "skipped_dependent",
+      "event_type": "AgentOutputWritten",
+      "stream_id": "agent-fraud_detection-sess-fraud",
+      "stream_position": 3,
+      "event_id": "a9b34e95-e1af-4ba2-8f54-6a62002fdf4b"
+    },
+    {
+      "kind": "skipped_dependent",
+      "event_type": "AgentSessionCompleted",
+      "stream_id": "agent-fraud_detection-sess-fraud",
+      "stream_position": 4,
+      "event_id": "c42547b7-c912-4a79-8d23-903667560464"
+    },
+    {
+      "kind": "skipped_dependent",
+      "event_type": "DecisionRequested",
+      "stream_id": "loan-APEX-NARR05",
+      "stream_position": 5,
+      "event_id": "e6122170-0bd9-487c-89c8-fa79adc382cb"
+    },
+    {
+      "kind": "skipped_dependent",
+      "event_type": "AgentOutputWritten",
+      "stream_id": "agent-compliance-sess-compliance",
+      "stream_position": 2,
+      "event_id": "088e259e-0e94-468d-a79c-6b580ec54f07"
+    },
+    {
+      "kind": "skipped_dependent",
+      "event_type": "AgentSessionCompleted",
+      "stream_id": "agent-compliance-sess-compliance",
+      "stream_position": 3,
+      "event_id": "dccfc138-9811-4a92-a2d1-6a2f2130fd63"
+    },
+    {
+      "kind": "skipped_dependent",
+      "event_type": "DecisionGenerated",
+      "stream_id": "loan-APEX-NARR05",
+      "stream_position": 6,
+      "event_id": "8d2b98ca-4b65-4b80-8962-4f272f7f4c84"
+    },
+    {
+      "kind": "skipped_dependent",
+      "event_type": "AgentOutputWritten",
+      "stream_id": "agent-decision_orchestrator-sess-orch",
+      "stream_position": 1,
+      "event_id": "842d08c6-4701-4713-9eb2-459f2a18dfe6"
+    },
+    {
+      "kind": "skipped_dependent",
+      "event_type": "HumanReviewRequested",
+      "stream_id": "loan-APEX-NARR05",
+      "stream_position": 7,
+      "event_id": "9074e4fd-46e7-430b-8a15-33404812227c"
+    },
+    {
+      "kind": "skipped_dependent",
+      "event_type": "HumanReviewCompleted",
+      "stream_id": "loan-APEX-NARR05",
+      "stream_position": 8,
+      "event_id": "421afde9-1ee0-4b25-bad4-d8d6ca8076c0"
+    },
+    {
+      "kind": "skipped_dependent",
+      "event_type": "ApplicationApproved",
+      "stream_id": "loan-APEX-NARR05",
+      "stream_position": 9,
+      "event_id": "bdc5990e-1fb8-46e6-b66f-d77b1f562b4c"
+    }
+  ],
+  "real_outcome": {
+    "application_summary": {
+      "application_id": "APEX-NARR05",
+      "state": "FINAL_APPROVED",
+      "applicant_id": "COMP-068",
+      "requested_amount_usd": "950000",
+      "approved_amount_usd": "750000",
+      "risk_tier": "HIGH",
+      "fraud_score": 0.08,
+      "compliance_status": "CLEAR",
+      "decision": "APPROVE",
+      "agent_sessions_completed": [
+        "sess-fraud",
+        "sess-compliance"
+      ],
+      "last_event_type": "ApplicationApproved",
+      "last_event_at": "2026-03-23T16:12:46.020048+00:00",
+      "human_reviewer_id": "LO-Sarah-Chen",
+      "final_decision_at": "2026-03-23T16:12:46.019680+00:00"
+    },
+    "compliance_audit": {
+      "application_id": "APEX-NARR05",
+      "session_id": "sess-compliance",
+      "regulation_set_version": "2026-Q1",
+      "required_rules": [
+        "REG-001",
+        "REG-002",
+        "REG-003",
+        "REG-004",
+        "REG-005",
+        "REG-006"
+      ],
+      "passed_rules": [
+        {
+          "rule_id": "REG-001",
+          "rule_name": "AML",
+          "rule_version": "1",
+          "evidence_hash": "e1",
+          "evaluation_notes": "Customer cleared sanctions screening.",
+          "evaluated_at": "2026-03-23T16:12:46.011837Z"
+        },
+        {
+          "rule_id": "REG-002",
+          "rule_name": "OFAC",
+          "rule_version": "1",
+          "evidence_hash": "e2",
+          "evaluation_notes": "No OFAC match.",
+          "evaluated_at": "2026-03-23T16:12:46.011837Z"
+        },
+        {
+          "rule_id": "REG-003",
+          "rule_name": "Jurisdiction",
+          "rule_version": "1",
+          "evidence_hash": "e3",
+          "evaluation_notes": "Jurisdiction allowed.",
+          "evaluated_at": "2026-03-23T16:12:46.011837Z"
+        },
+        {
+          "rule_id": "REG-004",
+          "rule_name": "Entity Type",
+          "rule_version": "1",
+          "evidence_hash": "e4",
+          "evaluation_notes": "Entity type is eligible.",
+          "evaluated_at": "2026-03-23T16:12:46.011837Z"
+        },
+        {
+          "rule_id": "REG-005",
+          "rule_name": "Operating History",
+          "rule_version": "1",
+          "evidence_hash": "e5",
+          "evaluation_notes": "Operating history satisfies the policy.",
+          "evaluated_at": "2026-03-23T16:12:46.011837Z"
+        }
+      ],
+      "failed_rules": [],
+      "noted_rules": [
+        {
+          "rule_id": "REG-006",
+          "rule_name": "CRA",
+          "note_type": "CRA",
+          "note_text": "CRA consideration recorded.",
+          "evaluated_at": "2026-03-23T16:12:46.011837Z"
+        }
+      ],
+      "hard_block_rules": [],
+      "completed": true,
+      "overall_verdict": "CLEAR",
+      "last_event_type": "ComplianceCheckCompleted",
+      "as_of": "2026-03-23T16:12:46.013066+00:00",
+      "checkpoint_position": 48,
+      "snapshot_version": 8
+    },
+    "agent_performance": [
+      {
+        "agent_type": "credit_analysis",
+        "agent_id": "credit-agent-068",
+        "model_version": "credit-v1",
+        "total_sessions": 1,
+        "analyses_completed": 1,
+        "decisions_generated": 0,
+        "avg_confidence_score": 0.82,
+        "avg_duration_ms": 640.0,
+        "approve_count": 0,
+        "decline_count": 0,
+        "refer_count": 0,
+        "human_override_count": 0,
+        "approve_rate": 0.0,
+        "decline_rate": 0.0,
+        "refer_rate": 0.0,
+        "human_override_rate": 0.0,
+        "first_seen_at": "2026-03-23T16:12:46.003960+00:00",
+        "last_seen_at": "2026-03-23T16:12:46.006819+00:00",
+        "confidence_samples": 1,
+        "duration_samples": 1
+      },
+      {
+        "agent_type": "fraud_detection",
+        "agent_id": "fraud-comp-068",
+        "model_version": "fraud-v1",
+        "total_sessions": 1,
+        "analyses_completed": 1,
+        "decisions_generated": 0,
+        "avg_confidence_score": null,
+        "avg_duration_ms": null,
+        "approve_count": 0,
+        "decline_count": 0,
+        "refer_count": 0,
+        "human_override_count": 0,
+        "approve_rate": 0.0,
+        "decline_rate": 0.0,
+        "refer_rate": 0.0,
+        "human_override_rate": 0.0,
+        "first_seen_at": "2026-03-23T16:12:46.007909+00:00",
+        "last_seen_at": "2026-03-23T16:12:46.008957+00:00",
+        "confidence_samples": 0,
+        "duration_samples": 0
+      },
+      {
+        "agent_type": "compliance",
+        "agent_id": "compliance-comp-068",
+        "model_version": "compliance-v1",
+        "total_sessions": 1,
+        "analyses_completed": 1,
+        "decisions_generated": 0,
+        "avg_confidence_score": null,
+        "avg_duration_ms": null,
+        "approve_count": 0,
+        "decline_count": 0,
+        "refer_count": 0,
+        "human_override_count": 0,
+        "approve_rate": 0.0,
+        "decline_rate": 0.0,
+        "refer_rate": 0.0,
+        "human_override_rate": 0.0,
+        "first_seen_at": "2026-03-23T16:12:46.010085+00:00",
+        "last_seen_at": "2026-03-23T16:12:46.013066+00:00",
+        "confidence_samples": 0,
+        "duration_samples": 0
+      },
+      {
+        "agent_type": "decision_orchestrator",
+        "agent_id": "orch-agent-068",
+        "model_version": "orch-v1",
+        "total_sessions": 1,
+        "analyses_completed": 0,
+        "decisions_generated": 1,
+        "avg_confidence_score": 0.82,
+        "avg_duration_ms": null,
+        "approve_count": 0,
+        "decline_count": 1,
+        "refer_count": 0,
+        "human_override_count": 1,
+        "approve_rate": 0.0,
+        "decline_rate": 1.0,
+        "refer_rate": 0.0,
+        "human_override_rate": 1.0,
+        "first_seen_at": "2026-03-23T16:12:46.013939+00:00",
+        "last_seen_at": "2026-03-23T16:12:46.019991+00:00",
+        "confidence_samples": 1,
+        "duration_samples": 0
+      }
+    ],
+    "decision_recommendation": "DECLINE",
+    "projected_recommendation": "DECLINE",
+    "projected_approved_amount_usd": null,
+    "reasoning": "Observed recommendation from the real timeline."
+  },
+  "counterfactual_outcome": {
+    "application_summary": {
+      "application_id": "APEX-NARR05",
+      "state": "AWAITING_ANALYSIS",
+      "applicant_id": "COMP-068",
+      "requested_amount_usd": "950000",
+      "approved_amount_usd": null,
+      "risk_tier": "MEDIUM",
+      "fraud_score": 0.08,
+      "compliance_status": "CLEAR",
+      "decision": null,
+      "agent_sessions_completed": [],
+      "last_event_type": "CreditAnalysisCompleted",
+      "last_event_at": "2026-03-23T16:12:46.046806+00:00",
+      "human_reviewer_id": null,
+      "final_decision_at": null
+    },
+    "compliance_audit": {
+      "application_id": "APEX-NARR05",
+      "session_id": "sess-compliance",
+      "regulation_set_version": "2026-Q1",
+      "required_rules": [
+        "REG-001",
+        "REG-002",
+        "REG-003",
+        "REG-004",
+        "REG-005",
+        "REG-006"
+      ],
+      "passed_rules": [
+        {
+          "rule_id": "REG-001",
+          "rule_name": "AML",
+          "rule_version": "1",
+          "evidence_hash": "e1",
+          "evaluation_notes": "Customer cleared sanctions screening.",
+          "evaluated_at": "2026-03-23T16:12:46.011837Z"
+        },
+        {
+          "rule_id": "REG-002",
+          "rule_name": "OFAC",
+          "rule_version": "1",
+          "evidence_hash": "e2",
+          "evaluation_notes": "No OFAC match.",
+          "evaluated_at": "2026-03-23T16:12:46.011837Z"
+        },
+        {
+          "rule_id": "REG-003",
+          "rule_name": "Jurisdiction",
+          "rule_version": "1",
+          "evidence_hash": "e3",
+          "evaluation_notes": "Jurisdiction allowed.",
+          "evaluated_at": "2026-03-23T16:12:46.011837Z"
+        },
+        {
+          "rule_id": "REG-004",
+          "rule_name": "Entity Type",
+          "rule_version": "1",
+          "evidence_hash": "e4",
+          "evaluation_notes": "Entity type is eligible.",
+          "evaluated_at": "2026-03-23T16:12:46.011837Z"
+        },
+        {
+          "rule_id": "REG-005",
+          "rule_name": "Operating History",
+          "rule_version": "1",
+          "evidence_hash": "e5",
+          "evaluation_notes": "Operating history satisfies the policy.",
+          "evaluated_at": "2026-03-23T16:12:46.011837Z"
+        }
+      ],
+      "failed_rules": [],
+      "noted_rules": [
+        {
+          "rule_id": "REG-006",
+          "rule_name": "CRA",
+          "note_type": "CRA",
+          "note_text": "CRA consideration recorded.",
+          "evaluated_at": "2026-03-23T16:12:46.011837Z"
+        }
+      ],
+      "hard_block_rules": [],
+      "completed": true,
+      "overall_verdict": "CLEAR",
+      "last_event_type": "ComplianceCheckCompleted",
+      "as_of": "2026-03-23T16:12:46.013066+00:00",
+      "checkpoint_position": 42,
+      "snapshot_version": 8
+    },
+    "agent_performance": [
+      {
+        "agent_type": "credit_analysis",
+        "agent_id": "credit-agent-068",
+        "model_version": "credit-v1",
+        "total_sessions": 1,
+        "analyses_completed": 1,
+        "decisions_generated": 0,
+        "avg_confidence_score": 0.88,
+        "avg_duration_ms": 5.0,
+        "approve_count": 0,
+        "decline_count": 0,
+        "refer_count": 0,
+        "human_override_count": 0,
+        "approve_rate": 0.0,
+        "decline_rate": 0.0,
+        "refer_rate": 0.0,
+        "human_override_rate": 0.0,
+        "first_seen_at": "2026-03-23T16:12:46.003960+00:00",
+        "last_seen_at": "2026-03-23T16:12:46.046806+00:00",
+        "confidence_samples": 1,
+        "duration_samples": 1
+      },
+      {
+        "agent_type": "fraud_detection",
+        "agent_id": "fraud-comp-068",
+        "model_version": "fraud-v1",
+        "total_sessions": 1,
+        "analyses_completed": 1,
+        "decisions_generated": 0,
+        "avg_confidence_score": null,
+        "avg_duration_ms": null,
+        "approve_count": 0,
+        "decline_count": 0,
+        "refer_count": 0,
+        "human_override_count": 0,
+        "approve_rate": 0.0,
+        "decline_rate": 0.0,
+        "refer_rate": 0.0,
+        "human_override_rate": 0.0,
+        "first_seen_at": "2026-03-23T16:12:46.007909+00:00",
+        "last_seen_at": "2026-03-23T16:12:46.008957+00:00",
+        "confidence_samples": 0,
+        "duration_samples": 0
+      },
+      {
+        "agent_type": "compliance",
+        "agent_id": "compliance-comp-068",
+        "model_version": "compliance-v1",
+        "total_sessions": 1,
+        "analyses_completed": 1,
+        "decisions_generated": 0,
+        "avg_confidence_score": null,
+        "avg_duration_ms": null,
+        "approve_count": 0,
+        "decline_count": 0,
+        "refer_count": 0,
+        "human_override_count": 0,
+        "approve_rate": 0.0,
+        "decline_rate": 0.0,
+        "refer_rate": 0.0,
+        "human_override_rate": 0.0,
+        "first_seen_at": "2026-03-23T16:12:46.010085+00:00",
+        "last_seen_at": "2026-03-23T16:12:46.013066+00:00",
+        "confidence_samples": 0,
+        "duration_samples": 0
+      },
+      {
+        "agent_type": "decision_orchestrator",
+        "agent_id": "orch-agent-068",
+        "model_version": "orch-v1",
+        "total_sessions": 1,
+        "analyses_completed": 0,
+        "decisions_generated": 0,
+        "avg_confidence_score": null,
+        "avg_duration_ms": null,
+        "approve_count": 0,
+        "decline_count": 0,
+        "refer_count": 0,
+        "human_override_count": 0,
+        "approve_rate": 0.0,
+        "decline_rate": 0.0,
+        "refer_rate": 0.0,
+        "human_override_rate": 0.0,
+        "first_seen_at": "2026-03-23T16:12:46.013939+00:00",
+        "last_seen_at": "2026-03-23T16:12:46.013939+00:00",
+        "confidence_samples": 0,
+        "duration_samples": 0
+      }
+    ],
+    "decision_recommendation": null,
+    "projected_recommendation": "APPROVE",
+    "projected_approved_amount_usd": "950000.00",
+    "reasoning": "Risk tier, confidence, compliance, and fraud signals support approval."
+  }
+}

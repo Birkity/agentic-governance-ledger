@@ -50,9 +50,9 @@ The Ledger is an event-sourced lending platform for document-to-decision workflo
 - `tests/`
   - contract, integration, lifecycle, projection, integrity, MCP, and counterfactual tests
 - `scripts/`
-  - CLI helpers for document analysis, lag-report generation, counterfactual replay, and regulatory packages
+  - CLI helpers for document analysis, one-application pipeline demos, NARR-05 artifact generation, lag-report generation, counterfactual replay, and regulatory packages
 - `artifacts/`
-  - generated benchmark or submission artifacts such as the projection lag report
+  - generated benchmark or submission artifacts such as test outputs, concurrency evidence, lag reports, counterfactual replay, API cost attribution, and the NARR-05 regulatory package
 - `ui/`
   - Next.js command-center interface for application selection, event timelines, evidence previews, audit status, and operational guardrails
 
@@ -256,6 +256,19 @@ Generate the projection lag artifact:
 .\.venv\Scripts\python.exe scripts\generate_projection_lag_report.py
 ```
 
+Run one application through the demo pipeline:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\run_pipeline.py --application-id APEX-DEMO-024 --company-id COMP-024 --phase full
+```
+
+Generate the NARR-05 submission artifacts:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\generate_narr05_artifacts.py
+.\.venv\Scripts\python.exe tests\phase6\verify_package.py artifacts\regulatory_package_NARR05.json
+```
+
 ## UI Command Center
 
 The repository also includes a Next.js interface in `ui/` for demos and operator workflows. It is designed to show:
@@ -346,11 +359,17 @@ Counterfactual and regulatory package checks:
 .\.venv\Scripts\python.exe -m pytest tests\test_phase6.py -q
 ```
 
+Narrative scenario checks:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests\test_narratives.py -q
+```
+
 Full regression:
 
 ```powershell
 $env:TEST_DB_URL='postgresql://postgres:YOUR_PASSWORD@localhost/apex_ledger'
-.\.venv\Scripts\python.exe -m pytest tests\phase1\test_event_store.py tests\test_event_store.py tests\test_concurrency.py tests\test_document_processing.py tests\test_schema_and_generator.py tests\phase2\test_domain_logic.py tests\test_projections.py tests\test_projection_seed_rebuild.py tests\test_upcasting.py tests\test_integrity.py tests\test_gas_town.py tests\test_mcp_lifecycle.py tests\test_phase6.py tests\test_registry_client.py -q
+.\.venv\Scripts\python.exe -m pytest tests -q
 ```
 
 Optional live Ollama smoke test:
