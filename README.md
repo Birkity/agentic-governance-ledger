@@ -13,6 +13,7 @@ The repository follows the Week 5 submission shape, with the assessed implementa
 - `src/projections/`: Phase 3 read models and the async projection daemon
 - `src/upcasting/`: Phase 4 read-time schema migration registry and concrete upcasters
 - `src/integrity/`: Phase 4 audit-chain verification and Gas Town recovery helpers
+- `src/mcp/`: Phase 5 FastMCP server, command tools, query resources, and in-process gateway helpers
 - `datagen/`: generator for the Applicant Registry seed data, document corpus, and seed event history
 - `tests/`: Phase 1 in-memory tests, real PostgreSQL tests, concurrency tests, document-processing tests, Phase 2 domain tests, Phase 3 projection tests, and schema/generator tests
 - `scripts/analyze_documents.py`: CLI for analyzing a company package and optionally persisting it into the Event Store
@@ -20,6 +21,7 @@ The repository follows the Week 5 submission shape, with the assessed implementa
 - `reports/phase_2.md`: Phase 2 implementation report
 - `reports/phase_3.md`: Phase 3 implementation report
 - `phase_4.md`: Phase 4 implementation report
+- `phase_5.md`: Phase 5 implementation report
 
 ## Setup
 
@@ -191,6 +193,58 @@ Phase 4 adds schema evolution and tamper-evidence without breaking event-sourcin
 - each run hashes the raw source stream with SHA-256, compares against the previous stored audit hash, detects tampering, and appends a new `AuditIntegrityCheckRun` event to `audit-{entity_type}-{entity_id}`
 - `src/integrity/gas_town.py` implements `reconstruct_agent_context()`, which rebuilds session context from the event stream, enforces the `AgentSessionStarted` anchor used by this codebase, tracks resume position, and flags `NEEDS_RECONCILIATION` when the replayed context is unsafe or incomplete
 
+## Phase 5
+
+Phase 5 exposes the ledger through FastMCP while keeping the CQRS boundary explicit.
+
+### Command Tools
+
+`src/mcp/tools.py` registers 8 tools:
+
+- `submit_application`
+- `start_agent_session`
+- `record_credit_analysis`
+- `record_fraud_screening`
+- `record_compliance_check`
+- `generate_decision`
+- `record_human_review`
+- `run_integrity_check`
+
+These tools call the existing command handlers and integrity service, then synchronize the projection daemon so query resources can observe the committed state. Agent-facing tools also write session provenance events such as `AgentOutputWritten` and `AgentSessionCompleted`, which keeps Gas Town recovery and orchestrator causal validation intact.
+
+### Query Resources
+
+`src/mcp/resources.py` exposes 6 resources:
+
+- `ledger://applications/{id}`
+- `ledger://applications/{id}/compliance`
+- `ledger://applications/{id}/audit-trail`
+- `ledger://agents/{id}/performance`
+- `ledger://agents/{id}/sessions/{session_id}`
+- `ledger://ledger/health`
+
+Projection-backed resources read from:
+
+- `ApplicationSummaryProjection`
+- `ComplianceAuditProjection`
+- `AgentPerformanceProjection`
+
+The two justified direct-stream exceptions are:
+
+- `ledger://applications/{id}/audit-trail`
+- `ledger://agents/{id}/sessions/{session_id}`
+
+### MCP Runtime
+
+`src/mcp/server.py` builds a FastMCP app and can run it over stdio or HTTP. The default HTTP command is:
+
+```powershell
+$env:DATABASE_URL='postgresql://postgres:YOUR_PASSWORD@localhost/apex_ledger'
+.\.venv\Scripts\python.exe -m src.mcp.server --transport http --host 127.0.0.1 --port 8765
+```
+
+For in-process testing, `src/mcp/runtime.py` provides a thin gateway that uses `app.call_tool()` and resource URIs directly, including query-string aware reads for temporal compliance and audit-trail range filtering.
+
 ## Run Tests
 
 Fast local checks:
@@ -216,6 +270,12 @@ Phase 4 upcasting, integrity, and Gas Town checks:
 ```powershell
 $env:TEST_DB_URL='postgresql://postgres:YOUR_PASSWORD@localhost/apex_ledger'
 .\.venv\Scripts\python.exe -m pytest tests\test_upcasting.py tests\test_integrity.py tests\test_gas_town.py -q
+```
+
+Phase 5 MCP lifecycle and resource checks:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests\test_mcp_lifecycle.py -q
 ```
 
 Seed-backed Phase 3 rebuild verification:
@@ -257,6 +317,13 @@ Full Phase 1 through Phase 4 bundle:
 ```powershell
 $env:TEST_DB_URL='postgresql://postgres:YOUR_PASSWORD@localhost/apex_ledger'
 .\.venv\Scripts\python.exe -m pytest tests\phase1\test_event_store.py tests\test_event_store.py tests\test_concurrency.py tests\test_document_processing.py tests\test_schema_and_generator.py tests\phase2\test_domain_logic.py tests\test_projections.py tests\test_projection_seed_rebuild.py tests\test_upcasting.py tests\test_integrity.py tests\test_gas_town.py -q
+```
+
+Full Phase 1 through Phase 5 bundle:
+
+```powershell
+$env:TEST_DB_URL='postgresql://postgres:YOUR_PASSWORD@localhost/apex_ledger'
+.\.venv\Scripts\python.exe -m pytest tests\phase1\test_event_store.py tests\test_event_store.py tests\test_concurrency.py tests\test_document_processing.py tests\test_schema_and_generator.py tests\phase2\test_domain_logic.py tests\test_projections.py tests\test_projection_seed_rebuild.py tests\test_upcasting.py tests\test_integrity.py tests\test_gas_town.py tests\test_mcp_lifecycle.py -q
 ```
 
 Optional live Ollama smoke test:
@@ -301,4 +368,6 @@ Generate the Phase 3 projection lag artifact:
 - `src/document_processing/` gives us a working bridge from generated documents to structured facts, `docpkg-*` event streams, and optional package summaries.
 - `src/aggregates/` and `src/commands/handlers.py` now provide the replay-driven Phase 2 domain layer with business rule enforcement before append.
 - `src/projections/` now provides all 3 required read models, the async daemon, checkpointing, lag metrics, temporal compliance queries, rebuild-from-scratch support, and seed-backed rebuild verification.
-- `reports/phase_1.md`, `reports/phase_2.md`, and `reports/phase_3.md` capture the implementation details, test results, and current rubric fit.
+- `src/upcasting/` and `src/integrity/` now provide Phase 4 schema evolution, audit-chain verification, and Gas Town recovery.
+- `src/mcp/` now provides the Phase 5 FastMCP layer with 8 tools, 6 resources, a runnable server entry point, and an MCP-only lifecycle test.
+- `reports/phase_1.md`, `reports/phase_2.md`, and `reports/phase_3.md` plus `phase_4.md` and `phase_5.md` capture the implementation details, test results, and current rubric fit.
