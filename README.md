@@ -43,6 +43,8 @@ The Ledger is an event-sourced lending platform for document-to-decision workflo
   - counterfactual replay helpers
 - `src/regulatory/`
   - regulatory package generation and verification
+- `DATA_GENERATION.md`
+  - data-generation rules, document variants, seed scenarios, and database outputs
 - `datagen/`
   - company, document, and seed event generation
 - `tests/`
