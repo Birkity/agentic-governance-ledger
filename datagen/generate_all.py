@@ -316,7 +316,7 @@ def main():
     print(f"  Top event types:")
     for et, cnt in sorted(type_dist.items(), key=lambda x:-x[1])[:8]:
         print(f"    {et}: {cnt}")
-    print(f"\nNext: python datagen/verify.py --db-url {args.db_url}")
+    print("\nArtifacts are available in data/, documents/, and the configured PostgreSQL database.")
 
 if __name__ == "__main__":
     main()

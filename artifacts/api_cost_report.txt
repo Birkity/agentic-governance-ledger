@@ -1,0 +1,27 @@
+Sentinel Cost Attribution Report
+Generated at: 2026-03-23T16:48:01.002963+00:00
+Billable API Cost Status: honest external billing measurement is $0.00 for the reproduced local workflow in this repository.
+Reason: the standard seeded pipeline, narrative scenarios, and committed artifacts do not call a paid external model provider.
+Optional Ollama usage is local inference and is not treated here as external billable API spend.
+
+Telemetry Attribution Methodology:
+Seed applications are replayed through the in-repo demo pipeline to produce session telemetry.
+Narrative applications use their dedicated scenario runners and their emitted session telemetry.
+The telemetry numbers below are workflow cost proxies derived from stored agent-session events.
+Applications processed: 29 seed + 5 narrative = 34 total
+
+Actual measured external API cost:
+- total $0.00
+- average per application $0.00
+- provider calls observed in reproduced workflow: 0
+
+Workflow telemetry cost proxy:
+- total for all 34 applications: $19.42
+- average per application: avg $0.57, range $0.00-$0.71
+Telemetry by agent:
+- DocProc $2.66
+- Credit $7.70
+- Fraud $3.76
+- Compliance $0.00
+- Orchestrator $5.24
+Most expensive single telemetry call: APEX-NARR05 Credit Analysis: $0.31 (2600 input tokens)

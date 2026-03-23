@@ -1,23 +1,97 @@
-"""
-scripts/run_pipeline.py — Process one application through the pipeline.
-Usage: python scripts/run_pipeline.py --application APEX-0007 [--phase all|document|credit|fraud|compliance|decision]
-"""
-import argparse, asyncio, os, sys
-from pathlib import Path; sys.path.insert(0, str(Path(__file__).parent.parent))
-from dotenv import load_dotenv; load_dotenv()
+from __future__ import annotations
 
-async def main():
-    p = argparse.ArgumentParser()
-    p.add_argument("--application", required=True)
-    p.add_argument("--phase", default="all")
-    p.add_argument("--db-url", default=os.environ.get("DATABASE_URL","postgresql://localhost/apex_ledger"))
-    args = p.parse_args()
+import argparse
+import asyncio
+import json
+import os
+import sys
+from datetime import datetime
+from decimal import Decimal
+from pathlib import Path
+from typing import Any
 
-    # TODO: Initialize EventStore, ApplicantRegistryClient, AsyncAnthropic
-    # TODO: Route to appropriate agent(s) based on --phase
-    print(f"Processing {args.application} through phase: {args.phase}")
-    print("TODO: Implement after the src/ event store, aggregates, and agents are complete.")
-    print("See src/event_store.py and src/agents/base_agent.py")
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from src.demo import (
+    default_company_for_application,
+    narr01_occ_collision,
+    narr02_missing_ebitda,
+    narr03_crash_recovery,
+    narr04_montana_hard_block,
+    narr05_human_override,
+    run_credit_phase,
+    run_document_phase,
+    run_full_pipeline,
+)
+from src.event_store import EventStore, InMemoryEventStore
+
+
+def _json_default(value: Any) -> Any:
+    if isinstance(value, datetime):
+        return value.isoformat()
+    if isinstance(value, Decimal):
+        return str(value)
+    if hasattr(value, "model_dump"):
+        return value.model_dump(mode="json")
+    return value
+
+
+def _parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="Run one application through the ledger demo pipeline.")
+    parser.add_argument("--application-id", required=True)
+    parser.add_argument("--company-id", default=None)
+    parser.add_argument("--phase", choices=["document", "credit", "full"], default="full")
+    parser.add_argument(
+        "--scenario",
+        choices=["default", "narr01", "narr02", "narr03", "narr04", "narr05"],
+        default="default",
+    )
+    parser.add_argument("--db-url", default=os.getenv("DATABASE_URL"))
+    parser.add_argument("--output", default=None)
+    return parser
+
+
+async def _build_store(db_url: str | None):
+    if db_url:
+        store = EventStore(db_url)
+        await store.connect()
+        return store
+    return InMemoryEventStore()
+
+
+async def main() -> None:
+    args = _parser().parse_args()
+    company_id = args.company_id or default_company_for_application(args.application_id)
+    store = await _build_store(args.db_url)
+    try:
+        if args.scenario == "narr01":
+            result = await narr01_occ_collision(store, application_id=args.application_id)
+        elif args.scenario == "narr02":
+            result = await narr02_missing_ebitda(store, application_id=args.application_id, company_id=company_id)
+        elif args.scenario == "narr03":
+            result = await narr03_crash_recovery(store, application_id=args.application_id, company_id=company_id)
+        elif args.scenario == "narr04":
+            result = await narr04_montana_hard_block(store, application_id=args.application_id, company_id=company_id)
+        elif args.scenario == "narr05":
+            result = await narr05_human_override(store, application_id=args.application_id, company_id=company_id)
+        elif args.phase == "document":
+            result = await run_document_phase(store, args.application_id, company_id)
+        elif args.phase == "credit":
+            result = await run_credit_phase(store, args.application_id, company_id)
+        else:
+            result = await run_full_pipeline(store, args.application_id, company_id)
+
+        rendered = json.dumps(result, default=_json_default, indent=2)
+        if args.output:
+            output_path = Path(args.output)
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            output_path.write_text(rendered, encoding="utf-8")
+            print(str(output_path))
+        else:
+            print(rendered)
+    finally:
+        await store.close()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

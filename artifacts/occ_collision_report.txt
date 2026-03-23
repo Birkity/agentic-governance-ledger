@@ -1,0 +1,22 @@
+Optimistic Concurrency Guardrail
+
+Command:
+$env:TEST_DB_URL='postgresql://postgres:newcode@localhost/apex_ledger'
+.\.venv\Scripts\python.exe -m pytest tests\test_concurrency.py -v -s
+
+Observed output:
+tests/test_concurrency.py::test_double_decision_concurrency_expected_version_three PASSED
+
+Verified assertions:
+- successful_appends=1
+- optimistic_concurrency_failures=1
+- final_stream_length=4
+- final_stream_positions=[1, 2, 3, 4]
+- failure_expected_version=3
+- failure_actual_version=4
+
+Meaning:
+Two concurrent writers attempted to append DecisionGenerated to the same stream with expected_version=3.
+Exactly one writer succeeded.
+The losing writer raised OptimisticConcurrencyError.
+The stream remained ordered and internally consistent.

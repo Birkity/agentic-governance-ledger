@@ -1,0 +1,28 @@
+{
+  "name": "ledger-ui",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "clean": "node -e \"const fs=require('fs'); fs.rmSync('.next', { recursive: true, force: true }); fs.rmSync('.next-local', { recursive: true, force: true }); fs.rmSync('tsconfig.tsbuildinfo', { force: true }); console.log('Cleared Next.js cache artifacts');\"",
+    "predev": "npm run clean",
+    "prebuild": "npm run clean",
+    "dev": "next dev --webpack",
+    "dev:reset": "npm run clean && next dev --webpack",
+    "build": "next build --webpack",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "16.2.1",
+    "pg": "8.13.1",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.13.14",
+    "@types/pg": "8.11.10",
+    "@types/react": "18.3.12",
+    "@types/react-dom": "18.3.1",
+    "typescript": "5.7.3"
+  }
+}
