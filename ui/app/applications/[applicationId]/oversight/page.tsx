@@ -8,13 +8,14 @@ import { formatDateTime } from "../../../../lib/presenters";
 export const dynamic = "force-dynamic";
 
 interface OversightPageProps {
-  params: {
+  params: Promise<{
     applicationId: string;
-  };
+  }>;
 }
 
 export default async function OversightPage({ params }: OversightPageProps) {
-  const detail = await getApplicationDetail(params.applicationId);
+  const { applicationId } = await params;
+  const detail = await getApplicationDetail(applicationId);
   if (!detail) {
     notFound();
   }

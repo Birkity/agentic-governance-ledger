@@ -10,13 +10,14 @@ import { formatCurrency, formatDateTime } from "../../../lib/presenters";
 export const dynamic = "force-dynamic";
 
 interface ApplicationPageProps {
-  params: {
+  params: Promise<{
     applicationId: string;
-  };
+  }>;
 }
 
 export default async function ApplicationPage({ params }: ApplicationPageProps) {
-  const detail = await getApplicationDetail(params.applicationId);
+  const { applicationId } = await params;
+  const detail = await getApplicationDetail(applicationId);
 
   if (!detail) {
     notFound();

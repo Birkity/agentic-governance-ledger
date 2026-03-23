@@ -8,17 +8,19 @@ import { SectionDataList } from "../../../../components/SectionDataList";
 export const dynamic = "force-dynamic";
 
 interface EvidencePageProps {
-  params: {
+  params: Promise<{
     applicationId: string;
-  };
-  searchParams?: {
+  }>;
+  searchParams?: Promise<{
     doc?: string | string[];
-  };
+  }>;
 }
 
 export default async function EvidencePage({ params, searchParams }: EvidencePageProps) {
-  const selectedDoc = typeof searchParams?.doc === "string" ? searchParams.doc : undefined;
-  const detail = await getApplicationDetail(params.applicationId, selectedDoc);
+  const { applicationId } = await params;
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  const selectedDoc = typeof resolvedSearchParams?.doc === "string" ? resolvedSearchParams.doc : undefined;
+  const detail = await getApplicationDetail(applicationId, selectedDoc);
   if (!detail) {
     notFound();
   }

@@ -7,13 +7,14 @@ export const dynamic = "force-dynamic";
 
 interface ApplicationLayoutProps {
   children: React.ReactNode;
-  params: {
+  params: Promise<{
     applicationId: string;
-  };
+  }>;
 }
 
 export default async function ApplicationLayout({ children, params }: ApplicationLayoutProps) {
-  const detail = await getApplicationDetail(params.applicationId);
+  const { applicationId } = await params;
+  const detail = await getApplicationDetail(applicationId);
   if (!detail) {
     notFound();
   }

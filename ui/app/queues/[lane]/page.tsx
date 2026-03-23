@@ -7,13 +7,14 @@ import { isQueueLane } from "../../../lib/queues";
 export const dynamic = "force-dynamic";
 
 interface QueuePageProps {
-  params: {
+  params: Promise<{
     lane: string;
-  };
+  }>;
 }
 
 export default async function QueuePage({ params }: QueuePageProps) {
-  if (!isQueueLane(params.lane)) {
+  const { lane } = await params;
+  if (!isQueueLane(lane)) {
     notFound();
   }
 
@@ -23,7 +24,7 @@ export default async function QueuePage({ params }: QueuePageProps) {
     <ApplicationExplorer
       applications={dashboard.applications}
       sourceMode={dashboard.mode}
-      queue={params.lane}
+      queue={lane}
     />
   );
 }

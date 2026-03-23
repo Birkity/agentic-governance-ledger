@@ -1,3 +1,4 @@
+import type { NextRequest } from "next/server";
 import { existsSync } from "fs";
 import { promises as fs } from "fs";
 import path from "path";
@@ -35,10 +36,11 @@ function safeResolve(base: string, segments: string[]): string | null {
 }
 
 export async function GET(
-  _request: Request,
-  { params }: { params: { segments: string[] } }
+  _request: NextRequest,
+  { params }: { params: Promise<{ segments: string[] }> }
 ) {
-  const [scope, ...rest] = params.segments ?? [];
+  const resolvedParams = await params;
+  const [scope, ...rest] = resolvedParams.segments ?? [];
   if (!scope || rest.length === 0) {
     return new Response("Missing asset path", { status: 400 });
   }

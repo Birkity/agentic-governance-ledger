@@ -296,7 +296,7 @@ npm.cmd run clean
 npm.cmd run dev
 ```
 
-The default `npm.cmd run dev` and `npm.cmd run build` commands now clear stale `.next` output automatically before starting.
+The default `npm.cmd run dev` and `npm.cmd run build` commands now clear stale output automatically before starting. The UI also uses a dedicated Next build directory, `.next-local`, to avoid collisions with stale `.next` artifacts in this Windows/OneDrive workspace.
 
 ## Tests
 

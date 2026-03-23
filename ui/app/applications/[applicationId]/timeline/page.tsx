@@ -6,13 +6,14 @@ import { getApplicationDetail } from "../../../../lib/ledger-data";
 export const dynamic = "force-dynamic";
 
 interface TimelinePageProps {
-  params: {
+  params: Promise<{
     applicationId: string;
-  };
+  }>;
 }
 
 export default async function TimelinePage({ params }: TimelinePageProps) {
-  const detail = await getApplicationDetail(params.applicationId);
+  const { applicationId } = await params;
+  const detail = await getApplicationDetail(applicationId);
   if (!detail) {
     notFound();
   }

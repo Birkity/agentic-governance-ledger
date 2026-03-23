@@ -7,13 +7,14 @@ import { getApplicationDetail } from "../../../../lib/ledger-data";
 export const dynamic = "force-dynamic";
 
 interface AgentsPageProps {
-  params: {
+  params: Promise<{
     applicationId: string;
-  };
+  }>;
 }
 
 export default async function AgentsPage({ params }: AgentsPageProps) {
-  const detail = await getApplicationDetail(params.applicationId);
+  const { applicationId } = await params;
+  const detail = await getApplicationDetail(applicationId);
   if (!detail) {
     notFound();
   }
