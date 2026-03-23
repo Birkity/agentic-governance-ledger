@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { PrimaryNav } from "../components/PrimaryNav";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -14,16 +15,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body suppressHydrationWarning>
         <div className="page-shell">
           <header className="site-header">
-            <Link href="/" className="brand-mark">
-              <span className="brand-chip">TL</span>
-              <div>
-                <strong>The Ledger</strong>
-                <span>Command Center</span>
-              </div>
-            </Link>
+            <div className="site-header-main">
+              <Link href="/" className="brand-mark">
+                <span className="brand-chip">TL</span>
+                <div>
+                  <strong>The Ledger</strong>
+                  <span>Command Center</span>
+                </div>
+              </Link>
+
+              <PrimaryNav />
+            </div>
 
             <div className="header-copy">
-              <p>Audit-ready application operations.</p>
+              <p>Durable lending operations, evidence, and oversight.</p>
             </div>
           </header>
 

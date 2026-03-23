@@ -298,6 +298,8 @@ npm.cmd run dev
 
 The default `npm.cmd run dev` and `npm.cmd run build` commands now clear stale output automatically before starting. The UI also uses a dedicated Next build directory, `.next-local`, to avoid collisions with stale `.next` artifacts in this Windows/OneDrive workspace.
 
+The UI dev server is configured to run with webpack as well, because Turbopack was intermittently producing missing-manifest and missing-runtime errors in this workspace under `.next-local/dev`.
+
 ## Tests
 
 Event store contract checks:

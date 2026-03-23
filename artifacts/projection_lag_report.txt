@@ -1,5 +1,5 @@
 Projection Lag and Seed Rebuild Report
-Generated at: 2026-03-22T18:23:27.635918+00:00
+Generated at: 2026-03-23T15:32:45.975062+00:00
 
 Lag SLO Check
 - concurrent_submissions: 50
