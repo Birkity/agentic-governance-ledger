@@ -14,6 +14,14 @@ from pydantic import BaseModel
 from src.models.events import DomainError, OptimisticConcurrencyError, StoredEvent, StreamMetadata
 
 
+def _build_default_upcaster_registry() -> Any | None:
+    try:
+        from src.upcasting import build_default_registry
+    except Exception:  # noqa: BLE001
+        return None
+    return build_default_registry()
+
+
 def _json_default(value: Any) -> Any:
     if isinstance(value, datetime):
         return value.isoformat()
@@ -98,10 +106,12 @@ class EventStore:
 
     def __init__(self, db_url: str, upcaster_registry: Any | None = None, max_pool_size: int = 10):
         self.db_url = db_url
-        self.upcasters = upcaster_registry
+        self.upcasters = upcaster_registry if upcaster_registry is not None else _build_default_upcaster_registry()
         self.max_pool_size = max_pool_size
         self._pool: asyncpg.Pool | None = None
         self._schema_path = Path(__file__).with_name("schema.sql")
+        if self.upcasters is not None and hasattr(self.upcasters, "bind_store"):
+            self.upcasters.bind_store(self)
 
     async def connect(self) -> None:
         self._pool = await asyncpg.create_pool(self.db_url, min_size=1, max_size=self.max_pool_size)
@@ -271,6 +281,8 @@ class EventStore:
         stream_id: str,
         from_position: int = 0,
         to_position: int | None = None,
+        *,
+        apply_upcasters: bool = True,
     ) -> list[StoredEvent]:
         if self._pool is None:
             raise RuntimeError("EventStore.connect() must be called before load_stream()")
@@ -291,13 +303,18 @@ class EventStore:
         async with self._pool.acquire() as conn:
             rows = await conn.fetch(query, *params)
 
-        return [self._apply_upcasters(_row_to_stored_event(row)) for row in rows]
+        events = [_row_to_stored_event(row) for row in rows]
+        if not apply_upcasters:
+            return events
+        return [await self._apply_upcasters(event) for event in events]
 
     async def load_all(
         self,
         from_position: int = 0,
         batch_size: int = 500,
         after_position: int | None = None,
+        *,
+        apply_upcasters: bool = True,
     ) -> AsyncGenerator[StoredEvent, None]:
         if self._pool is None:
             raise RuntimeError("EventStore.connect() must be called before load_all()")
@@ -322,14 +339,16 @@ class EventStore:
                     break
 
                 for row in rows:
-                    stored_event = self._apply_upcasters(_row_to_stored_event(row))
+                    stored_event = _row_to_stored_event(row)
+                    if apply_upcasters:
+                        stored_event = await self._apply_upcasters(stored_event)
                     yield stored_event
 
                 cursor = rows[-1]["global_position"]
                 if len(rows) < batch_size:
                     break
 
-    async def get_event(self, event_id: UUID | str) -> StoredEvent | None:
+    async def get_event(self, event_id: UUID | str, *, apply_upcasters: bool = True) -> StoredEvent | None:
         if self._pool is None:
             raise RuntimeError("EventStore.connect() must be called before get_event()")
 
@@ -346,7 +365,10 @@ class EventStore:
             )
         if row is None:
             return None
-        return self._apply_upcasters(_row_to_stored_event(row))
+        event = _row_to_stored_event(row)
+        if not apply_upcasters:
+            return event
+        return await self._apply_upcasters(event)
 
     async def archive_stream(self, stream_id: str) -> StreamMetadata | None:
         if self._pool is None:
@@ -423,11 +445,11 @@ class EventStore:
             value = await conn.fetchval("SELECT MAX(recorded_at) FROM events")
         return value
 
-    def _apply_upcasters(self, event: StoredEvent) -> StoredEvent:
+    async def _apply_upcasters(self, event: StoredEvent) -> StoredEvent:
         if self.upcasters is None:
             return event
 
-        upcasted = self.upcasters.upcast(event.model_dump(mode="python"))
+        upcasted = await self.upcasters.upcast(event.model_dump(mode="python"))
         if isinstance(upcasted, StoredEvent):
             return upcasted
         if isinstance(upcasted, dict):
@@ -439,13 +461,15 @@ class InMemoryEventStore:
     """Async-safe in-memory store used by the Phase 1 unit tests."""
 
     def __init__(self, upcaster_registry: Any | None = None):
-        self.upcasters = upcaster_registry
+        self.upcasters = upcaster_registry if upcaster_registry is not None else _build_default_upcaster_registry()
         self._streams: dict[str, list[StoredEvent]] = defaultdict(list)
         self._versions: dict[str, int] = {}
         self._stream_metadata: dict[str, StreamMetadata] = {}
         self._global: list[StoredEvent] = []
         self._checkpoints: dict[str, int] = {}
         self._locks: dict[str, Any] = defaultdict(__import__("asyncio").Lock)
+        if self.upcasters is not None and hasattr(self.upcasters, "bind_store"):
+            self.upcasters.bind_store(self)
 
     async def connect(self) -> None:
         return None
@@ -537,6 +561,8 @@ class InMemoryEventStore:
         stream_id: str,
         from_position: int = 0,
         to_position: int | None = None,
+        *,
+        apply_upcasters: bool = True,
     ) -> list[StoredEvent]:
         events = [
             event
@@ -544,24 +570,30 @@ class InMemoryEventStore:
             if event.stream_position >= from_position
             and (to_position is None or event.stream_position <= to_position)
         ]
-        return [self._apply_upcasters(event) for event in events]
+        if not apply_upcasters:
+            return list(events)
+        return [await self._apply_upcasters(event) for event in events]
 
     async def load_all(
         self,
         from_position: int = 0,
         batch_size: int = 500,
         after_position: int | None = None,
+        *,
+        apply_upcasters: bool = True,
     ) -> AsyncGenerator[StoredEvent, None]:
         start = after_position + 1 if after_position is not None else from_position
         for event in self._global:
             if event.global_position is not None and event.global_position >= start:
-                yield self._apply_upcasters(event)
+                yield await self._apply_upcasters(event) if apply_upcasters else event
 
-    async def get_event(self, event_id: UUID | str) -> StoredEvent | None:
+    async def get_event(self, event_id: UUID | str, *, apply_upcasters: bool = True) -> StoredEvent | None:
         normalized = UUID(str(event_id))
         for event in self._global:
             if event.event_id == normalized:
-                return self._apply_upcasters(event)
+                if not apply_upcasters:
+                    return event
+                return await self._apply_upcasters(event)
         return None
 
     async def archive_stream(self, stream_id: str) -> StreamMetadata | None:
@@ -592,10 +624,10 @@ class InMemoryEventStore:
             return None
         return self._global[-1].recorded_at
 
-    def _apply_upcasters(self, event: StoredEvent) -> StoredEvent:
+    async def _apply_upcasters(self, event: StoredEvent) -> StoredEvent:
         if self.upcasters is None:
             return event
-        upcasted = self.upcasters.upcast(event.model_dump(mode="python"))
+        upcasted = await self.upcasters.upcast(event.model_dump(mode="python"))
         if isinstance(upcasted, StoredEvent):
             return upcasted
         if isinstance(upcasted, dict):

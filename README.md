@@ -11,12 +11,15 @@ The repository follows the Week 5 submission shape, with the assessed implementa
 - `src/commands/`: Phase 2 command handlers using the load -> validate -> determine -> append flow
 - `src/document_processing/`: document parsing, optional Docling-first PDF extraction, event persistence helpers, and optional Ollama summaries
 - `src/projections/`: Phase 3 read models and the async projection daemon
+- `src/upcasting/`: Phase 4 read-time schema migration registry and concrete upcasters
+- `src/integrity/`: Phase 4 audit-chain verification and Gas Town recovery helpers
 - `datagen/`: generator for the Applicant Registry seed data, document corpus, and seed event history
 - `tests/`: Phase 1 in-memory tests, real PostgreSQL tests, concurrency tests, document-processing tests, Phase 2 domain tests, Phase 3 projection tests, and schema/generator tests
 - `scripts/analyze_documents.py`: CLI for analyzing a company package and optionally persisting it into the Event Store
 - `reports/phase_1.md`: Phase 1 implementation report
 - `reports/phase_2.md`: Phase 2 implementation report
 - `reports/phase_3.md`: Phase 3 implementation report
+- `phase_4.md`: Phase 4 implementation report
 
 ## Setup
 
@@ -170,6 +173,24 @@ Helper tables for restart-safe incremental processing:
 - `agent_session_projection_index`
 - `application_decision_projection_index`
 
+## Phase 4
+
+Phase 4 adds schema evolution and tamper-evidence without breaking event-sourcing rules. Stored history remains immutable in PostgreSQL. Compatibility is handled on read, and integrity is checked against the raw stored stream.
+
+### Upcasting
+
+- `src/upcasting/registry.py` provides an async `UpcasterRegistry` that applies version chains automatically inside `EventStore.load_stream()`, `load_all()`, and `get_event()`
+- `src/upcasting/upcasters.py` registers the required migrations:
+  - `CreditAnalysisCompleted` v1 -> v2 infers `model_version` and `regulatory_basis` from the event timestamp window
+  - `DecisionGenerated` v1 -> v2 reconstructs `model_versions` by replaying the contributing agent-session streams
+- the Event Store also exposes raw-read paths with `apply_upcasters=False`, which lets integrity checks hash the original stored bytes instead of the migrated read model
+
+### Integrity and Gas Town Recovery
+
+- `src/integrity/audit_chain.py` implements `run_integrity_check()`
+- each run hashes the raw source stream with SHA-256, compares against the previous stored audit hash, detects tampering, and appends a new `AuditIntegrityCheckRun` event to `audit-{entity_type}-{entity_id}`
+- `src/integrity/gas_town.py` implements `reconstruct_agent_context()`, which rebuilds session context from the event stream, enforces the `AgentSessionStarted` anchor used by this codebase, tracks resume position, and flags `NEEDS_RECONCILIATION` when the replayed context is unsafe or incomplete
+
 ## Run Tests
 
 Fast local checks:
@@ -188,6 +209,13 @@ Phase 3 projection checks:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest tests\test_projections.py -q
+```
+
+Phase 4 upcasting, integrity, and Gas Town checks:
+
+```powershell
+$env:TEST_DB_URL='postgresql://postgres:YOUR_PASSWORD@localhost/apex_ledger'
+.\.venv\Scripts\python.exe -m pytest tests\test_upcasting.py tests\test_integrity.py tests\test_gas_town.py -q
 ```
 
 Seed-backed Phase 3 rebuild verification:
@@ -222,6 +250,13 @@ Full Phase 1 + Phase 2 + Phase 3 bundle:
 ```powershell
 $env:TEST_DB_URL='postgresql://postgres:YOUR_PASSWORD@localhost/apex_ledger'
 .\.venv\Scripts\python.exe -m pytest tests\phase1\test_event_store.py tests\test_event_store.py tests\test_concurrency.py tests\test_document_processing.py tests\test_schema_and_generator.py tests\phase2\test_domain_logic.py tests\test_projections.py tests\test_projection_seed_rebuild.py -q
+```
+
+Full Phase 1 through Phase 4 bundle:
+
+```powershell
+$env:TEST_DB_URL='postgresql://postgres:YOUR_PASSWORD@localhost/apex_ledger'
+.\.venv\Scripts\python.exe -m pytest tests\phase1\test_event_store.py tests\test_event_store.py tests\test_concurrency.py tests\test_document_processing.py tests\test_schema_and_generator.py tests\phase2\test_domain_logic.py tests\test_projections.py tests\test_projection_seed_rebuild.py tests\test_upcasting.py tests\test_integrity.py tests\test_gas_town.py -q
 ```
 
 Optional live Ollama smoke test:
