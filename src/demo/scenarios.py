@@ -62,6 +62,8 @@ NARRATIVE_COMPANIES = {
     "NARR-05": "COMP-068",
 }
 
+_API_COST_REPORT_CACHE: str | None = None
+
 
 def _now() -> datetime:
     return datetime.now(timezone.utc)
@@ -172,6 +174,9 @@ async def _record_node(
     input_keys: list[str] | None = None,
     output_keys: list[str] | None = None,
     duration_ms: int = 120,
+    llm_tokens_input: int | None = None,
+    llm_tokens_output: int | None = None,
+    llm_cost_usd: float | None = None,
 ) -> list[int]:
     event = AgentNodeExecuted(
         session_id=session_id,
@@ -181,9 +186,9 @@ async def _record_node(
         input_keys=input_keys or [],
         output_keys=output_keys or [],
         llm_called=llm_called,
-        llm_tokens_input=480 if llm_called else None,
-        llm_tokens_output=120 if llm_called else None,
-        llm_cost_usd=0.04 if llm_called else 0.0,
+        llm_tokens_input=(llm_tokens_input if llm_tokens_input is not None else 480) if llm_called else None,
+        llm_tokens_output=(llm_tokens_output if llm_tokens_output is not None else 120) if llm_called else None,
+        llm_cost_usd=(llm_cost_usd if llm_cost_usd is not None else 0.04) if llm_called else 0.0,
         duration_ms=duration_ms,
         executed_at=_now(),
     ).to_store_dict()
@@ -421,13 +426,88 @@ async def run_document_phase(
 ) -> dict[str, Any]:
     processor = DocumentPackageProcessor(documents_root=DOCUMENTS_ROOT)
     analysis = processor.process_company(company_id, include_summaries=include_summaries)
-    positions = await persist_document_package(store, analysis, application_id=application_id)
+    stream_id = f"docpkg-{application_id}"
+    existing_version = await store.stream_version(stream_id)
+    positions: list[int] = []
+    session_stream_id: str | None = None
+
+    if existing_version == -1:
+        session_id = "sess-doc"
+        session_stream_id = await _start_session(
+            store,
+            application_id,
+            AgentType.DOCUMENT_PROCESSING,
+            session_id,
+            agent_id=f"doc-{company_id.lower()}",
+            model_version="docproc-v1",
+        )
+        await _record_node(
+            store,
+            AgentType.DOCUMENT_PROCESSING,
+            session_id,
+            node_name="validate_inputs",
+            node_sequence=1,
+            llm_called=False,
+            input_keys=["application_id", "documents"],
+            output_keys=["validated_inputs", "document_paths"],
+            duration_ms=180,
+        )
+        positions = await persist_document_package(store, analysis, application_id=application_id)
+        await _record_node(
+            store,
+            AgentType.DOCUMENT_PROCESSING,
+            session_id,
+            node_name="run_extraction",
+            node_sequence=2,
+            llm_called=False,
+            input_keys=["document_paths"],
+            output_keys=["raw_facts", "structured_documents"],
+            duration_ms=240,
+        )
+        caveat_count = sum(len(document.extraction_notes) for document in analysis.documents) + len(analysis.consistency_notes)
+        llm_cost = round(0.012 + (0.0025 * caveat_count), 6)
+        await _record_node(
+            store,
+            AgentType.DOCUMENT_PROCESSING,
+            session_id,
+            node_name="assess_quality",
+            node_sequence=3,
+            llm_called=True,
+            input_keys=["raw_facts", "company_profile"],
+            output_keys=["quality_assessment", "package_summary"],
+            duration_ms=520,
+            llm_tokens_input=1400 + (100 * caveat_count),
+            llm_tokens_output=260 + (30 * caveat_count),
+            llm_cost_usd=round(0.055 + (0.009 * caveat_count), 6),
+        )
+        await _record_agent_output(
+            store,
+            application_id,
+            AgentType.DOCUMENT_PROCESSING,
+            session_id,
+            stream_id=stream_id,
+            event_type="PackageReadyForAnalysis",
+            stream_position=positions[-1],
+        )
+        await _complete_session(
+            store,
+            application_id,
+            AgentType.DOCUMENT_PROCESSING,
+            session_id,
+            next_agent_triggered="credit_analysis",
+            total_nodes=3,
+            total_llm_calls=1,
+            total_tokens_used=1200 + (90 * caveat_count),
+            total_cost_usd=round(0.075 + (0.01 * caveat_count), 4),
+        )
+
     return {
         "application_id": application_id,
         "company_id": company_id,
         "analysis": analysis,
         "positions": positions,
         "quality_caveats": _quality_caveats(analysis),
+        "document_session_stream_id": session_stream_id,
     }
 
 
@@ -482,6 +562,26 @@ async def run_credit_phase(
 
     requested = requested_amount_usd or _requested_amount_from_analysis(analysis, company)
     decision = _credit_decision_from_profile(company, profile, analysis, requested)
+    credit_llm_cost = round(
+        0.18
+        + (0.08 if decision.risk_tier == RiskTier.HIGH else 0.04 if decision.risk_tier == RiskTier.MEDIUM else 0.02)
+        + (0.03 if _quality_caveats(analysis) else 0.0),
+        4,
+    )
+    await _record_node(
+        store,
+        AgentType.CREDIT_ANALYSIS,
+        session_id,
+        node_name="compose_recommendation",
+        node_sequence=2,
+        llm_called=True,
+        input_keys=["financial_facts", "registry_profile", "quality_caveats"],
+        output_keys=["credit_decision"],
+        duration_ms=760,
+        llm_tokens_input=2400 + (180 * len(_quality_caveats(analysis))),
+        llm_tokens_output=360,
+        llm_cost_usd=credit_llm_cost,
+    )
     positions = await handle_credit_analysis_completed(
         CreditAnalysisCompletedCommand(
             application_id=application_id,
@@ -511,7 +611,10 @@ async def run_credit_phase(
         AgentType.CREDIT_ANALYSIS,
         session_id,
         next_agent_triggered="fraud_detection",
-        total_cost_usd=0.23,
+        total_nodes=2,
+        total_llm_calls=1,
+        total_tokens_used=2600 + (180 * len(_quality_caveats(analysis))),
+        total_cost_usd=credit_llm_cost,
     )
     return {
         "application_id": application_id,
@@ -565,6 +668,26 @@ async def _run_fraud_stage(
         tool_input_summary=company_id,
         tool_output_summary=f"flags={len(profile.get('compliance_flags', []))}",
     )
+    fraud_llm_cost = round(
+        0.09
+        + (0.05 if profile.get("industry") in {"retail", "logistics"} else 0.02)
+        + (0.04 if fraud_score >= 0.30 else 0.0),
+        4,
+    )
+    await _record_node(
+        store,
+        AgentType.FRAUD_DETECTION,
+        session_id,
+        node_name="score_anomalies",
+        node_sequence=3 if context_source.startswith("prior_session_replay:") else 2,
+        llm_called=True,
+        input_keys=["registry_context", "credit_output"],
+        output_keys=["fraud_score", "anomaly_summary"],
+        duration_ms=580,
+        llm_tokens_input=1800,
+        llm_tokens_output=240,
+        llm_cost_usd=fraud_llm_cost,
+    )
     risk_level = "LOW" if fraud_score < 0.30 else "MEDIUM" if fraud_score < 0.60 else "HIGH"
     positions = await handle_fraud_screening_completed(
         FraudScreeningCompletedCommand(
@@ -595,7 +718,10 @@ async def _run_fraud_stage(
         AgentType.FRAUD_DETECTION,
         session_id,
         next_agent_triggered="compliance",
-        total_cost_usd=0.11,
+        total_nodes=2 if not context_source.startswith("prior_session_replay:") else 3,
+        total_llm_calls=1,
+        total_tokens_used=2040,
+        total_cost_usd=fraud_llm_cost,
     )
     return {
         "fraud_session_stream_id": stream_id,
@@ -753,6 +879,26 @@ async def run_full_pipeline(
         ),
         store,
     )
+    orchestrator_llm_cost = round(
+        0.14
+        + (0.05 if recommendation == "DECLINE" else 0.03 if recommendation == "REFER" else 0.02)
+        + (0.03 if credit_result["quality_caveats"] else 0.0),
+        4,
+    )
+    await _record_node(
+        store,
+        AgentType.DECISION_ORCHESTRATOR,
+        session_id,
+        node_name="synthesize_recommendation",
+        node_sequence=1,
+        llm_called=True,
+        input_keys=["credit_decision", "fraud_assessment", "compliance_verdict"],
+        output_keys=["decision_summary", "recommendation"],
+        duration_ms=690,
+        llm_tokens_input=2200 + (150 * len(credit_result["quality_caveats"])),
+        llm_tokens_output=320,
+        llm_cost_usd=orchestrator_llm_cost,
+    )
     decision_position = positions[f"loan-{application_id}"][0]
     await _record_agent_output(
         store,
@@ -769,7 +915,10 @@ async def run_full_pipeline(
         AgentType.DECISION_ORCHESTRATOR,
         session_id,
         next_agent_triggered="human_review",
-        total_cost_usd=0.15,
+        total_nodes=1,
+        total_llm_calls=1,
+        total_tokens_used=2350 + (150 * len(credit_result["quality_caveats"])),
+        total_cost_usd=orchestrator_llm_cost,
     )
 
     await _request_human_review(store, application_id, reason="Standard post-decision adjudication.")
@@ -1006,6 +1155,30 @@ async def narr05_human_override(
         agent_id="credit-agent-068",
         model_version="credit-v1",
     )
+    await _record_node(
+        store,
+        AgentType.CREDIT_ANALYSIS,
+        "sess-credit",
+        node_name="load_facts",
+        node_sequence=1,
+        llm_called=False,
+        input_keys=["docpkg"],
+        output_keys=["financial_facts"],
+    )
+    await _record_node(
+        store,
+        AgentType.CREDIT_ANALYSIS,
+        "sess-credit",
+        node_name="compose_recommendation",
+        node_sequence=2,
+        llm_called=True,
+        input_keys=["financial_facts", "customer_history"],
+        output_keys=["credit_decision"],
+        duration_ms=820,
+        llm_tokens_input=2600,
+        llm_tokens_output=340,
+        llm_cost_usd=0.31,
+    )
     credit_positions = await handle_credit_analysis_completed(
         CreditAnalysisCompletedCommand(
             application_id=application_id,
@@ -1032,6 +1205,17 @@ async def narr05_human_override(
         event_type="CreditAnalysisCompleted",
         stream_position=credit_positions[f"credit-{application_id}"][-1],
     )
+    await _complete_session(
+        store,
+        application_id,
+        AgentType.CREDIT_ANALYSIS,
+        "sess-credit",
+        next_agent_triggered="fraud_detection",
+        total_nodes=2,
+        total_llm_calls=1,
+        total_tokens_used=2940,
+        total_cost_usd=0.31,
+    )
 
     await _run_fraud_stage(store, application_id, company_id, fraud_score=0.08, session_id="sess-fraud")
     await _run_compliance_stage(store, application_id, company_id, hard_block=False, session_id="sess-compliance")
@@ -1043,6 +1227,20 @@ async def narr05_human_override(
         "sess-orch",
         agent_id="orch-agent-068",
         model_version="orch-v1",
+    )
+    await _record_node(
+        store,
+        AgentType.DECISION_ORCHESTRATOR,
+        "sess-orch",
+        node_name="synthesize_recommendation",
+        node_sequence=1,
+        llm_called=True,
+        input_keys=["credit_decision", "fraud_assessment", "compliance_verdict"],
+        output_keys=["recommendation", "summary"],
+        duration_ms=710,
+        llm_tokens_input=2350,
+        llm_tokens_output=300,
+        llm_cost_usd=0.22,
     )
     loan_positions = await handle_generate_decision(
         GenerateDecisionCommand(
@@ -1069,6 +1267,17 @@ async def narr05_human_override(
         stream_id=f"loan-{application_id}",
         event_type="DecisionGenerated",
         stream_position=loan_positions[f"loan-{application_id}"][0],
+    )
+    await _complete_session(
+        store,
+        application_id,
+        AgentType.DECISION_ORCHESTRATOR,
+        "sess-orch",
+        next_agent_triggered="human_review",
+        total_nodes=1,
+        total_llm_calls=1,
+        total_tokens_used=2650,
+        total_cost_usd=0.22,
     )
 
     await _request_human_review(
@@ -1130,41 +1339,16 @@ def _analysis_cache(company_id: str, cache: dict[str, DocumentPackageAnalysis]) 
     return cache[company_id]
 
 
-def _estimate_agent_costs(
-    *,
-    company_id: str,
-    requested_amount_usd: Decimal,
-    analysis: DocumentPackageAnalysis,
-    profile: dict[str, Any],
-) -> dict[str, float]:
-    caveat_count = sum(len(document.extraction_notes) for document in analysis.documents) + len(analysis.consistency_notes)
-    risk_weight = 0.06 if str(profile.get("risk_segment", "")).upper() == "HIGH" else 0.03 if str(profile.get("risk_segment", "")).upper() == "MEDIUM" else 0.01
-    trajectory = str(profile.get("trajectory", "")).upper()
-    trajectory_weight = 0.04 if trajectory == "DECLINING" else 0.02 if trajectory == "RECOVERING" else 0.01 if trajectory == "GROWTH" else 0.0
-    amount_weight = 0.05 if requested_amount_usd >= Decimal("2000000") else 0.03 if requested_amount_usd >= Decimal("1000000") else 0.015
-    flag_weight = 0.02 if profile.get("compliance_flags") else 0.0
-
-    return {
-        "document_processing": round(0.08 + (0.006 * len(analysis.documents)) + (0.003 * caveat_count), 2),
-        "credit_analysis": round(0.19 + risk_weight + trajectory_weight + amount_weight + (0.008 * caveat_count), 2),
-        "fraud_detection": round(0.09 + flag_weight + (0.02 if profile.get("industry") in {"retail", "logistics"} else 0.0), 2),
-        "compliance": 0.0,
-        "decision_orchestrator": round(0.15 + (0.02 if caveat_count else 0.0) + risk_weight + trajectory_weight, 2),
-    }
+def _event_to_dict(event: Any) -> dict[str, Any]:
+    if isinstance(event, dict):
+        return event
+    if hasattr(event, "model_dump"):
+        return event.model_dump(mode="json")
+    raise TypeError(f"Unsupported event value: {type(event)!r}")
 
 
-def build_api_cost_report() -> str:
-    analysis_cache: dict[str, DocumentPackageAnalysis] = {}
-    application_rows = _seed_application_rows()
-    narrative_rows = [
-        {"application_id": "APEX-NARR01", "company_id": NARRATIVE_COMPANIES["NARR-01"], "requested_amount_usd": Decimal("4036813")},
-        {"application_id": "APEX-NARR02", "company_id": NARRATIVE_COMPANIES["NARR-02"], "requested_amount_usd": Decimal("700000")},
-        {"application_id": "APEX-NARR03", "company_id": NARRATIVE_COMPANIES["NARR-03"], "requested_amount_usd": Decimal("1100000")},
-        {"application_id": "APEX-NARR04", "company_id": find_montana_company_id(), "requested_amount_usd": Decimal("650000")},
-        {"application_id": "APEX-NARR05", "company_id": NARRATIVE_COMPANIES["NARR-05"], "requested_amount_usd": Decimal("950000")},
-    ]
-    all_rows = application_rows + narrative_rows
-
+def _collect_cost_metrics_from_event_dicts(events: list[dict[str, Any]]) -> dict[str, Any]:
+    session_context: dict[str, dict[str, str]] = {}
     totals_by_agent = {
         "document_processing": 0.0,
         "credit_analysis": 0.0,
@@ -1172,48 +1356,155 @@ def build_api_cost_report() -> str:
         "compliance": 0.0,
         "decision_orchestrator": 0.0,
     }
-    total_per_application: list[tuple[str, float]] = []
-    most_expensive: tuple[str, str, float] = ("", "", 0.0)
+    totals_by_application: dict[str, float] = {}
+    most_expensive: tuple[str, str, float, int] = ("", "", 0.0, 0)
 
-    for row in all_rows:
-        company_id = str(row["company_id"])
-        analysis = _analysis_cache(company_id, analysis_cache)
-        profile = profile_for_company(company_id)
-        costs = _estimate_agent_costs(
-            company_id=company_id,
-            requested_amount_usd=Decimal(str(row["requested_amount_usd"])),
-            analysis=analysis,
-            profile=profile,
-        )
-        app_total = round(sum(costs.values()), 2)
-        total_per_application.append((str(row["application_id"]), app_total))
-        for agent, cost in costs.items():
-            totals_by_agent[agent] += cost
-            if cost > most_expensive[2]:
-                most_expensive = (str(row["application_id"]), agent, cost)
+    for event in events:
+        event_type = event.get("event_type")
+        stream_id = str(event.get("stream_id", ""))
+        payload = event.get("payload", {})
+        if event_type == "AgentSessionStarted":
+            session_context[stream_id] = {
+                "application_id": str(payload.get("application_id", "")),
+                "agent_type": str(payload.get("agent_type", "")),
+            }
+        elif event_type == "AgentSessionCompleted":
+            context = session_context.setdefault(
+                stream_id,
+                {
+                    "application_id": str(payload.get("application_id", "")),
+                    "agent_type": str(payload.get("agent_type", "")),
+                },
+            )
+            application_id = context["application_id"]
+            agent_type = context["agent_type"]
+            total_cost = float(payload.get("total_cost_usd") or 0.0)
+            if agent_type in totals_by_agent:
+                totals_by_agent[agent_type] += total_cost
+            totals_by_application[application_id] = totals_by_application.get(application_id, 0.0) + total_cost
+        elif event_type == "AgentNodeExecuted" and payload.get("llm_called"):
+            context = session_context.get(
+                stream_id,
+                {
+                    "application_id": "",
+                    "agent_type": str(payload.get("agent_type", "")),
+                },
+            )
+            llm_cost = float(payload.get("llm_cost_usd") or 0.0)
+            if llm_cost > most_expensive[2]:
+                most_expensive = (
+                    context.get("application_id", ""),
+                    context.get("agent_type", ""),
+                    llm_cost,
+                    int(payload.get("llm_tokens_input") or 0),
+                )
 
-    grand_total = round(sum(cost for _, cost in total_per_application), 2)
-    avg_cost = round(grand_total / len(total_per_application), 2)
-    min_cost = min(cost for _, cost in total_per_application)
-    max_cost = max(cost for _, cost in total_per_application)
-    return "\n".join(
+    return {
+        "totals_by_agent": {agent: round(cost, 2) for agent, cost in totals_by_agent.items()},
+        "totals_by_application": {app: round(cost, 2) for app, cost in totals_by_application.items()},
+        "most_expensive_call": most_expensive,
+    }
+
+
+async def _load_seed_cost_metrics() -> dict[str, Any]:
+    seed_events: list[dict[str, Any]] = []
+    for row in _seed_application_rows():
+        store = InMemoryEventStore()
+        await run_full_pipeline(store, application_id=str(row["application_id"]), company_id=str(row["company_id"]))
+        async for event in store.load_all(from_position=0, apply_upcasters=False):
+            seed_events.append(_event_to_dict(event))
+    return _collect_cost_metrics_from_event_dicts(seed_events)
+
+
+async def _load_narrative_cost_metrics() -> dict[str, Any]:
+    narrative_events: list[dict[str, Any]] = []
+    narrative_app_ids = [
+        "APEX-NARR01",
+        "APEX-NARR02",
+        "APEX-NARR03",
+        "APEX-NARR04",
+        "APEX-NARR05",
+    ]
+    scenarios = [
+        lambda store: narr01_occ_collision(store, application_id=narrative_app_ids[0]),
+        lambda store: narr02_missing_ebitda(store, application_id=narrative_app_ids[1], company_id=NARRATIVE_COMPANIES["NARR-02"]),
+        lambda store: narr03_crash_recovery(store, application_id=narrative_app_ids[2], company_id=NARRATIVE_COMPANIES["NARR-03"]),
+        lambda store: narr04_montana_hard_block(store, application_id=narrative_app_ids[3], company_id=find_montana_company_id()),
+        lambda store: narr05_human_override(store, application_id=narrative_app_ids[4], company_id=NARRATIVE_COMPANIES["NARR-05"]),
+    ]
+    for runner in scenarios:
+        store = InMemoryEventStore()
+        await runner(store)
+        async for event in store.load_all(from_position=0, apply_upcasters=False):
+            narrative_events.append(_event_to_dict(event))
+    metrics = _collect_cost_metrics_from_event_dicts(narrative_events)
+    for application_id in narrative_app_ids:
+        metrics["totals_by_application"].setdefault(application_id, 0.0)
+    return metrics
+
+
+async def build_api_cost_report() -> str:
+    global _API_COST_REPORT_CACHE
+    if _API_COST_REPORT_CACHE is not None:
+        return _API_COST_REPORT_CACHE
+
+    application_rows = _seed_application_rows()
+    seed_metrics = await _load_seed_cost_metrics()
+    narrative_metrics = await _load_narrative_cost_metrics()
+    for row in application_rows:
+        seed_metrics["totals_by_application"].setdefault(str(row["application_id"]), 0.0)
+
+    totals_by_agent = {
+        agent: round(seed_metrics["totals_by_agent"].get(agent, 0.0) + narrative_metrics["totals_by_agent"].get(agent, 0.0), 2)
+        for agent in {"document_processing", "credit_analysis", "fraud_detection", "compliance", "decision_orchestrator"}
+    }
+    total_per_application = {
+        **seed_metrics["totals_by_application"],
+        **narrative_metrics["totals_by_application"],
+    }
+    all_costs = list(total_per_application.values())
+    grand_total = round(sum(all_costs), 2)
+    avg_cost = round(grand_total / len(all_costs), 2)
+    min_cost = min(all_costs)
+    max_cost = max(all_costs)
+
+    seed_max = seed_metrics["most_expensive_call"]
+    narrative_max = narrative_metrics["most_expensive_call"]
+    most_expensive = seed_max if seed_max[2] >= narrative_max[2] else narrative_max
+    narrative_count = 5
+    report = "\n".join(
         [
             "Sentinel Cost Attribution Report",
             f"Generated at: {_now().isoformat()}",
-            "Methodology: deterministic offline estimate derived from prompt budget assumptions, data quality caveats, requested amount, and applicant risk profile.",
-            f"Applications processed: {len(application_rows)} seed + {len(narrative_rows)} narrative = {len(all_rows)} total",
+            "Billable API Cost Status: honest external billing measurement is $0.00 for the reproduced local workflow in this repository.",
+            "Reason: the standard seeded pipeline, narrative scenarios, and committed artifacts do not call a paid external model provider.",
+            "Optional Ollama usage is local inference and is not treated here as external billable API spend.",
             "",
-            f"Total API cost for all 34 applications: ${grand_total:.2f}",
-            f"Average cost per application: avg ${avg_cost:.2f}, range ${min_cost:.2f}-${max_cost:.2f}",
-            "Cost by agent:",
+            "Telemetry Attribution Methodology:",
+            "Seed applications are replayed through the in-repo demo pipeline to produce session telemetry.",
+            "Narrative applications use their dedicated scenario runners and their emitted session telemetry.",
+            "The telemetry numbers below are workflow cost proxies derived from stored agent-session events.",
+            f"Applications processed: {len(application_rows)} seed + {narrative_count} narrative = {len(all_costs)} total",
+            "",
+            "Actual measured external API cost:",
+            "- total $0.00",
+            "- average per application $0.00",
+            "- provider calls observed in reproduced workflow: 0",
+            "",
+            "Workflow telemetry cost proxy:",
+            f"- total for all 34 applications: ${grand_total:.2f}",
+            f"- average per application: avg ${avg_cost:.2f}, range ${min_cost:.2f}-${max_cost:.2f}",
+            "Telemetry by agent:",
             f"- DocProc ${totals_by_agent['document_processing']:.2f}",
             f"- Credit ${totals_by_agent['credit_analysis']:.2f}",
             f"- Fraud ${totals_by_agent['fraud_detection']:.2f}",
             f"- Compliance ${totals_by_agent['compliance']:.2f}",
             f"- Orchestrator ${totals_by_agent['decision_orchestrator']:.2f}",
-            f"Most expensive single call: {most_expensive[0]} {most_expensive[1].replace('_', ' ').title()}: ${most_expensive[2]:.2f}",
+            f"Most expensive single telemetry call: {most_expensive[0]} {most_expensive[1].replace('_', ' ').title()}: ${most_expensive[2]:.2f} ({most_expensive[3]} input tokens)",
         ]
     )
+    _API_COST_REPORT_CACHE = report
+    return report
 
 
 async def generate_narr05_artifacts(output_dir: str | Path = ARTIFACTS_ROOT) -> dict[str, Any]:
@@ -1261,7 +1552,7 @@ async def generate_narr05_artifacts(output_dir: str | Path = ARTIFACTS_ROOT) -> 
         encoding="utf-8",
     )
 
-    api_cost_report = build_api_cost_report()
+    api_cost_report = await build_api_cost_report()
     api_cost_path = output_root / "api_cost_report.txt"
     api_cost_path.write_text(api_cost_report, encoding="utf-8")
 

@@ -2,9 +2,9 @@
   "application_id": "APEX-NARR05",
   "branch_event_type": "CreditAnalysisCompleted",
   "branch_stream_id": "credit-APEX-NARR05",
-  "branch_event_id": "a17118f6-4b75-4a3b-b344-cb26952c6a6e",
-  "total_real_events": 57,
-  "total_counterfactual_events": 44,
+  "branch_event_id": "66324404-9917-4f8f-901c-a04508d81f09",
+  "total_real_events": 62,
+  "total_counterfactual_events": 47,
   "injected_events": [
     {
       "event_type": "CreditAnalysisCompleted",
@@ -26,7 +26,7 @@
         "input_data_hash": "whatif-input-narr05",
         "analysis_duration_ms": 5,
         "regulatory_basis": [],
-        "completed_at": "2026-03-23T16:12:46.039364Z"
+        "completed_at": "2026-03-23T16:37:20.563007Z"
       },
       "recorded_at": null,
       "metadata": {},
@@ -39,98 +39,112 @@
       "event_type": "CreditAnalysisCompleted",
       "stream_id": "credit-APEX-NARR05",
       "stream_position": 0,
-      "event_id": "a17118f6-4b75-4a3b-b344-cb26952c6a6e"
+      "event_id": "66324404-9917-4f8f-901c-a04508d81f09"
     },
     {
       "kind": "skipped_dependent",
       "event_type": "FraudScreeningRequested",
       "stream_id": "loan-APEX-NARR05",
       "stream_position": 3,
-      "event_id": "2d0033bf-cdeb-4c63-a586-72d5c409ff1e"
+      "event_id": "25ead8dc-0e01-437f-8bcb-72e14b04bc39"
     },
     {
       "kind": "skipped_dependent",
       "event_type": "AgentOutputWritten",
       "stream_id": "agent-credit_analysis-sess-credit",
-      "stream_position": 1,
-      "event_id": "5e28ce63-2bfe-4378-9c2a-f0f750ddbc6a"
+      "stream_position": 3,
+      "event_id": "efca753c-2920-4676-9220-16ce08e843be"
+    },
+    {
+      "kind": "skipped_dependent",
+      "event_type": "AgentSessionCompleted",
+      "stream_id": "agent-credit_analysis-sess-credit",
+      "stream_position": 4,
+      "event_id": "f57e0bbc-fdaa-4217-a010-c3c20375dfe0"
     },
     {
       "kind": "skipped_dependent",
       "event_type": "ComplianceCheckRequested",
       "stream_id": "loan-APEX-NARR05",
       "stream_position": 4,
-      "event_id": "33e86204-32b6-49ae-b90e-c7b6fe8f629f"
+      "event_id": "6372b0e4-2a86-4489-bbac-e25e520d79e1"
     },
     {
       "kind": "skipped_dependent",
       "event_type": "AgentOutputWritten",
       "stream_id": "agent-fraud_detection-sess-fraud",
-      "stream_position": 3,
-      "event_id": "a9b34e95-e1af-4ba2-8f54-6a62002fdf4b"
+      "stream_position": 4,
+      "event_id": "b62c2dc6-ab49-42d8-9b89-c7d19b4ac5af"
     },
     {
       "kind": "skipped_dependent",
       "event_type": "AgentSessionCompleted",
       "stream_id": "agent-fraud_detection-sess-fraud",
-      "stream_position": 4,
-      "event_id": "c42547b7-c912-4a79-8d23-903667560464"
+      "stream_position": 5,
+      "event_id": "8d246390-314e-4dbb-b9f3-39beb8fbcdb6"
     },
     {
       "kind": "skipped_dependent",
       "event_type": "DecisionRequested",
       "stream_id": "loan-APEX-NARR05",
       "stream_position": 5,
-      "event_id": "e6122170-0bd9-487c-89c8-fa79adc382cb"
+      "event_id": "4364fbb6-1702-4bda-9702-e1e4a2bfd14b"
     },
     {
       "kind": "skipped_dependent",
       "event_type": "AgentOutputWritten",
       "stream_id": "agent-compliance-sess-compliance",
       "stream_position": 2,
-      "event_id": "088e259e-0e94-468d-a79c-6b580ec54f07"
+      "event_id": "fa9e91c1-18ee-44ba-aeb2-a3b440f13251"
     },
     {
       "kind": "skipped_dependent",
       "event_type": "AgentSessionCompleted",
       "stream_id": "agent-compliance-sess-compliance",
       "stream_position": 3,
-      "event_id": "dccfc138-9811-4a92-a2d1-6a2f2130fd63"
+      "event_id": "59ccd79d-690b-4205-a128-257393f8477e"
     },
     {
       "kind": "skipped_dependent",
       "event_type": "DecisionGenerated",
       "stream_id": "loan-APEX-NARR05",
       "stream_position": 6,
-      "event_id": "8d2b98ca-4b65-4b80-8962-4f272f7f4c84"
+      "event_id": "71168f79-5dc8-40d0-996b-0e6e29a731db"
     },
     {
       "kind": "skipped_dependent",
       "event_type": "AgentOutputWritten",
       "stream_id": "agent-decision_orchestrator-sess-orch",
-      "stream_position": 1,
-      "event_id": "842d08c6-4701-4713-9eb2-459f2a18dfe6"
+      "stream_position": 2,
+      "event_id": "d27d0b5c-19ec-4ac9-9d15-25b073ffc661"
+    },
+    {
+      "kind": "skipped_dependent",
+      "event_type": "AgentSessionCompleted",
+      "stream_id": "agent-decision_orchestrator-sess-orch",
+      "stream_position": 3,
+      "event_id": "d2dbfbef-005e-4862-856e-50620e03a308"
     },
     {
       "kind": "skipped_dependent",
       "event_type": "HumanReviewRequested",
       "stream_id": "loan-APEX-NARR05",
       "stream_position": 7,
-      "event_id": "9074e4fd-46e7-430b-8a15-33404812227c"
+      "event_id": "3d52dcbc-5fe9-4b25-856c-6a90ecba6789"
     },
     {
       "kind": "skipped_dependent",
       "event_type": "HumanReviewCompleted",
       "stream_id": "loan-APEX-NARR05",
       "stream_position": 8,
-      "event_id": "421afde9-1ee0-4b25-bad4-d8d6ca8076c0"
+      "event_id": "ca3c7ba3-0e19-4c64-8f82-939f2817092b"
     },
     {
       "kind": "skipped_dependent",
       "event_type": "ApplicationApproved",
       "stream_id": "loan-APEX-NARR05",
       "stream_position": 9,
-      "event_id": "bdc5990e-1fb8-46e6-b66f-d77b1f562b4c"
+      "event_id": "8bbea9b3-7773-45b9-8c7c-0f3d4129dd57"
     }
   ],
   "real_outcome": {
@@ -145,13 +159,16 @@
       "compliance_status": "CLEAR",
       "decision": "APPROVE",
       "agent_sessions_completed": [
+        "sess-doc",
+        "sess-credit",
         "sess-fraud",
-        "sess-compliance"
+        "sess-compliance",
+        "sess-orch"
       ],
       "last_event_type": "ApplicationApproved",
-      "last_event_at": "2026-03-23T16:12:46.020048+00:00",
+      "last_event_at": "2026-03-23T16:37:20.515262+00:00",
       "human_reviewer_id": "LO-Sarah-Chen",
-      "final_decision_at": "2026-03-23T16:12:46.019680+00:00"
+      "final_decision_at": "2026-03-23T16:37:20.513698+00:00"
     },
     "compliance_audit": {
       "application_id": "APEX-NARR05",
@@ -172,7 +189,7 @@
           "rule_version": "1",
           "evidence_hash": "e1",
           "evaluation_notes": "Customer cleared sanctions screening.",
-          "evaluated_at": "2026-03-23T16:12:46.011837Z"
+          "evaluated_at": "2026-03-23T16:37:20.498154Z"
         },
         {
           "rule_id": "REG-002",
@@ -180,7 +197,7 @@
           "rule_version": "1",
           "evidence_hash": "e2",
           "evaluation_notes": "No OFAC match.",
-          "evaluated_at": "2026-03-23T16:12:46.011837Z"
+          "evaluated_at": "2026-03-23T16:37:20.498154Z"
         },
         {
           "rule_id": "REG-003",
@@ -188,7 +205,7 @@
           "rule_version": "1",
           "evidence_hash": "e3",
           "evaluation_notes": "Jurisdiction allowed.",
-          "evaluated_at": "2026-03-23T16:12:46.011837Z"
+          "evaluated_at": "2026-03-23T16:37:20.498154Z"
         },
         {
           "rule_id": "REG-004",
@@ -196,7 +213,7 @@
           "rule_version": "1",
           "evidence_hash": "e4",
           "evaluation_notes": "Entity type is eligible.",
-          "evaluated_at": "2026-03-23T16:12:46.011837Z"
+          "evaluated_at": "2026-03-23T16:37:20.498154Z"
         },
         {
           "rule_id": "REG-005",
@@ -204,7 +221,7 @@
           "rule_version": "1",
           "evidence_hash": "e5",
           "evaluation_notes": "Operating history satisfies the policy.",
-          "evaluated_at": "2026-03-23T16:12:46.011837Z"
+          "evaluated_at": "2026-03-23T16:37:20.498154Z"
         }
       ],
       "failed_rules": [],
@@ -214,18 +231,40 @@
           "rule_name": "CRA",
           "note_type": "CRA",
           "note_text": "CRA consideration recorded.",
-          "evaluated_at": "2026-03-23T16:12:46.011837Z"
+          "evaluated_at": "2026-03-23T16:37:20.498154Z"
         }
       ],
       "hard_block_rules": [],
       "completed": true,
       "overall_verdict": "CLEAR",
       "last_event_type": "ComplianceCheckCompleted",
-      "as_of": "2026-03-23T16:12:46.013066+00:00",
-      "checkpoint_position": 48,
+      "as_of": "2026-03-23T16:37:20.499962+00:00",
+      "checkpoint_position": 52,
       "snapshot_version": 8
     },
     "agent_performance": [
+      {
+        "agent_type": "document_processing",
+        "agent_id": "doc-comp-068",
+        "model_version": "docproc-v1",
+        "total_sessions": 1,
+        "analyses_completed": 0,
+        "decisions_generated": 0,
+        "avg_confidence_score": null,
+        "avg_duration_ms": null,
+        "approve_count": 0,
+        "decline_count": 0,
+        "refer_count": 0,
+        "human_override_count": 0,
+        "approve_rate": 0.0,
+        "decline_rate": 0.0,
+        "refer_rate": 0.0,
+        "human_override_rate": 0.0,
+        "first_seen_at": "2026-03-23T16:37:20.441460+00:00",
+        "last_seen_at": "2026-03-23T16:37:20.441460+00:00",
+        "confidence_samples": 0,
+        "duration_samples": 0
+      },
       {
         "agent_type": "credit_analysis",
         "agent_id": "credit-agent-068",
@@ -243,8 +282,8 @@
         "decline_rate": 0.0,
         "refer_rate": 0.0,
         "human_override_rate": 0.0,
-        "first_seen_at": "2026-03-23T16:12:46.003960+00:00",
-        "last_seen_at": "2026-03-23T16:12:46.006819+00:00",
+        "first_seen_at": "2026-03-23T16:37:20.479879+00:00",
+        "last_seen_at": "2026-03-23T16:37:20.487087+00:00",
         "confidence_samples": 1,
         "duration_samples": 1
       },
@@ -265,8 +304,8 @@
         "decline_rate": 0.0,
         "refer_rate": 0.0,
         "human_override_rate": 0.0,
-        "first_seen_at": "2026-03-23T16:12:46.007909+00:00",
-        "last_seen_at": "2026-03-23T16:12:46.008957+00:00",
+        "first_seen_at": "2026-03-23T16:37:20.489370+00:00",
+        "last_seen_at": "2026-03-23T16:37:20.492738+00:00",
         "confidence_samples": 0,
         "duration_samples": 0
       },
@@ -287,8 +326,8 @@
         "decline_rate": 0.0,
         "refer_rate": 0.0,
         "human_override_rate": 0.0,
-        "first_seen_at": "2026-03-23T16:12:46.010085+00:00",
-        "last_seen_at": "2026-03-23T16:12:46.013066+00:00",
+        "first_seen_at": "2026-03-23T16:37:20.495775+00:00",
+        "last_seen_at": "2026-03-23T16:37:20.499962+00:00",
         "confidence_samples": 0,
         "duration_samples": 0
       },
@@ -309,8 +348,8 @@
         "decline_rate": 1.0,
         "refer_rate": 0.0,
         "human_override_rate": 1.0,
-        "first_seen_at": "2026-03-23T16:12:46.013939+00:00",
-        "last_seen_at": "2026-03-23T16:12:46.019991+00:00",
+        "first_seen_at": "2026-03-23T16:37:20.501495+00:00",
+        "last_seen_at": "2026-03-23T16:37:20.515011+00:00",
         "confidence_samples": 1,
         "duration_samples": 0
       }
@@ -331,9 +370,11 @@
       "fraud_score": 0.08,
       "compliance_status": "CLEAR",
       "decision": null,
-      "agent_sessions_completed": [],
+      "agent_sessions_completed": [
+        "sess-doc"
+      ],
       "last_event_type": "CreditAnalysisCompleted",
-      "last_event_at": "2026-03-23T16:12:46.046806+00:00",
+      "last_event_at": "2026-03-23T16:37:20.587546+00:00",
       "human_reviewer_id": null,
       "final_decision_at": null
     },
@@ -356,7 +397,7 @@
           "rule_version": "1",
           "evidence_hash": "e1",
           "evaluation_notes": "Customer cleared sanctions screening.",
-          "evaluated_at": "2026-03-23T16:12:46.011837Z"
+          "evaluated_at": "2026-03-23T16:37:20.498154Z"
         },
         {
           "rule_id": "REG-002",
@@ -364,7 +405,7 @@
           "rule_version": "1",
           "evidence_hash": "e2",
           "evaluation_notes": "No OFAC match.",
-          "evaluated_at": "2026-03-23T16:12:46.011837Z"
+          "evaluated_at": "2026-03-23T16:37:20.498154Z"
         },
         {
           "rule_id": "REG-003",
@@ -372,7 +413,7 @@
           "rule_version": "1",
           "evidence_hash": "e3",
           "evaluation_notes": "Jurisdiction allowed.",
-          "evaluated_at": "2026-03-23T16:12:46.011837Z"
+          "evaluated_at": "2026-03-23T16:37:20.498154Z"
         },
         {
           "rule_id": "REG-004",
@@ -380,7 +421,7 @@
           "rule_version": "1",
           "evidence_hash": "e4",
           "evaluation_notes": "Entity type is eligible.",
-          "evaluated_at": "2026-03-23T16:12:46.011837Z"
+          "evaluated_at": "2026-03-23T16:37:20.498154Z"
         },
         {
           "rule_id": "REG-005",
@@ -388,7 +429,7 @@
           "rule_version": "1",
           "evidence_hash": "e5",
           "evaluation_notes": "Operating history satisfies the policy.",
-          "evaluated_at": "2026-03-23T16:12:46.011837Z"
+          "evaluated_at": "2026-03-23T16:37:20.498154Z"
         }
       ],
       "failed_rules": [],
@@ -398,18 +439,40 @@
           "rule_name": "CRA",
           "note_type": "CRA",
           "note_text": "CRA consideration recorded.",
-          "evaluated_at": "2026-03-23T16:12:46.011837Z"
+          "evaluated_at": "2026-03-23T16:37:20.498154Z"
         }
       ],
       "hard_block_rules": [],
       "completed": true,
       "overall_verdict": "CLEAR",
       "last_event_type": "ComplianceCheckCompleted",
-      "as_of": "2026-03-23T16:12:46.013066+00:00",
-      "checkpoint_position": 42,
+      "as_of": "2026-03-23T16:37:20.499962+00:00",
+      "checkpoint_position": 45,
       "snapshot_version": 8
     },
     "agent_performance": [
+      {
+        "agent_type": "document_processing",
+        "agent_id": "doc-comp-068",
+        "model_version": "docproc-v1",
+        "total_sessions": 1,
+        "analyses_completed": 0,
+        "decisions_generated": 0,
+        "avg_confidence_score": null,
+        "avg_duration_ms": null,
+        "approve_count": 0,
+        "decline_count": 0,
+        "refer_count": 0,
+        "human_override_count": 0,
+        "approve_rate": 0.0,
+        "decline_rate": 0.0,
+        "refer_rate": 0.0,
+        "human_override_rate": 0.0,
+        "first_seen_at": "2026-03-23T16:37:20.441460+00:00",
+        "last_seen_at": "2026-03-23T16:37:20.441460+00:00",
+        "confidence_samples": 0,
+        "duration_samples": 0
+      },
       {
         "agent_type": "credit_analysis",
         "agent_id": "credit-agent-068",
@@ -427,8 +490,8 @@
         "decline_rate": 0.0,
         "refer_rate": 0.0,
         "human_override_rate": 0.0,
-        "first_seen_at": "2026-03-23T16:12:46.003960+00:00",
-        "last_seen_at": "2026-03-23T16:12:46.046806+00:00",
+        "first_seen_at": "2026-03-23T16:37:20.479879+00:00",
+        "last_seen_at": "2026-03-23T16:37:20.587546+00:00",
         "confidence_samples": 1,
         "duration_samples": 1
       },
@@ -449,8 +512,8 @@
         "decline_rate": 0.0,
         "refer_rate": 0.0,
         "human_override_rate": 0.0,
-        "first_seen_at": "2026-03-23T16:12:46.007909+00:00",
-        "last_seen_at": "2026-03-23T16:12:46.008957+00:00",
+        "first_seen_at": "2026-03-23T16:37:20.489370+00:00",
+        "last_seen_at": "2026-03-23T16:37:20.492738+00:00",
         "confidence_samples": 0,
         "duration_samples": 0
       },
@@ -471,8 +534,8 @@
         "decline_rate": 0.0,
         "refer_rate": 0.0,
         "human_override_rate": 0.0,
-        "first_seen_at": "2026-03-23T16:12:46.010085+00:00",
-        "last_seen_at": "2026-03-23T16:12:46.013066+00:00",
+        "first_seen_at": "2026-03-23T16:37:20.495775+00:00",
+        "last_seen_at": "2026-03-23T16:37:20.499962+00:00",
         "confidence_samples": 0,
         "duration_samples": 0
       },
@@ -493,8 +556,8 @@
         "decline_rate": 0.0,
         "refer_rate": 0.0,
         "human_override_rate": 0.0,
-        "first_seen_at": "2026-03-23T16:12:46.013939+00:00",
-        "last_seen_at": "2026-03-23T16:12:46.013939+00:00",
+        "first_seen_at": "2026-03-23T16:37:20.501495+00:00",
+        "last_seen_at": "2026-03-23T16:37:20.501495+00:00",
         "confidence_samples": 0,
         "duration_samples": 0
       }

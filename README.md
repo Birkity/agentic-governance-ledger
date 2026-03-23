@@ -256,6 +256,12 @@ Generate the projection lag artifact:
 .\.venv\Scripts\python.exe scripts\generate_projection_lag_report.py
 ```
 
+Generate the API cost attribution artifact:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\generate_api_cost_report.py
+```
+
 Run one application through the demo pipeline:
 
 ```powershell
@@ -265,7 +271,7 @@ Run one application through the demo pipeline:
 Generate the NARR-05 submission artifacts:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\generate_narr05_artifacts.py
+.\.venv\Scripts\python.exe scripts\demo_narr05.py
 .\.venv\Scripts\python.exe tests\phase6\verify_package.py artifacts\regulatory_package_NARR05.json
 ```
 

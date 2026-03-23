@@ -1,15 +1,36 @@
 {
   "package": {
     "package_version": "1.0",
-    "generated_at": "2026-03-23T16:12:46.034261+00:00",
+    "generated_at": "2026-03-23T16:37:20.550055+00:00",
     "application_id": "APEX-NARR05",
-    "examination_date": "2026-03-23T16:12:46.020920+00:00",
+    "examination_date": "2026-03-23T16:37:20.517915+00:00",
     "event_stream": [
       {
-        "event_id": "281ec19d-178d-4c93-8c23-8a7ba77473d7",
-        "stream_id": "docpkg-APEX-NARR05",
+        "event_id": "3ca3ca90-6e84-4816-855f-f6956b84999b",
+        "stream_id": "agent-document_processing-sess-doc",
         "stream_position": 0,
         "global_position": 0,
+        "event_type": "AgentSessionStarted",
+        "event_version": 1,
+        "payload": {
+          "session_id": "sess-doc",
+          "agent_type": "document_processing",
+          "agent_id": "doc-comp-068",
+          "application_id": "APEX-NARR05",
+          "model_version": "docproc-v1",
+          "langgraph_graph_version": "graph-v1",
+          "context_source": "fresh",
+          "context_token_count": 512,
+          "started_at": "2026-03-23T16:37:20.440688Z"
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:37:20.441460Z"
+      },
+      {
+        "event_id": "ccf3ca8c-d20a-4ed2-8ca5-f859be1be093",
+        "stream_id": "docpkg-APEX-NARR05",
+        "stream_position": 0,
+        "global_position": 2,
         "event_type": "PackageCreated",
         "event_version": 1,
         "payload": {
@@ -22,16 +43,16 @@
             "financial_workbook",
             "financial_summary"
           ],
-          "created_at": "2026-03-23T16:12:45.982861Z"
+          "created_at": "2026-03-23T16:37:20.442124Z"
         },
         "metadata": {},
-        "recorded_at": "2026-03-23T16:12:45.999324Z"
+        "recorded_at": "2026-03-23T16:37:20.473429Z"
       },
       {
-        "event_id": "c5eb62f4-c318-4d42-be41-2634a1a52586",
+        "event_id": "53c4499a-c0a3-4387-bf82-d4f74cbe9c4c",
         "stream_id": "docpkg-APEX-NARR05",
         "stream_position": 1,
-        "global_position": 1,
+        "global_position": 3,
         "event_type": "DocumentAdded",
         "event_version": 1,
         "payload": {
@@ -40,19 +61,19 @@
           "document_type": "income_statement",
           "document_format": "pdf",
           "file_hash": "e0593e44b3eae3022fe8da4a10ab8d8e299c2552826f5e4b368adf17a6ed6362",
-          "added_at": "2026-03-23T16:12:45.984854Z"
+          "added_at": "2026-03-23T16:37:20.446276Z"
         },
         "metadata": {
           "document_path": "C:\\Users\\Ab\\OneDrive\\Desktop\\10 Academy\\Week 5\\agentic-governance-ledger\\documents\\COMP-068\\income_statement_2024.pdf",
           "parser_used": "pdfplumber"
         },
-        "recorded_at": "2026-03-23T16:12:45.999419Z"
+        "recorded_at": "2026-03-23T16:37:20.473559Z"
       },
       {
-        "event_id": "d1b1eed5-6aa0-43b2-845b-8616ee42b734",
+        "event_id": "e3973465-8c26-4e3f-8922-647f04cdef82",
         "stream_id": "docpkg-APEX-NARR05",
         "stream_position": 2,
-        "global_position": 2,
+        "global_position": 4,
         "event_type": "DocumentFormatValidated",
         "event_version": 1,
         "payload": {
@@ -61,18 +82,18 @@
           "document_type": "income_statement",
           "page_count": 1,
           "detected_format": "pdf",
-          "validated_at": "2026-03-23T16:12:45.984987Z"
+          "validated_at": "2026-03-23T16:37:20.446431Z"
         },
         "metadata": {
           "parser_used": "pdfplumber"
         },
-        "recorded_at": "2026-03-23T16:12:45.999470Z"
+        "recorded_at": "2026-03-23T16:37:20.473656Z"
       },
       {
-        "event_id": "30a6e3df-1d83-4af2-b734-0d213720f063",
+        "event_id": "1a30c25a-fdd0-4b94-af4d-6e1a16139348",
         "stream_id": "docpkg-APEX-NARR05",
         "stream_position": 3,
-        "global_position": 3,
+        "global_position": 5,
         "event_type": "ExtractionStarted",
         "event_version": 1,
         "payload": {
@@ -81,16 +102,16 @@
           "document_type": "income_statement",
           "pipeline_version": "phase1-document-processor",
           "extraction_model": "pdfplumber",
-          "started_at": "2026-03-23T16:12:45.984329Z"
+          "started_at": "2026-03-23T16:37:20.445457Z"
         },
         "metadata": {},
-        "recorded_at": "2026-03-23T16:12:45.999513Z"
+        "recorded_at": "2026-03-23T16:37:20.473722Z"
       },
       {
-        "event_id": "b210a957-9ae4-4ae8-ba98-e3dd1f79b34f",
+        "event_id": "aee71f20-3d38-450a-9272-913ef273ef57",
         "stream_id": "docpkg-APEX-NARR05",
         "stream_position": 4,
-        "global_position": 4,
+        "global_position": 6,
         "event_type": "ExtractionCompleted",
         "event_version": 1,
         "payload": {
@@ -140,7 +161,7 @@
           "raw_text_length": 518,
           "tables_extracted": 0,
           "processing_ms": 0,
-          "completed_at": "2026-03-23T16:12:45.985120Z"
+          "completed_at": "2026-03-23T16:37:20.446656Z"
         },
         "metadata": {
           "document_path": "C:\\Users\\Ab\\OneDrive\\Desktop\\10 Academy\\Week 5\\agentic-governance-ledger\\documents\\COMP-068\\income_statement_2024.pdf",
@@ -149,13 +170,13 @@
           "document_summary": null,
           "extraction_notes": []
         },
-        "recorded_at": "2026-03-23T16:12:45.999613Z"
+        "recorded_at": "2026-03-23T16:37:20.473885Z"
       },
       {
-        "event_id": "7fa08a7f-a722-49ae-acc8-69d48e00c3ae",
+        "event_id": "a5abbc3d-cecf-4955-b225-00a4165cab86",
         "stream_id": "docpkg-APEX-NARR05",
         "stream_position": 5,
-        "global_position": 5,
+        "global_position": 7,
         "event_type": "QualityAssessmentCompleted",
         "event_version": 1,
         "payload": {
@@ -167,19 +188,19 @@
           "critical_missing_fields": [],
           "reextraction_recommended": false,
           "auditor_notes": "Parsed with pdfplumber. Quality assessment is deterministic and based on extraction notes plus package consistency checks.",
-          "assessed_at": "2026-03-23T16:12:45.985262Z"
+          "assessed_at": "2026-03-23T16:37:20.446845Z"
         },
         "metadata": {
           "document_type": "income_statement",
           "document_summary": null
         },
-        "recorded_at": "2026-03-23T16:12:45.999667Z"
+        "recorded_at": "2026-03-23T16:37:20.473975Z"
       },
       {
-        "event_id": "80eaf2c6-f94f-428c-b7e7-314cdf3ab41a",
+        "event_id": "e97fa4d0-c7fd-478a-9b34-6c4eaff2c7c5",
         "stream_id": "docpkg-APEX-NARR05",
         "stream_position": 6,
-        "global_position": 6,
+        "global_position": 8,
         "event_type": "DocumentAdded",
         "event_version": 1,
         "payload": {
@@ -188,19 +209,19 @@
           "document_type": "balance_sheet",
           "document_format": "pdf",
           "file_hash": "868ea399433f552e3a0307bfea78f4de4a206270157bad1793149b26b10f3854",
-          "added_at": "2026-03-23T16:12:45.986619Z"
+          "added_at": "2026-03-23T16:37:20.450434Z"
         },
         "metadata": {
           "document_path": "C:\\Users\\Ab\\OneDrive\\Desktop\\10 Academy\\Week 5\\agentic-governance-ledger\\documents\\COMP-068\\balance_sheet_2024.pdf",
           "parser_used": "pdfplumber"
         },
-        "recorded_at": "2026-03-23T16:12:45.999715Z"
+        "recorded_at": "2026-03-23T16:37:20.474048Z"
       },
       {
-        "event_id": "30d424f4-caeb-4a68-92e9-4ca39b0500e7",
+        "event_id": "b57653f4-c76f-47fb-a528-f7a2de0fed03",
         "stream_id": "docpkg-APEX-NARR05",
         "stream_position": 7,
-        "global_position": 7,
+        "global_position": 9,
         "event_type": "DocumentFormatValidated",
         "event_version": 1,
         "payload": {
@@ -209,18 +230,18 @@
           "document_type": "balance_sheet",
           "page_count": 1,
           "detected_format": "pdf",
-          "validated_at": "2026-03-23T16:12:45.986678Z"
+          "validated_at": "2026-03-23T16:37:20.450599Z"
         },
         "metadata": {
           "parser_used": "pdfplumber"
         },
-        "recorded_at": "2026-03-23T16:12:45.999757Z"
+        "recorded_at": "2026-03-23T16:37:20.474122Z"
       },
       {
-        "event_id": "026e6220-eb06-4790-baaf-791ead1f0e06",
+        "event_id": "a197fefd-ca0b-4561-8516-5d9a18e0796a",
         "stream_id": "docpkg-APEX-NARR05",
         "stream_position": 8,
-        "global_position": 8,
+        "global_position": 10,
         "event_type": "ExtractionStarted",
         "event_version": 1,
         "payload": {
@@ -229,16 +250,16 @@
           "document_type": "balance_sheet",
           "pipeline_version": "phase1-document-processor",
           "extraction_model": "pdfplumber",
-          "started_at": "2026-03-23T16:12:45.986337Z"
+          "started_at": "2026-03-23T16:37:20.449678Z"
         },
         "metadata": {},
-        "recorded_at": "2026-03-23T16:12:45.999813Z"
+        "recorded_at": "2026-03-23T16:37:20.474182Z"
       },
       {
-        "event_id": "1ad93cf2-bb3c-41a6-a18e-699fd4a91c27",
+        "event_id": "757457b5-4bfe-4317-8795-78c1dba4bfd0",
         "stream_id": "docpkg-APEX-NARR05",
         "stream_position": 9,
-        "global_position": 9,
+        "global_position": 11,
         "event_type": "ExtractionCompleted",
         "event_version": 1,
         "payload": {
@@ -288,7 +309,7 @@
           "raw_text_length": 719,
           "tables_extracted": 0,
           "processing_ms": 0,
-          "completed_at": "2026-03-23T16:12:45.986787Z"
+          "completed_at": "2026-03-23T16:37:20.450894Z"
         },
         "metadata": {
           "document_path": "C:\\Users\\Ab\\OneDrive\\Desktop\\10 Academy\\Week 5\\agentic-governance-ledger\\documents\\COMP-068\\balance_sheet_2024.pdf",
@@ -297,13 +318,13 @@
           "document_summary": null,
           "extraction_notes": []
         },
-        "recorded_at": "2026-03-23T16:12:45.999901Z"
+        "recorded_at": "2026-03-23T16:37:20.474324Z"
       },
       {
-        "event_id": "1a9eeec2-836a-46cd-8dfd-e706b51d4db7",
+        "event_id": "56aa69e5-08e2-43ac-9c53-ed483c72ac49",
         "stream_id": "docpkg-APEX-NARR05",
         "stream_position": 10,
-        "global_position": 10,
+        "global_position": 12,
         "event_type": "QualityAssessmentCompleted",
         "event_version": 1,
         "payload": {
@@ -315,19 +336,19 @@
           "critical_missing_fields": [],
           "reextraction_recommended": false,
           "auditor_notes": "Parsed with pdfplumber. Quality assessment is deterministic and based on extraction notes plus package consistency checks.",
-          "assessed_at": "2026-03-23T16:12:45.986882Z"
+          "assessed_at": "2026-03-23T16:37:20.451069Z"
         },
         "metadata": {
           "document_type": "balance_sheet",
           "document_summary": null
         },
-        "recorded_at": "2026-03-23T16:12:45.999951Z"
+        "recorded_at": "2026-03-23T16:37:20.474435Z"
       },
       {
-        "event_id": "15d97a75-0fac-454a-b329-0bde2deb4135",
+        "event_id": "0278a8b3-e0ba-4014-b908-f95f108661d5",
         "stream_id": "docpkg-APEX-NARR05",
         "stream_position": 11,
-        "global_position": 11,
+        "global_position": 13,
         "event_type": "DocumentAdded",
         "event_version": 1,
         "payload": {
@@ -336,19 +357,19 @@
           "document_type": "application_proposal",
           "document_format": "pdf",
           "file_hash": "c78b22b041d976e76024ee34c7d9c3aa5352cd37896d2dcd23f105a140b455ce",
-          "added_at": "2026-03-23T16:12:45.988217Z"
+          "added_at": "2026-03-23T16:37:20.454357Z"
         },
         "metadata": {
           "document_path": "C:\\Users\\Ab\\OneDrive\\Desktop\\10 Academy\\Week 5\\agentic-governance-ledger\\documents\\COMP-068\\application_proposal.pdf",
           "parser_used": "pdfplumber"
         },
-        "recorded_at": "2026-03-23T16:12:46.000301Z"
+        "recorded_at": "2026-03-23T16:37:20.474536Z"
       },
       {
-        "event_id": "45a0d1d9-5a82-4a80-8041-227085a6c058",
+        "event_id": "333c6a65-c83d-4804-929d-51cbf2095e57",
         "stream_id": "docpkg-APEX-NARR05",
         "stream_position": 12,
-        "global_position": 12,
+        "global_position": 14,
         "event_type": "DocumentFormatValidated",
         "event_version": 1,
         "payload": {
@@ -357,18 +378,18 @@
           "document_type": "application_proposal",
           "page_count": 1,
           "detected_format": "pdf",
-          "validated_at": "2026-03-23T16:12:45.988287Z"
+          "validated_at": "2026-03-23T16:37:20.454518Z"
         },
         "metadata": {
           "parser_used": "pdfplumber"
         },
-        "recorded_at": "2026-03-23T16:12:46.000405Z"
+        "recorded_at": "2026-03-23T16:37:20.474598Z"
       },
       {
-        "event_id": "757742b1-f118-43ca-ae02-787be22a197a",
+        "event_id": "934ba1d9-5856-47f3-a687-c8336767d117",
         "stream_id": "docpkg-APEX-NARR05",
         "stream_position": 13,
-        "global_position": 13,
+        "global_position": 15,
         "event_type": "ExtractionStarted",
         "event_version": 1,
         "payload": {
@@ -377,16 +398,16 @@
           "document_type": "application_proposal",
           "pipeline_version": "phase1-document-processor",
           "extraction_model": "pdfplumber",
-          "started_at": "2026-03-23T16:12:45.987915Z"
+          "started_at": "2026-03-23T16:37:20.453648Z"
         },
         "metadata": {},
-        "recorded_at": "2026-03-23T16:12:46.000474Z"
+        "recorded_at": "2026-03-23T16:37:20.474669Z"
       },
       {
-        "event_id": "f04758de-d885-4916-965a-c6a02df941c1",
+        "event_id": "5c0ae689-717c-476a-aa6a-136b0f108b59",
         "stream_id": "docpkg-APEX-NARR05",
         "stream_position": 14,
-        "global_position": 14,
+        "global_position": 16,
         "event_type": "ExtractionCompleted",
         "event_version": 1,
         "payload": {
@@ -436,7 +457,7 @@
           "raw_text_length": 639,
           "tables_extracted": 0,
           "processing_ms": 0,
-          "completed_at": "2026-03-23T16:12:45.988351Z"
+          "completed_at": "2026-03-23T16:37:20.454724Z"
         },
         "metadata": {
           "document_path": "C:\\Users\\Ab\\OneDrive\\Desktop\\10 Academy\\Week 5\\agentic-governance-ledger\\documents\\COMP-068\\application_proposal.pdf",
@@ -453,13 +474,13 @@
           "document_summary": null,
           "extraction_notes": []
         },
-        "recorded_at": "2026-03-23T16:12:46.000623Z"
+        "recorded_at": "2026-03-23T16:37:20.474819Z"
       },
       {
-        "event_id": "90e9f3b4-4b55-4646-ab33-5c6a231b9a35",
+        "event_id": "1682732e-fee3-4ec4-a52e-179a1eeaa8db",
         "stream_id": "docpkg-APEX-NARR05",
         "stream_position": 15,
-        "global_position": 15,
+        "global_position": 17,
         "event_type": "QualityAssessmentCompleted",
         "event_version": 1,
         "payload": {
@@ -471,19 +492,19 @@
           "critical_missing_fields": [],
           "reextraction_recommended": false,
           "auditor_notes": "Parsed with pdfplumber. Quality assessment is deterministic and based on extraction notes plus package consistency checks.",
-          "assessed_at": "2026-03-23T16:12:45.988399Z"
+          "assessed_at": "2026-03-23T16:37:20.454839Z"
         },
         "metadata": {
           "document_type": "application_proposal",
           "document_summary": null
         },
-        "recorded_at": "2026-03-23T16:12:46.000705Z"
+        "recorded_at": "2026-03-23T16:37:20.474904Z"
       },
       {
-        "event_id": "815fbb71-9c6d-4aab-a152-3ae42081a11f",
+        "event_id": "3c4fa19a-7f97-48e9-8045-2f3fde2c0128",
         "stream_id": "docpkg-APEX-NARR05",
         "stream_position": 16,
-        "global_position": 16,
+        "global_position": 18,
         "event_type": "DocumentAdded",
         "event_version": 1,
         "payload": {
@@ -492,19 +513,19 @@
           "document_type": "financial_workbook",
           "document_format": "xlsx",
           "file_hash": "3d2278f808c12d30fda36dc3faae374c684f283f3060c7dfe7461ff63670c6ec",
-          "added_at": "2026-03-23T16:12:45.997634Z"
+          "added_at": "2026-03-23T16:37:20.470741Z"
         },
         "metadata": {
           "document_path": "C:\\Users\\Ab\\OneDrive\\Desktop\\10 Academy\\Week 5\\agentic-governance-ledger\\documents\\COMP-068\\financial_statements.xlsx",
           "parser_used": "openpyxl"
         },
-        "recorded_at": "2026-03-23T16:12:46.000775Z"
+        "recorded_at": "2026-03-23T16:37:20.474988Z"
       },
       {
-        "event_id": "dca105bc-c501-4ebd-90a6-73867586c8b1",
+        "event_id": "796468af-507e-4507-8526-56b67b2ef8ab",
         "stream_id": "docpkg-APEX-NARR05",
         "stream_position": 17,
-        "global_position": 17,
+        "global_position": 19,
         "event_type": "DocumentFormatValidated",
         "event_version": 1,
         "payload": {
@@ -513,18 +534,18 @@
           "document_type": "financial_workbook",
           "page_count": 3,
           "detected_format": "xlsx",
-          "validated_at": "2026-03-23T16:12:45.997748Z"
+          "validated_at": "2026-03-23T16:37:20.470929Z"
         },
         "metadata": {
           "parser_used": "openpyxl"
         },
-        "recorded_at": "2026-03-23T16:12:46.000836Z"
+        "recorded_at": "2026-03-23T16:37:20.475055Z"
       },
       {
-        "event_id": "c8236c98-1ee8-490a-9009-b5981b305bce",
+        "event_id": "50f5ab15-3f09-4d70-991a-681dc44281dc",
         "stream_id": "docpkg-APEX-NARR05",
         "stream_position": 18,
-        "global_position": 18,
+        "global_position": 20,
         "event_type": "ExtractionStarted",
         "event_version": 1,
         "payload": {
@@ -533,16 +554,16 @@
           "document_type": "financial_workbook",
           "pipeline_version": "phase1-document-processor",
           "extraction_model": "openpyxl",
-          "started_at": "2026-03-23T16:12:45.997083Z"
+          "started_at": "2026-03-23T16:37:20.469950Z"
         },
         "metadata": {},
-        "recorded_at": "2026-03-23T16:12:46.000891Z"
+        "recorded_at": "2026-03-23T16:37:20.475116Z"
       },
       {
-        "event_id": "eacf0eb1-901d-4ca4-ac97-74ec5fb62c94",
+        "event_id": "aceb1c67-8a51-448d-88b6-b294e6046431",
         "stream_id": "docpkg-APEX-NARR05",
         "stream_position": 19,
-        "global_position": 19,
+        "global_position": 21,
         "event_type": "ExtractionCompleted",
         "event_version": 1,
         "payload": {
@@ -592,7 +613,7 @@
           "raw_text_length": 0,
           "tables_extracted": 1,
           "processing_ms": 0,
-          "completed_at": "2026-03-23T16:12:45.997865Z"
+          "completed_at": "2026-03-23T16:37:20.471102Z"
         },
         "metadata": {
           "document_path": "C:\\Users\\Ab\\OneDrive\\Desktop\\10 Academy\\Week 5\\agentic-governance-ledger\\documents\\COMP-068\\financial_statements.xlsx",
@@ -601,13 +622,13 @@
           "document_summary": null,
           "extraction_notes": []
         },
-        "recorded_at": "2026-03-23T16:12:46.001030Z"
+        "recorded_at": "2026-03-23T16:37:20.475263Z"
       },
       {
-        "event_id": "d3ea3a37-8d03-4ade-aae7-1432d2c2618f",
+        "event_id": "5583091c-f080-440e-94ab-1eb937c5132d",
         "stream_id": "docpkg-APEX-NARR05",
         "stream_position": 20,
-        "global_position": 20,
+        "global_position": 22,
         "event_type": "QualityAssessmentCompleted",
         "event_version": 1,
         "payload": {
@@ -619,19 +640,19 @@
           "critical_missing_fields": [],
           "reextraction_recommended": false,
           "auditor_notes": "Parsed with openpyxl. Quality assessment is deterministic and based on extraction notes plus package consistency checks.",
-          "assessed_at": "2026-03-23T16:12:45.997944Z"
+          "assessed_at": "2026-03-23T16:37:20.471284Z"
         },
         "metadata": {
           "document_type": "financial_workbook",
           "document_summary": null
         },
-        "recorded_at": "2026-03-23T16:12:46.001114Z"
+        "recorded_at": "2026-03-23T16:37:20.475376Z"
       },
       {
-        "event_id": "772ecb89-ec3c-4ef2-afbf-20f4a06e636f",
+        "event_id": "02fc215c-f4e2-48b8-ad10-28b57a0dbb1f",
         "stream_id": "docpkg-APEX-NARR05",
         "stream_position": 21,
-        "global_position": 21,
+        "global_position": 23,
         "event_type": "DocumentAdded",
         "event_version": 1,
         "payload": {
@@ -640,19 +661,19 @@
           "document_type": "financial_summary",
           "document_format": "csv",
           "file_hash": "a0fb09c03037aa79208808ea75c37fae9050f11f50ade7b814959aa789d29eb6",
-          "added_at": "2026-03-23T16:12:45.998617Z"
+          "added_at": "2026-03-23T16:37:20.472702Z"
         },
         "metadata": {
           "document_path": "C:\\Users\\Ab\\OneDrive\\Desktop\\10 Academy\\Week 5\\agentic-governance-ledger\\documents\\COMP-068\\financial_summary.csv",
           "parser_used": "csv"
         },
-        "recorded_at": "2026-03-23T16:12:46.001181Z"
+        "recorded_at": "2026-03-23T16:37:20.475489Z"
       },
       {
-        "event_id": "32751194-36ce-4eb9-b8b2-324de6aab581",
+        "event_id": "85ddefd7-d566-4bfb-b5a3-e5d9f9053b51",
         "stream_id": "docpkg-APEX-NARR05",
         "stream_position": 22,
-        "global_position": 22,
+        "global_position": 24,
         "event_type": "DocumentFormatValidated",
         "event_version": 1,
         "payload": {
@@ -661,18 +682,18 @@
           "document_type": "financial_summary",
           "page_count": 31,
           "detected_format": "csv",
-          "validated_at": "2026-03-23T16:12:45.998799Z"
+          "validated_at": "2026-03-23T16:37:20.472828Z"
         },
         "metadata": {
           "parser_used": "csv"
         },
-        "recorded_at": "2026-03-23T16:12:46.001236Z"
+        "recorded_at": "2026-03-23T16:37:20.475593Z"
       },
       {
-        "event_id": "17b39192-5777-46ad-acdb-32446649d04e",
+        "event_id": "7f53217a-bc45-492a-b1c6-5a6eafdeb54d",
         "stream_id": "docpkg-APEX-NARR05",
         "stream_position": 23,
-        "global_position": 23,
+        "global_position": 25,
         "event_type": "ExtractionStarted",
         "event_version": 1,
         "payload": {
@@ -681,16 +702,16 @@
           "document_type": "financial_summary",
           "pipeline_version": "phase1-document-processor",
           "extraction_model": "csv",
-          "started_at": "2026-03-23T16:12:45.998334Z"
+          "started_at": "2026-03-23T16:37:20.472124Z"
         },
         "metadata": {},
-        "recorded_at": "2026-03-23T16:12:46.001292Z"
+        "recorded_at": "2026-03-23T16:37:20.475699Z"
       },
       {
-        "event_id": "bb894b88-4251-4577-9d42-528f2e03cd12",
+        "event_id": "d0b5da0c-78b7-4507-b106-b2d52e983799",
         "stream_id": "docpkg-APEX-NARR05",
         "stream_position": 24,
-        "global_position": 24,
+        "global_position": 26,
         "event_type": "ExtractionCompleted",
         "event_version": 1,
         "payload": {
@@ -740,7 +761,7 @@
           "raw_text_length": 0,
           "tables_extracted": 1,
           "processing_ms": 0,
-          "completed_at": "2026-03-23T16:12:45.998975Z"
+          "completed_at": "2026-03-23T16:37:20.472934Z"
         },
         "metadata": {
           "document_path": "C:\\Users\\Ab\\OneDrive\\Desktop\\10 Academy\\Week 5\\agentic-governance-ledger\\documents\\COMP-068\\financial_summary.csv",
@@ -749,13 +770,13 @@
           "document_summary": null,
           "extraction_notes": []
         },
-        "recorded_at": "2026-03-23T16:12:46.001420Z"
+        "recorded_at": "2026-03-23T16:37:20.475897Z"
       },
       {
-        "event_id": "b6ae7bac-8965-496e-9a5c-dcb474a62c0c",
+        "event_id": "6b15bcc4-253c-4a0b-a28d-395832f40601",
         "stream_id": "docpkg-APEX-NARR05",
         "stream_position": 25,
-        "global_position": 25,
+        "global_position": 27,
         "event_type": "QualityAssessmentCompleted",
         "event_version": 1,
         "payload": {
@@ -767,19 +788,19 @@
           "critical_missing_fields": [],
           "reextraction_recommended": false,
           "auditor_notes": "Parsed with csv. Quality assessment is deterministic and based on extraction notes plus package consistency checks.",
-          "assessed_at": "2026-03-23T16:12:45.999042Z"
+          "assessed_at": "2026-03-23T16:37:20.473040Z"
         },
         "metadata": {
           "document_type": "financial_summary",
           "document_summary": null
         },
-        "recorded_at": "2026-03-23T16:12:46.001503Z"
+        "recorded_at": "2026-03-23T16:37:20.476016Z"
       },
       {
-        "event_id": "fa1e8ed6-7190-4bbd-b05c-589b1b7fdea3",
+        "event_id": "e2d7a7cb-83c4-4121-94d6-e3c56f1dc092",
         "stream_id": "docpkg-APEX-NARR05",
         "stream_position": 26,
-        "global_position": 26,
+        "global_position": 28,
         "event_type": "PackageReadyForAnalysis",
         "event_version": 1,
         "payload": {
@@ -788,7 +809,7 @@
           "documents_processed": 5,
           "has_quality_flags": false,
           "quality_flag_count": 0,
-          "ready_at": "2026-03-23T16:12:45.999115Z"
+          "ready_at": "2026-03-23T16:37:20.473158Z"
         },
         "metadata": {
           "field_sources": {
@@ -828,13 +849,59 @@
           "consistency_notes": [],
           "package_summary": null
         },
-        "recorded_at": "2026-03-23T16:12:46.001622Z"
+        "recorded_at": "2026-03-23T16:37:20.476208Z"
       },
       {
-        "event_id": "80892d0b-3ec2-4be1-ac4d-f0592bb0ae2c",
+        "event_id": "10d8b0de-5457-4424-9b0f-694de148c035",
+        "stream_id": "agent-document_processing-sess-doc",
+        "stream_position": 4,
+        "global_position": 31,
+        "event_type": "AgentOutputWritten",
+        "event_version": 1,
+        "payload": {
+          "session_id": "sess-doc",
+          "agent_type": "document_processing",
+          "application_id": "APEX-NARR05",
+          "events_written": [
+            {
+              "stream_id": "docpkg-APEX-NARR05",
+              "event_type": "PackageReadyForAnalysis",
+              "stream_position": 26
+            }
+          ],
+          "output_summary": "PackageReadyForAnalysis recorded",
+          "written_at": "2026-03-23T16:37:20.476904Z"
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:37:20.477072Z"
+      },
+      {
+        "event_id": "9e09ec2c-dea2-4825-9a0d-804be17efa7e",
+        "stream_id": "agent-document_processing-sess-doc",
+        "stream_position": 5,
+        "global_position": 32,
+        "event_type": "AgentSessionCompleted",
+        "event_version": 1,
+        "payload": {
+          "session_id": "sess-doc",
+          "agent_type": "document_processing",
+          "application_id": "APEX-NARR05",
+          "total_nodes_executed": 3,
+          "total_llm_calls": 1,
+          "total_tokens_used": 1200,
+          "total_cost_usd": 0.075,
+          "total_duration_ms": 650,
+          "next_agent_triggered": "credit_analysis",
+          "completed_at": "2026-03-23T16:37:20.477125Z"
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:37:20.477291Z"
+      },
+      {
+        "event_id": "3ef508bf-3856-4d14-8cd5-6132e0bd4457",
         "stream_id": "loan-APEX-NARR05",
         "stream_position": 0,
-        "global_position": 27,
+        "global_position": 33,
         "event_type": "ApplicationSubmitted",
         "event_version": 1,
         "payload": {
@@ -846,17 +913,17 @@
           "submission_channel": "relationship_manager",
           "contact_email": "comp-068@example.com",
           "contact_name": "Garcia Farmer and Garrett",
-          "submitted_at": "2026-03-23T16:12:46.002826Z",
+          "submitted_at": "2026-03-23T16:37:20.478546Z",
           "application_reference": "APEX-NARR05"
         },
         "metadata": {},
-        "recorded_at": "2026-03-23T16:12:46.003198Z"
+        "recorded_at": "2026-03-23T16:37:20.478904Z"
       },
       {
-        "event_id": "9dc6b333-292b-49bd-b3de-53ae7daa8ccb",
+        "event_id": "567ee54a-5ada-4b0b-906e-941c11cdb66d",
         "stream_id": "loan-APEX-NARR05",
         "stream_position": 1,
-        "global_position": 28,
+        "global_position": 34,
         "event_type": "DocumentUploadRequested",
         "event_version": 1,
         "payload": {
@@ -866,33 +933,33 @@
             "income_statement",
             "balance_sheet"
           ],
-          "deadline": "2026-03-30T16:12:46.002826Z",
+          "deadline": "2026-03-30T16:37:20.478546Z",
           "requested_by": "system"
         },
         "metadata": {},
-        "recorded_at": "2026-03-23T16:12:46.003277Z"
+        "recorded_at": "2026-03-23T16:37:20.478984Z"
       },
       {
-        "event_id": "f6e605bd-deb5-4948-b9d2-cb7ff0bc6e86",
+        "event_id": "b896a2ff-bae4-4263-a19d-7c286c876254",
         "stream_id": "loan-APEX-NARR05",
         "stream_position": 2,
-        "global_position": 29,
+        "global_position": 35,
         "event_type": "CreditAnalysisRequested",
         "event_version": 1,
         "payload": {
           "application_id": "APEX-NARR05",
-          "requested_at": "2026-03-23T16:12:46.003678+00:00",
+          "requested_at": "2026-03-23T16:37:20.479479+00:00",
           "requested_by": "document_processing",
           "priority": "NORMAL"
         },
         "metadata": {},
-        "recorded_at": "2026-03-23T16:12:46.003756Z"
+        "recorded_at": "2026-03-23T16:37:20.479589Z"
       },
       {
-        "event_id": "9dac9ac8-ed77-46c1-810d-0c0938458ab7",
+        "event_id": "e478f9a6-af7c-4b93-a0cd-317c674ddec2",
         "stream_id": "agent-credit_analysis-sess-credit",
         "stream_position": 0,
-        "global_position": 30,
+        "global_position": 36,
         "event_type": "AgentSessionStarted",
         "event_version": 1,
         "payload": {
@@ -904,16 +971,16 @@
           "langgraph_graph_version": "graph-v1",
           "context_source": "fresh",
           "context_token_count": 512,
-          "started_at": "2026-03-23T16:12:46.003825Z"
+          "started_at": "2026-03-23T16:37:20.479682Z"
         },
         "metadata": {},
-        "recorded_at": "2026-03-23T16:12:46.003960Z"
+        "recorded_at": "2026-03-23T16:37:20.479879Z"
       },
       {
-        "event_id": "a17118f6-4b75-4a3b-b344-cb26952c6a6e",
+        "event_id": "66324404-9917-4f8f-901c-a04508d81f09",
         "stream_id": "credit-APEX-NARR05",
         "stream_position": 0,
-        "global_position": 31,
+        "global_position": 39,
         "event_type": "CreditAnalysisCompleted",
         "event_version": 2,
         "payload": {
@@ -933,31 +1000,31 @@
           "input_data_hash": "credit-input-068",
           "analysis_duration_ms": 640,
           "regulatory_basis": [],
-          "completed_at": "2026-03-23T16:12:46.006637Z"
+          "completed_at": "2026-03-23T16:37:20.486701Z"
         },
         "metadata": {},
-        "recorded_at": "2026-03-23T16:12:46.006819Z"
+        "recorded_at": "2026-03-23T16:37:20.487087Z"
       },
       {
-        "event_id": "2d0033bf-cdeb-4c63-a586-72d5c409ff1e",
+        "event_id": "25ead8dc-0e01-437f-8bcb-72e14b04bc39",
         "stream_id": "loan-APEX-NARR05",
         "stream_position": 3,
-        "global_position": 32,
+        "global_position": 40,
         "event_type": "FraudScreeningRequested",
         "event_version": 1,
         "payload": {
           "application_id": "APEX-NARR05",
-          "requested_at": "2026-03-23T16:12:46.006637Z",
+          "requested_at": "2026-03-23T16:37:20.486701Z",
           "triggered_by_event_id": "credit-APEX-NARR05:0"
         },
         "metadata": {},
-        "recorded_at": "2026-03-23T16:12:46.006942Z"
+        "recorded_at": "2026-03-23T16:37:20.487323Z"
       },
       {
-        "event_id": "5e28ce63-2bfe-4378-9c2a-f0f750ddbc6a",
+        "event_id": "efca753c-2920-4676-9220-16ce08e843be",
         "stream_id": "agent-credit_analysis-sess-credit",
-        "stream_position": 1,
-        "global_position": 33,
+        "stream_position": 3,
+        "global_position": 41,
         "event_type": "AgentOutputWritten",
         "event_version": 1,
         "payload": {
@@ -972,16 +1039,38 @@
             }
           ],
           "output_summary": "CreditAnalysisCompleted recorded",
-          "written_at": "2026-03-23T16:12:46.006982Z"
+          "written_at": "2026-03-23T16:37:20.487404Z"
         },
         "metadata": {},
-        "recorded_at": "2026-03-23T16:12:46.007082Z"
+        "recorded_at": "2026-03-23T16:37:20.487592Z"
       },
       {
-        "event_id": "d2b00348-c65a-46e7-8dfe-4b84388b2b2e",
+        "event_id": "f57e0bbc-fdaa-4217-a010-c3c20375dfe0",
+        "stream_id": "agent-credit_analysis-sess-credit",
+        "stream_position": 4,
+        "global_position": 42,
+        "event_type": "AgentSessionCompleted",
+        "event_version": 1,
+        "payload": {
+          "session_id": "sess-credit",
+          "agent_type": "credit_analysis",
+          "application_id": "APEX-NARR05",
+          "total_nodes_executed": 2,
+          "total_llm_calls": 1,
+          "total_tokens_used": 2940,
+          "total_cost_usd": 0.31,
+          "total_duration_ms": 650,
+          "next_agent_triggered": "fraud_detection",
+          "completed_at": "2026-03-23T16:37:20.487644Z"
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:37:20.487825Z"
+      },
+      {
+        "event_id": "50f2c4d3-a8f7-4b67-87f8-9580d7b08482",
         "stream_id": "agent-fraud_detection-sess-fraud",
         "stream_position": 0,
-        "global_position": 34,
+        "global_position": 43,
         "event_type": "AgentSessionStarted",
         "event_version": 1,
         "payload": {
@@ -993,16 +1082,16 @@
           "langgraph_graph_version": "graph-v1",
           "context_source": "fresh",
           "context_token_count": 512,
-          "started_at": "2026-03-23T16:12:46.007769Z"
+          "started_at": "2026-03-23T16:37:20.489070Z"
         },
         "metadata": {},
-        "recorded_at": "2026-03-23T16:12:46.007909Z"
+        "recorded_at": "2026-03-23T16:37:20.489370Z"
       },
       {
-        "event_id": "2c78d749-6f0c-498b-add9-dc7e716f737c",
+        "event_id": "a7282334-515d-4f56-a8a1-540d05ba1c13",
         "stream_id": "fraud-APEX-NARR05",
         "stream_position": 0,
-        "global_position": 37,
+        "global_position": 47,
         "event_type": "FraudScreeningCompleted",
         "event_version": 1,
         "payload": {
@@ -1014,21 +1103,21 @@
           "recommendation": "CLEAR",
           "screening_model_version": "fraud-v1",
           "input_data_hash": "fraud-apex-narr05",
-          "completed_at": "2026-03-23T16:12:46.008827Z"
+          "completed_at": "2026-03-23T16:37:20.492316Z"
         },
         "metadata": {},
-        "recorded_at": "2026-03-23T16:12:46.008957Z"
+        "recorded_at": "2026-03-23T16:37:20.492738Z"
       },
       {
-        "event_id": "33e86204-32b6-49ae-b90e-c7b6fe8f629f",
+        "event_id": "6372b0e4-2a86-4489-bbac-e25e520d79e1",
         "stream_id": "loan-APEX-NARR05",
         "stream_position": 4,
-        "global_position": 38,
+        "global_position": 48,
         "event_type": "ComplianceCheckRequested",
         "event_version": 1,
         "payload": {
           "application_id": "APEX-NARR05",
-          "requested_at": "2026-03-23T16:12:46.008827+00:00",
+          "requested_at": "2026-03-23T16:37:20.492316+00:00",
           "triggered_by_event_id": "fraud-APEX-NARR05:0",
           "regulation_set_version": "2026-Q1",
           "rules_to_evaluate": [
@@ -1041,13 +1130,13 @@
           ]
         },
         "metadata": {},
-        "recorded_at": "2026-03-23T16:12:46.009050Z"
+        "recorded_at": "2026-03-23T16:37:20.493014Z"
       },
       {
-        "event_id": "a9b34e95-e1af-4ba2-8f54-6a62002fdf4b",
+        "event_id": "b62c2dc6-ab49-42d8-9b89-c7d19b4ac5af",
         "stream_id": "agent-fraud_detection-sess-fraud",
-        "stream_position": 3,
-        "global_position": 39,
+        "stream_position": 4,
+        "global_position": 49,
         "event_type": "AgentOutputWritten",
         "event_version": 1,
         "payload": {
@@ -1062,38 +1151,38 @@
             }
           ],
           "output_summary": "FraudScreeningCompleted recorded",
-          "written_at": "2026-03-23T16:12:46.009087Z"
+          "written_at": "2026-03-23T16:37:20.493121Z"
         },
         "metadata": {},
-        "recorded_at": "2026-03-23T16:12:46.009223Z"
+        "recorded_at": "2026-03-23T16:37:20.493396Z"
       },
       {
-        "event_id": "c42547b7-c912-4a79-8d23-903667560464",
+        "event_id": "8d246390-314e-4dbb-b9f3-39beb8fbcdb6",
         "stream_id": "agent-fraud_detection-sess-fraud",
-        "stream_position": 4,
-        "global_position": 40,
+        "stream_position": 5,
+        "global_position": 50,
         "event_type": "AgentSessionCompleted",
         "event_version": 1,
         "payload": {
           "session_id": "sess-fraud",
           "agent_type": "fraud_detection",
           "application_id": "APEX-NARR05",
-          "total_nodes_executed": 3,
+          "total_nodes_executed": 2,
           "total_llm_calls": 1,
-          "total_tokens_used": 900,
+          "total_tokens_used": 2040,
           "total_cost_usd": 0.11,
           "total_duration_ms": 650,
           "next_agent_triggered": "compliance",
-          "completed_at": "2026-03-23T16:12:46.009253Z"
+          "completed_at": "2026-03-23T16:37:20.493475Z"
         },
         "metadata": {},
-        "recorded_at": "2026-03-23T16:12:46.009353Z"
+        "recorded_at": "2026-03-23T16:37:20.493739Z"
       },
       {
-        "event_id": "513dd115-a3fa-4b25-a598-9ca105e31a6d",
+        "event_id": "ef2618a6-1dd2-4589-944e-c3640a70aee2",
         "stream_id": "agent-compliance-sess-compliance",
         "stream_position": 0,
-        "global_position": 41,
+        "global_position": 51,
         "event_type": "AgentSessionStarted",
         "event_version": 1,
         "payload": {
@@ -1105,16 +1194,16 @@
           "langgraph_graph_version": "graph-v1",
           "context_source": "fresh",
           "context_token_count": 512,
-          "started_at": "2026-03-23T16:12:46.009956Z"
+          "started_at": "2026-03-23T16:37:20.495417Z"
         },
         "metadata": {},
-        "recorded_at": "2026-03-23T16:12:46.010085Z"
+        "recorded_at": "2026-03-23T16:37:20.495775Z"
       },
       {
-        "event_id": "9fa081a7-a8f0-4483-801d-750993e87078",
+        "event_id": "cde7ba75-02b4-45b5-a1fe-6afddb82dc2c",
         "stream_id": "compliance-APEX-NARR05",
         "stream_position": 0,
-        "global_position": 43,
+        "global_position": 53,
         "event_type": "ComplianceCheckInitiated",
         "event_version": 1,
         "payload": {
@@ -1129,16 +1218,16 @@
             "REG-005",
             "REG-006"
           ],
-          "initiated_at": "2026-03-23T16:12:46.011837Z"
+          "initiated_at": "2026-03-23T16:37:20.498154Z"
         },
         "metadata": {},
-        "recorded_at": "2026-03-23T16:12:46.012388Z"
+        "recorded_at": "2026-03-23T16:37:20.499057Z"
       },
       {
-        "event_id": "4fdc27eb-ac38-4a5b-b5e1-dc98f4e3b78c",
+        "event_id": "a04bda24-5ef8-4743-a833-f9dad6e91095",
         "stream_id": "compliance-APEX-NARR05",
         "stream_position": 1,
-        "global_position": 44,
+        "global_position": 54,
         "event_type": "ComplianceRulePassed",
         "event_version": 1,
         "payload": {
@@ -1149,16 +1238,16 @@
           "rule_version": "1",
           "evidence_hash": "e1",
           "evaluation_notes": "Customer cleared sanctions screening.",
-          "evaluated_at": "2026-03-23T16:12:46.011837Z"
+          "evaluated_at": "2026-03-23T16:37:20.498154Z"
         },
         "metadata": {},
-        "recorded_at": "2026-03-23T16:12:46.012469Z"
+        "recorded_at": "2026-03-23T16:37:20.499222Z"
       },
       {
-        "event_id": "90e7a48c-fb3e-4df8-92cf-b1f32cb22a6f",
+        "event_id": "5f50b838-a36a-4bca-b7c5-1e7f70a66c20",
         "stream_id": "compliance-APEX-NARR05",
         "stream_position": 2,
-        "global_position": 45,
+        "global_position": 55,
         "event_type": "ComplianceRulePassed",
         "event_version": 1,
         "payload": {
@@ -1169,16 +1258,16 @@
           "rule_version": "1",
           "evidence_hash": "e2",
           "evaluation_notes": "No OFAC match.",
-          "evaluated_at": "2026-03-23T16:12:46.011837Z"
+          "evaluated_at": "2026-03-23T16:37:20.498154Z"
         },
         "metadata": {},
-        "recorded_at": "2026-03-23T16:12:46.012542Z"
+        "recorded_at": "2026-03-23T16:37:20.499353Z"
       },
       {
-        "event_id": "6873cc4e-b125-4d2f-aeb4-97bb28cca7c5",
+        "event_id": "16edc094-3b1e-4594-9880-a2784dfd1df5",
         "stream_id": "compliance-APEX-NARR05",
         "stream_position": 3,
-        "global_position": 46,
+        "global_position": 56,
         "event_type": "ComplianceRulePassed",
         "event_version": 1,
         "payload": {
@@ -1189,16 +1278,16 @@
           "rule_version": "1",
           "evidence_hash": "e3",
           "evaluation_notes": "Jurisdiction allowed.",
-          "evaluated_at": "2026-03-23T16:12:46.011837Z"
+          "evaluated_at": "2026-03-23T16:37:20.498154Z"
         },
         "metadata": {},
-        "recorded_at": "2026-03-23T16:12:46.012611Z"
+        "recorded_at": "2026-03-23T16:37:20.499483Z"
       },
       {
-        "event_id": "79f20437-959f-410d-aad6-b4c22b5a0017",
+        "event_id": "7c6453fa-0f01-45ed-b92a-7b7d7455e9c5",
         "stream_id": "compliance-APEX-NARR05",
         "stream_position": 4,
-        "global_position": 47,
+        "global_position": 57,
         "event_type": "ComplianceRulePassed",
         "event_version": 1,
         "payload": {
@@ -1209,16 +1298,16 @@
           "rule_version": "1",
           "evidence_hash": "e4",
           "evaluation_notes": "Entity type is eligible.",
-          "evaluated_at": "2026-03-23T16:12:46.011837Z"
+          "evaluated_at": "2026-03-23T16:37:20.498154Z"
         },
         "metadata": {},
-        "recorded_at": "2026-03-23T16:12:46.012744Z"
+        "recorded_at": "2026-03-23T16:37:20.499603Z"
       },
       {
-        "event_id": "d929b8e7-1541-49c0-b818-2bb42ddd987a",
+        "event_id": "c673e428-88e3-4808-bf2a-a51831f254a0",
         "stream_id": "compliance-APEX-NARR05",
         "stream_position": 5,
-        "global_position": 48,
+        "global_position": 58,
         "event_type": "ComplianceRulePassed",
         "event_version": 1,
         "payload": {
@@ -1229,16 +1318,16 @@
           "rule_version": "1",
           "evidence_hash": "e5",
           "evaluation_notes": "Operating history satisfies the policy.",
-          "evaluated_at": "2026-03-23T16:12:46.011837Z"
+          "evaluated_at": "2026-03-23T16:37:20.498154Z"
         },
         "metadata": {},
-        "recorded_at": "2026-03-23T16:12:46.012928Z"
+        "recorded_at": "2026-03-23T16:37:20.499725Z"
       },
       {
-        "event_id": "25abcdd7-ca29-4775-a9e6-fe8a948657c0",
+        "event_id": "46186d72-c9d9-4b1e-b782-baf70a004062",
         "stream_id": "compliance-APEX-NARR05",
         "stream_position": 6,
-        "global_position": 49,
+        "global_position": 59,
         "event_type": "ComplianceRuleNoted",
         "event_version": 1,
         "payload": {
@@ -1248,16 +1337,16 @@
           "rule_name": "CRA",
           "note_type": "CRA",
           "note_text": "CRA consideration recorded.",
-          "evaluated_at": "2026-03-23T16:12:46.011837Z"
+          "evaluated_at": "2026-03-23T16:37:20.498154Z"
         },
         "metadata": {},
-        "recorded_at": "2026-03-23T16:12:46.013000Z"
+        "recorded_at": "2026-03-23T16:37:20.499836Z"
       },
       {
-        "event_id": "88b433fb-5c58-405a-89e1-a2ea73bfa037",
+        "event_id": "f48982ea-6a1a-4288-a4a2-aaa9c97c9c62",
         "stream_id": "compliance-APEX-NARR05",
         "stream_position": 7,
-        "global_position": 50,
+        "global_position": 60,
         "event_type": "ComplianceCheckCompleted",
         "event_version": 1,
         "payload": {
@@ -1269,32 +1358,32 @@
           "rules_noted": 1,
           "has_hard_block": false,
           "overall_verdict": "CLEAR",
-          "completed_at": "2026-03-23T16:12:46.011837Z"
+          "completed_at": "2026-03-23T16:37:20.498154Z"
         },
         "metadata": {},
-        "recorded_at": "2026-03-23T16:12:46.013066Z"
+        "recorded_at": "2026-03-23T16:37:20.499962Z"
       },
       {
-        "event_id": "e6122170-0bd9-487c-89c8-fa79adc382cb",
+        "event_id": "4364fbb6-1702-4bda-9702-e1e4a2bfd14b",
         "stream_id": "loan-APEX-NARR05",
         "stream_position": 5,
-        "global_position": 51,
+        "global_position": 61,
         "event_type": "DecisionRequested",
         "event_version": 1,
         "payload": {
           "application_id": "APEX-NARR05",
-          "requested_at": "2026-03-23T16:12:46.011837Z",
+          "requested_at": "2026-03-23T16:37:20.498154Z",
           "all_analyses_complete": true,
           "triggered_by_event_id": "compliance-APEX-NARR05:7"
         },
         "metadata": {},
-        "recorded_at": "2026-03-23T16:12:46.013281Z"
+        "recorded_at": "2026-03-23T16:37:20.500301Z"
       },
       {
-        "event_id": "088e259e-0e94-468d-a79c-6b580ec54f07",
+        "event_id": "fa9e91c1-18ee-44ba-aeb2-a3b440f13251",
         "stream_id": "agent-compliance-sess-compliance",
         "stream_position": 2,
-        "global_position": 52,
+        "global_position": 62,
         "event_type": "AgentOutputWritten",
         "event_version": 1,
         "payload": {
@@ -1309,16 +1398,16 @@
             }
           ],
           "output_summary": "ComplianceCheckCompleted recorded",
-          "written_at": "2026-03-23T16:12:46.013369Z"
+          "written_at": "2026-03-23T16:37:20.500423Z"
         },
         "metadata": {},
-        "recorded_at": "2026-03-23T16:12:46.013542Z"
+        "recorded_at": "2026-03-23T16:37:20.500699Z"
       },
       {
-        "event_id": "dccfc138-9811-4a92-a2d1-6a2f2130fd63",
+        "event_id": "59ccd79d-690b-4205-a128-257393f8477e",
         "stream_id": "agent-compliance-sess-compliance",
         "stream_position": 3,
-        "global_position": 53,
+        "global_position": 63,
         "event_type": "AgentSessionCompleted",
         "event_version": 1,
         "payload": {
@@ -1331,16 +1420,16 @@
           "total_cost_usd": 0.0,
           "total_duration_ms": 650,
           "next_agent_triggered": "decision_orchestrator",
-          "completed_at": "2026-03-23T16:12:46.013584Z"
+          "completed_at": "2026-03-23T16:37:20.500776Z"
         },
         "metadata": {},
-        "recorded_at": "2026-03-23T16:12:46.013720Z"
+        "recorded_at": "2026-03-23T16:37:20.501041Z"
       },
       {
-        "event_id": "6ea64bb2-9541-4606-9cdb-14cd6760847f",
+        "event_id": "a43af602-7db6-4e4a-b46c-057a7681b86f",
         "stream_id": "agent-decision_orchestrator-sess-orch",
         "stream_position": 0,
-        "global_position": 54,
+        "global_position": 64,
         "event_type": "AgentSessionStarted",
         "event_version": 1,
         "payload": {
@@ -1352,16 +1441,16 @@
           "langgraph_graph_version": "graph-v1",
           "context_source": "fresh",
           "context_token_count": 512,
-          "started_at": "2026-03-23T16:12:46.013798Z"
+          "started_at": "2026-03-23T16:37:20.501185Z"
         },
         "metadata": {},
-        "recorded_at": "2026-03-23T16:12:46.013939Z"
+        "recorded_at": "2026-03-23T16:37:20.501495Z"
       },
       {
-        "event_id": "8d2b98ca-4b65-4b80-8962-4f272f7f4c84",
+        "event_id": "71168f79-5dc8-40d0-996b-0e6e29a731db",
         "stream_id": "loan-APEX-NARR05",
         "stream_position": 6,
-        "global_position": 55,
+        "global_position": 66,
         "event_type": "DecisionGenerated",
         "event_version": 2,
         "payload": {
@@ -1384,16 +1473,16 @@
           "model_versions": {
             "decision_orchestrator": "orch-v1"
           },
-          "generated_at": "2026-03-23T16:12:46.016709Z"
+          "generated_at": "2026-03-23T16:37:20.509267Z"
         },
         "metadata": {},
-        "recorded_at": "2026-03-23T16:12:46.016932Z"
+        "recorded_at": "2026-03-23T16:37:20.509544Z"
       },
       {
-        "event_id": "842d08c6-4701-4713-9eb2-459f2a18dfe6",
+        "event_id": "d27d0b5c-19ec-4ac9-9d15-25b073ffc661",
         "stream_id": "agent-decision_orchestrator-sess-orch",
-        "stream_position": 1,
-        "global_position": 56,
+        "stream_position": 2,
+        "global_position": 67,
         "event_type": "AgentOutputWritten",
         "event_version": 1,
         "payload": {
@@ -1408,33 +1497,55 @@
             }
           ],
           "output_summary": "DecisionGenerated recorded",
-          "written_at": "2026-03-23T16:12:46.017002Z"
+          "written_at": "2026-03-23T16:37:20.509637Z"
         },
         "metadata": {},
-        "recorded_at": "2026-03-23T16:12:46.017161Z"
+        "recorded_at": "2026-03-23T16:37:20.509814Z"
       },
       {
-        "event_id": "9074e4fd-46e7-430b-8a15-33404812227c",
+        "event_id": "d2dbfbef-005e-4862-856e-50620e03a308",
+        "stream_id": "agent-decision_orchestrator-sess-orch",
+        "stream_position": 3,
+        "global_position": 68,
+        "event_type": "AgentSessionCompleted",
+        "event_version": 1,
+        "payload": {
+          "session_id": "sess-orch",
+          "agent_type": "decision_orchestrator",
+          "application_id": "APEX-NARR05",
+          "total_nodes_executed": 1,
+          "total_llm_calls": 1,
+          "total_tokens_used": 2650,
+          "total_cost_usd": 0.22,
+          "total_duration_ms": 650,
+          "next_agent_triggered": "human_review",
+          "completed_at": "2026-03-23T16:37:20.509860Z"
+        },
+        "metadata": {},
+        "recorded_at": "2026-03-23T16:37:20.510069Z"
+      },
+      {
+        "event_id": "3d52dcbc-5fe9-4b25-856c-6a90ecba6789",
         "stream_id": "loan-APEX-NARR05",
         "stream_position": 7,
-        "global_position": 57,
+        "global_position": 69,
         "event_type": "HumanReviewRequested",
         "event_version": 1,
         "payload": {
           "application_id": "APEX-NARR05",
           "reason": "Relationship manager requested manual adjudication.",
-          "decision_event_id": "8d2b98ca-4b65-4b80-8962-4f272f7f4c84",
+          "decision_event_id": "71168f79-5dc8-40d0-996b-0e6e29a731db",
           "assigned_to": "loan-operations",
-          "requested_at": "2026-03-23T16:12:46.017777Z"
+          "requested_at": "2026-03-23T16:37:20.511026Z"
         },
         "metadata": {},
-        "recorded_at": "2026-03-23T16:12:46.017898Z"
+        "recorded_at": "2026-03-23T16:37:20.511194Z"
       },
       {
-        "event_id": "421afde9-1ee0-4b25-bad4-d8d6ca8076c0",
+        "event_id": "ca3c7ba3-0e19-4c64-8f82-939f2817092b",
         "stream_id": "loan-APEX-NARR05",
         "stream_position": 8,
-        "global_position": 58,
+        "global_position": 70,
         "event_type": "HumanReviewCompleted",
         "event_version": 1,
         "payload": {
@@ -1444,16 +1555,16 @@
           "original_recommendation": "DECLINE",
           "final_decision": "APPROVE",
           "override_reason": "15-year customer, prior repayment history, collateral offered",
-          "reviewed_at": "2026-03-23T16:12:46.019680Z"
+          "reviewed_at": "2026-03-23T16:37:20.513698Z"
         },
         "metadata": {},
-        "recorded_at": "2026-03-23T16:12:46.019991Z"
+        "recorded_at": "2026-03-23T16:37:20.515011Z"
       },
       {
-        "event_id": "bdc5990e-1fb8-46e6-b66f-d77b1f562b4c",
+        "event_id": "8bbea9b3-7773-45b9-8c7c-0f3d4129dd57",
         "stream_id": "loan-APEX-NARR05",
         "stream_position": 9,
-        "global_position": 59,
+        "global_position": 71,
         "event_type": "ApplicationApproved",
         "event_version": 1,
         "payload": {
@@ -1467,32 +1578,32 @@
           ],
           "approved_by": "LO-Sarah-Chen",
           "effective_date": "2026-03-23",
-          "approved_at": "2026-03-23T16:12:46.019680Z"
+          "approved_at": "2026-03-23T16:37:20.513698Z"
         },
         "metadata": {},
-        "recorded_at": "2026-03-23T16:12:46.020048Z"
+        "recorded_at": "2026-03-23T16:37:20.515262Z"
       }
     ],
     "audit_stream": [
       {
-        "event_id": "129ebd5d-8a70-4334-9bb3-8fa4f3150ed3",
+        "event_id": "5847c138-b659-44c2-ac64-16dce07777e0",
         "stream_id": "audit-loan-APEX-NARR05",
         "stream_position": 0,
-        "global_position": 60,
+        "global_position": 72,
         "event_type": "AuditIntegrityCheckRun",
         "event_version": 1,
         "payload": {
           "entity_type": "loan",
           "entity_id": "APEX-NARR05",
-          "check_timestamp": "2026-03-23T16:12:46.021307Z",
+          "check_timestamp": "2026-03-23T16:37:20.518659Z",
           "events_verified_count": 10,
-          "integrity_hash": "162445e4f4fbe36fbf73ecbbb7cb0d5c9441e3bd4c0dffeb583ffba2450a7b53",
+          "integrity_hash": "d09e256415c078e6ff15b4fd5d1622b59f358a3e3d596c20535f200588865570",
           "previous_hash": null,
           "chain_valid": true,
           "tamper_detected": false
         },
         "metadata": {},
-        "recorded_at": "2026-03-23T16:12:46.021442Z"
+        "recorded_at": "2026-03-23T16:37:20.518916Z"
       }
     ],
     "projection_states_as_of": {
@@ -1507,13 +1618,16 @@
         "compliance_status": "CLEAR",
         "decision": "APPROVE",
         "agent_sessions_completed": [
+          "sess-doc",
+          "sess-credit",
           "sess-fraud",
-          "sess-compliance"
+          "sess-compliance",
+          "sess-orch"
         ],
         "last_event_type": "ApplicationApproved",
-        "last_event_at": "2026-03-23T16:12:46.020048+00:00",
+        "last_event_at": "2026-03-23T16:37:20.515262+00:00",
         "human_reviewer_id": "LO-Sarah-Chen",
-        "final_decision_at": "2026-03-23T16:12:46.019680+00:00"
+        "final_decision_at": "2026-03-23T16:37:20.513698+00:00"
       },
       "compliance_audit": {
         "application_id": "APEX-NARR05",
@@ -1534,7 +1648,7 @@
             "rule_version": "1",
             "evidence_hash": "e1",
             "evaluation_notes": "Customer cleared sanctions screening.",
-            "evaluated_at": "2026-03-23T16:12:46.011837Z"
+            "evaluated_at": "2026-03-23T16:37:20.498154Z"
           },
           {
             "rule_id": "REG-002",
@@ -1542,7 +1656,7 @@
             "rule_version": "1",
             "evidence_hash": "e2",
             "evaluation_notes": "No OFAC match.",
-            "evaluated_at": "2026-03-23T16:12:46.011837Z"
+            "evaluated_at": "2026-03-23T16:37:20.498154Z"
           },
           {
             "rule_id": "REG-003",
@@ -1550,7 +1664,7 @@
             "rule_version": "1",
             "evidence_hash": "e3",
             "evaluation_notes": "Jurisdiction allowed.",
-            "evaluated_at": "2026-03-23T16:12:46.011837Z"
+            "evaluated_at": "2026-03-23T16:37:20.498154Z"
           },
           {
             "rule_id": "REG-004",
@@ -1558,7 +1672,7 @@
             "rule_version": "1",
             "evidence_hash": "e4",
             "evaluation_notes": "Entity type is eligible.",
-            "evaluated_at": "2026-03-23T16:12:46.011837Z"
+            "evaluated_at": "2026-03-23T16:37:20.498154Z"
           },
           {
             "rule_id": "REG-005",
@@ -1566,7 +1680,7 @@
             "rule_version": "1",
             "evidence_hash": "e5",
             "evaluation_notes": "Operating history satisfies the policy.",
-            "evaluated_at": "2026-03-23T16:12:46.011837Z"
+            "evaluated_at": "2026-03-23T16:37:20.498154Z"
           }
         ],
         "failed_rules": [],
@@ -1576,18 +1690,40 @@
             "rule_name": "CRA",
             "note_type": "CRA",
             "note_text": "CRA consideration recorded.",
-            "evaluated_at": "2026-03-23T16:12:46.011837Z"
+            "evaluated_at": "2026-03-23T16:37:20.498154Z"
           }
         ],
         "hard_block_rules": [],
         "completed": true,
         "overall_verdict": "CLEAR",
         "last_event_type": "ComplianceCheckCompleted",
-        "as_of": "2026-03-23T16:12:46.013066+00:00",
-        "checkpoint_position": 48,
+        "as_of": "2026-03-23T16:37:20.499962+00:00",
+        "checkpoint_position": 52,
         "snapshot_version": 8
       },
       "agent_performance": [
+        {
+          "agent_type": "document_processing",
+          "agent_id": "doc-comp-068",
+          "model_version": "docproc-v1",
+          "total_sessions": 1,
+          "analyses_completed": 0,
+          "decisions_generated": 0,
+          "avg_confidence_score": null,
+          "avg_duration_ms": null,
+          "approve_count": 0,
+          "decline_count": 0,
+          "refer_count": 0,
+          "human_override_count": 0,
+          "approve_rate": 0.0,
+          "decline_rate": 0.0,
+          "refer_rate": 0.0,
+          "human_override_rate": 0.0,
+          "first_seen_at": "2026-03-23T16:37:20.441460+00:00",
+          "last_seen_at": "2026-03-23T16:37:20.441460+00:00",
+          "confidence_samples": 0,
+          "duration_samples": 0
+        },
         {
           "agent_type": "credit_analysis",
           "agent_id": "credit-agent-068",
@@ -1605,8 +1741,8 @@
           "decline_rate": 0.0,
           "refer_rate": 0.0,
           "human_override_rate": 0.0,
-          "first_seen_at": "2026-03-23T16:12:46.003960+00:00",
-          "last_seen_at": "2026-03-23T16:12:46.006819+00:00",
+          "first_seen_at": "2026-03-23T16:37:20.479879+00:00",
+          "last_seen_at": "2026-03-23T16:37:20.487087+00:00",
           "confidence_samples": 1,
           "duration_samples": 1
         },
@@ -1627,8 +1763,8 @@
           "decline_rate": 0.0,
           "refer_rate": 0.0,
           "human_override_rate": 0.0,
-          "first_seen_at": "2026-03-23T16:12:46.007909+00:00",
-          "last_seen_at": "2026-03-23T16:12:46.008957+00:00",
+          "first_seen_at": "2026-03-23T16:37:20.489370+00:00",
+          "last_seen_at": "2026-03-23T16:37:20.492738+00:00",
           "confidence_samples": 0,
           "duration_samples": 0
         },
@@ -1649,8 +1785,8 @@
           "decline_rate": 0.0,
           "refer_rate": 0.0,
           "human_override_rate": 0.0,
-          "first_seen_at": "2026-03-23T16:12:46.010085+00:00",
-          "last_seen_at": "2026-03-23T16:12:46.013066+00:00",
+          "first_seen_at": "2026-03-23T16:37:20.495775+00:00",
+          "last_seen_at": "2026-03-23T16:37:20.499962+00:00",
           "confidence_samples": 0,
           "duration_samples": 0
         },
@@ -1671,8 +1807,8 @@
           "decline_rate": 1.0,
           "refer_rate": 0.0,
           "human_override_rate": 1.0,
-          "first_seen_at": "2026-03-23T16:12:46.013939+00:00",
-          "last_seen_at": "2026-03-23T16:12:46.019991+00:00",
+          "first_seen_at": "2026-03-23T16:37:20.501495+00:00",
+          "last_seen_at": "2026-03-23T16:37:20.515011+00:00",
           "confidence_samples": 1,
           "duration_samples": 0
         }
@@ -1684,67 +1820,72 @@
       "events_verified": 10,
       "chain_valid": true,
       "tamper_detected": false,
-      "latest_integrity_hash": "162445e4f4fbe36fbf73ecbbb7cb0d5c9441e3bd4c0dffeb583ffba2450a7b53",
+      "latest_integrity_hash": "d09e256415c078e6ff15b4fd5d1622b59f358a3e3d596c20535f200588865570",
       "previous_hash": null
     },
     "narrative": [
-      "2026-03-23T16:12:45.999324+00:00: PackageCreated was recorded.",
-      "2026-03-23T16:12:45.999419+00:00: DocumentAdded was recorded.",
-      "2026-03-23T16:12:45.999470+00:00: DocumentFormatValidated was recorded.",
-      "2026-03-23T16:12:45.999513+00:00: ExtractionStarted was recorded.",
-      "2026-03-23T16:12:45.999613+00:00: ExtractionCompleted was recorded.",
-      "2026-03-23T16:12:45.999667+00:00: QualityAssessmentCompleted was recorded.",
-      "2026-03-23T16:12:45.999715+00:00: DocumentAdded was recorded.",
-      "2026-03-23T16:12:45.999757+00:00: DocumentFormatValidated was recorded.",
-      "2026-03-23T16:12:45.999813+00:00: ExtractionStarted was recorded.",
-      "2026-03-23T16:12:45.999901+00:00: ExtractionCompleted was recorded.",
-      "2026-03-23T16:12:45.999951+00:00: QualityAssessmentCompleted was recorded.",
-      "2026-03-23T16:12:46.000301+00:00: DocumentAdded was recorded.",
-      "2026-03-23T16:12:46.000405+00:00: DocumentFormatValidated was recorded.",
-      "2026-03-23T16:12:46.000474+00:00: ExtractionStarted was recorded.",
-      "2026-03-23T16:12:46.000623+00:00: ExtractionCompleted was recorded.",
-      "2026-03-23T16:12:46.000705+00:00: QualityAssessmentCompleted was recorded.",
-      "2026-03-23T16:12:46.000775+00:00: DocumentAdded was recorded.",
-      "2026-03-23T16:12:46.000836+00:00: DocumentFormatValidated was recorded.",
-      "2026-03-23T16:12:46.000891+00:00: ExtractionStarted was recorded.",
-      "2026-03-23T16:12:46.001030+00:00: ExtractionCompleted was recorded.",
-      "2026-03-23T16:12:46.001114+00:00: QualityAssessmentCompleted was recorded.",
-      "2026-03-23T16:12:46.001181+00:00: DocumentAdded was recorded.",
-      "2026-03-23T16:12:46.001236+00:00: DocumentFormatValidated was recorded.",
-      "2026-03-23T16:12:46.001292+00:00: ExtractionStarted was recorded.",
-      "2026-03-23T16:12:46.001420+00:00: ExtractionCompleted was recorded.",
-      "2026-03-23T16:12:46.001503+00:00: QualityAssessmentCompleted was recorded.",
-      "2026-03-23T16:12:46.001622+00:00: PackageReadyForAnalysis was recorded.",
-      "2026-03-23T16:12:46.003198+00:00: Application APEX-NARR05 was submitted for $950000.",
-      "2026-03-23T16:12:46.003277+00:00: DocumentUploadRequested was recorded.",
-      "2026-03-23T16:12:46.003756+00:00: CreditAnalysisRequested was recorded.",
-      "2026-03-23T16:12:46.003960+00:00: Agent session sess-credit started for credit_analysis.",
-      "2026-03-23T16:12:46.006819+00:00: Credit analysis completed with risk tier HIGH and confidence 0.82.",
-      "2026-03-23T16:12:46.006942+00:00: FraudScreeningRequested was recorded.",
-      "2026-03-23T16:12:46.007082+00:00: AgentOutputWritten was recorded.",
-      "2026-03-23T16:12:46.007909+00:00: Agent session sess-fraud started for fraud_detection.",
-      "2026-03-23T16:12:46.008957+00:00: Fraud screening completed with score 0.08.",
-      "2026-03-23T16:12:46.009050+00:00: ComplianceCheckRequested was recorded.",
-      "2026-03-23T16:12:46.009223+00:00: AgentOutputWritten was recorded.",
-      "2026-03-23T16:12:46.009353+00:00: AgentSessionCompleted was recorded.",
-      "2026-03-23T16:12:46.010085+00:00: Agent session sess-compliance started for compliance.",
-      "2026-03-23T16:12:46.012388+00:00: ComplianceCheckInitiated was recorded.",
-      "2026-03-23T16:12:46.012469+00:00: ComplianceRulePassed was recorded.",
-      "2026-03-23T16:12:46.012542+00:00: ComplianceRulePassed was recorded.",
-      "2026-03-23T16:12:46.012611+00:00: ComplianceRulePassed was recorded.",
-      "2026-03-23T16:12:46.012744+00:00: ComplianceRulePassed was recorded.",
-      "2026-03-23T16:12:46.012928+00:00: ComplianceRulePassed was recorded.",
-      "2026-03-23T16:12:46.013000+00:00: ComplianceRuleNoted was recorded.",
-      "2026-03-23T16:12:46.013066+00:00: Compliance review finished with verdict CLEAR.",
-      "2026-03-23T16:12:46.013281+00:00: DecisionRequested was recorded.",
-      "2026-03-23T16:12:46.013542+00:00: AgentOutputWritten was recorded.",
-      "2026-03-23T16:12:46.013720+00:00: AgentSessionCompleted was recorded.",
-      "2026-03-23T16:12:46.013939+00:00: Agent session sess-orch started for decision_orchestrator.",
-      "2026-03-23T16:12:46.016932+00:00: The orchestrator recommended DECLINE with confidence 0.82.",
-      "2026-03-23T16:12:46.017161+00:00: AgentOutputWritten was recorded.",
-      "2026-03-23T16:12:46.017898+00:00: HumanReviewRequested was recorded.",
-      "2026-03-23T16:12:46.019991+00:00: Human review ended with override; final decision was APPROVE.",
-      "2026-03-23T16:12:46.020048+00:00: The application was approved for $750000."
+      "2026-03-23T16:37:20.441460+00:00: Agent session sess-doc started for document_processing.",
+      "2026-03-23T16:37:20.473429+00:00: PackageCreated was recorded.",
+      "2026-03-23T16:37:20.473559+00:00: DocumentAdded was recorded.",
+      "2026-03-23T16:37:20.473656+00:00: DocumentFormatValidated was recorded.",
+      "2026-03-23T16:37:20.473722+00:00: ExtractionStarted was recorded.",
+      "2026-03-23T16:37:20.473885+00:00: ExtractionCompleted was recorded.",
+      "2026-03-23T16:37:20.473975+00:00: QualityAssessmentCompleted was recorded.",
+      "2026-03-23T16:37:20.474048+00:00: DocumentAdded was recorded.",
+      "2026-03-23T16:37:20.474122+00:00: DocumentFormatValidated was recorded.",
+      "2026-03-23T16:37:20.474182+00:00: ExtractionStarted was recorded.",
+      "2026-03-23T16:37:20.474324+00:00: ExtractionCompleted was recorded.",
+      "2026-03-23T16:37:20.474435+00:00: QualityAssessmentCompleted was recorded.",
+      "2026-03-23T16:37:20.474536+00:00: DocumentAdded was recorded.",
+      "2026-03-23T16:37:20.474598+00:00: DocumentFormatValidated was recorded.",
+      "2026-03-23T16:37:20.474669+00:00: ExtractionStarted was recorded.",
+      "2026-03-23T16:37:20.474819+00:00: ExtractionCompleted was recorded.",
+      "2026-03-23T16:37:20.474904+00:00: QualityAssessmentCompleted was recorded.",
+      "2026-03-23T16:37:20.474988+00:00: DocumentAdded was recorded.",
+      "2026-03-23T16:37:20.475055+00:00: DocumentFormatValidated was recorded.",
+      "2026-03-23T16:37:20.475116+00:00: ExtractionStarted was recorded.",
+      "2026-03-23T16:37:20.475263+00:00: ExtractionCompleted was recorded.",
+      "2026-03-23T16:37:20.475376+00:00: QualityAssessmentCompleted was recorded.",
+      "2026-03-23T16:37:20.475489+00:00: DocumentAdded was recorded.",
+      "2026-03-23T16:37:20.475593+00:00: DocumentFormatValidated was recorded.",
+      "2026-03-23T16:37:20.475699+00:00: ExtractionStarted was recorded.",
+      "2026-03-23T16:37:20.475897+00:00: ExtractionCompleted was recorded.",
+      "2026-03-23T16:37:20.476016+00:00: QualityAssessmentCompleted was recorded.",
+      "2026-03-23T16:37:20.476208+00:00: PackageReadyForAnalysis was recorded.",
+      "2026-03-23T16:37:20.477072+00:00: AgentOutputWritten was recorded.",
+      "2026-03-23T16:37:20.477291+00:00: AgentSessionCompleted was recorded.",
+      "2026-03-23T16:37:20.478904+00:00: Application APEX-NARR05 was submitted for $950000.",
+      "2026-03-23T16:37:20.478984+00:00: DocumentUploadRequested was recorded.",
+      "2026-03-23T16:37:20.479589+00:00: CreditAnalysisRequested was recorded.",
+      "2026-03-23T16:37:20.479879+00:00: Agent session sess-credit started for credit_analysis.",
+      "2026-03-23T16:37:20.487087+00:00: Credit analysis completed with risk tier HIGH and confidence 0.82.",
+      "2026-03-23T16:37:20.487323+00:00: FraudScreeningRequested was recorded.",
+      "2026-03-23T16:37:20.487592+00:00: AgentOutputWritten was recorded.",
+      "2026-03-23T16:37:20.487825+00:00: AgentSessionCompleted was recorded.",
+      "2026-03-23T16:37:20.489370+00:00: Agent session sess-fraud started for fraud_detection.",
+      "2026-03-23T16:37:20.492738+00:00: Fraud screening completed with score 0.08.",
+      "2026-03-23T16:37:20.493014+00:00: ComplianceCheckRequested was recorded.",
+      "2026-03-23T16:37:20.493396+00:00: AgentOutputWritten was recorded.",
+      "2026-03-23T16:37:20.493739+00:00: AgentSessionCompleted was recorded.",
+      "2026-03-23T16:37:20.495775+00:00: Agent session sess-compliance started for compliance.",
+      "2026-03-23T16:37:20.499057+00:00: ComplianceCheckInitiated was recorded.",
+      "2026-03-23T16:37:20.499222+00:00: ComplianceRulePassed was recorded.",
+      "2026-03-23T16:37:20.499353+00:00: ComplianceRulePassed was recorded.",
+      "2026-03-23T16:37:20.499483+00:00: ComplianceRulePassed was recorded.",
+      "2026-03-23T16:37:20.499603+00:00: ComplianceRulePassed was recorded.",
+      "2026-03-23T16:37:20.499725+00:00: ComplianceRulePassed was recorded.",
+      "2026-03-23T16:37:20.499836+00:00: ComplianceRuleNoted was recorded.",
+      "2026-03-23T16:37:20.499962+00:00: Compliance review finished with verdict CLEAR.",
+      "2026-03-23T16:37:20.500301+00:00: DecisionRequested was recorded.",
+      "2026-03-23T16:37:20.500699+00:00: AgentOutputWritten was recorded.",
+      "2026-03-23T16:37:20.501041+00:00: AgentSessionCompleted was recorded.",
+      "2026-03-23T16:37:20.501495+00:00: Agent session sess-orch started for decision_orchestrator.",
+      "2026-03-23T16:37:20.509544+00:00: The orchestrator recommended DECLINE with confidence 0.82.",
+      "2026-03-23T16:37:20.509814+00:00: AgentOutputWritten was recorded.",
+      "2026-03-23T16:37:20.510069+00:00: AgentSessionCompleted was recorded.",
+      "2026-03-23T16:37:20.511194+00:00: HumanReviewRequested was recorded.",
+      "2026-03-23T16:37:20.515011+00:00: Human review ended with override; final decision was APPROVE.",
+      "2026-03-23T16:37:20.515262+00:00: The application was approved for $750000."
     ],
     "agent_model_metadata": [
       {
@@ -1756,7 +1897,7 @@
         "event_type": "CreditAnalysisCompleted",
         "input_data_hash": "credit-input-068",
         "confidence": 0.82,
-        "recorded_at": "2026-03-23T16:12:46.006819Z"
+        "recorded_at": "2026-03-23T16:37:20.487087Z"
       },
       {
         "session_id": "sess-fraud",
@@ -1767,7 +1908,7 @@
         "event_type": "FraudScreeningCompleted",
         "input_data_hash": "fraud-apex-narr05",
         "confidence": null,
-        "recorded_at": "2026-03-23T16:12:46.008957Z"
+        "recorded_at": "2026-03-23T16:37:20.492738Z"
       },
       {
         "session_id": "sess-compliance",
@@ -1778,7 +1919,7 @@
         "event_type": "ComplianceCheckCompleted",
         "input_data_hash": null,
         "confidence": null,
-        "recorded_at": "2026-03-23T16:12:46.013066Z"
+        "recorded_at": "2026-03-23T16:37:20.499962Z"
       },
       {
         "session_id": "sess-orch",
@@ -1789,13 +1930,13 @@
         "event_type": "DecisionGenerated",
         "input_data_hash": null,
         "confidence": 0.82,
-        "recorded_at": "2026-03-23T16:12:46.016932Z",
+        "recorded_at": "2026-03-23T16:37:20.509544Z",
         "model_versions": {
           "decision_orchestrator": "orch-v1"
         }
       }
     ],
-    "package_hash": "7b0b22d9252918ebc98590c405a93c64c697a7880a58a4075b55c591b6ef37df"
+    "package_hash": "05c8990133ec056c402478e16d73b9669cccbe9dc3a18ca2770ef38c4c4c6c12"
   },
   "verification": {
     "package_hash_valid": true,
