@@ -9,3 +9,6 @@ __pycache__/
 .env
 documents/
 data/
+ui/node_modules/
+ui/.next/
+ui/*.tsbuildinfo

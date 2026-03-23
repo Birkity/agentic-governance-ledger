@@ -53,6 +53,8 @@ The Ledger is an event-sourced lending platform for document-to-decision workflo
   - CLI helpers for document analysis, lag-report generation, counterfactual replay, and regulatory packages
 - `artifacts/`
   - generated benchmark or submission artifacts such as the projection lag report
+- `ui/`
+  - Next.js command-center interface for application selection, event timelines, evidence previews, audit status, and operational guardrails
 
 ## Architecture
 
@@ -253,6 +255,40 @@ Generate the projection lag artifact:
 ```powershell
 .\.venv\Scripts\python.exe scripts\generate_projection_lag_report.py
 ```
+
+## UI Command Center
+
+The repository also includes a Next.js interface in `ui/` for demos and operator workflows. It is designed to show:
+
+- application selection and lifecycle status
+- the full immutable event timeline for one application
+- source documents and evidence previews
+- human review state and override details
+- audit integrity status
+- projection lag and optimistic concurrency guardrail reports
+
+The UI reads from the live PostgreSQL ledger when `DATABASE_URL` is available. If not, it falls back to the seeded JSON event world in `data/`.
+
+Install and run the UI:
+
+```powershell
+cd ui
+npm.cmd install
+$env:DATABASE_URL='postgresql://postgres:YOUR_PASSWORD@localhost/apex_ledger'
+npm.cmd run dev
+```
+
+Then open `http://localhost:3000`.
+
+If you ever see a stale Next.js chunk error such as `Cannot find module './948.js'`, clear the local build cache and restart the UI:
+
+```powershell
+cd ui
+npm.cmd run clean
+npm.cmd run dev
+```
+
+The default `npm.cmd run dev` and `npm.cmd run build` commands now clear stale `.next` output automatically before starting.
 
 ## Tests
 
