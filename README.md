@@ -24,7 +24,7 @@ The Ledger is an event-sourced lending platform for document-to-decision workflo
 - `src/models/events.py`
   - canonical event catalogue, stored-event wrapper, stream metadata model, and domain exceptions
 - `src/aggregates/`
-  - replay-driven aggregate boundaries for loan applications, agent sessions, and compliance records
+  - replay-driven aggregate boundaries for loan applications, agent sessions, compliance records, and the audit ledger
 - `src/commands/`
   - command handlers that follow load -> replay -> validate -> determine -> append
 - `src/document_processing/`
