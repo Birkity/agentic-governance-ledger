@@ -43,8 +43,9 @@ export function DocumentPreview({ applicationId, documents, preview }: DocumentP
     <section className="panel stack-lg">
       <div className="section-header">
         <div>
-          <p className="eyebrow">Evidence Pack</p>
-          <h2>Inspect the source documents beside the ledger timeline</h2>
+          <p className="eyebrow">Evidence</p>
+          <h2>Document viewer</h2>
+          <p className="muted-copy">Choose a file and open it only when you need deeper detail.</p>
         </div>
       </div>
 
@@ -58,7 +59,7 @@ export function DocumentPreview({ applicationId, documents, preview }: DocumentP
               return (
                 <Link
                   key={document.name}
-                  href={`/applications/${applicationId}?doc=${encodeURIComponent(document.name)}`}
+                  href={`/applications/${applicationId}/evidence?doc=${encodeURIComponent(document.name)}`}
                   className={`doc-tab ${isActive ? "doc-tab-active" : ""}`}
                 >
                   <span>{document.name}</span>

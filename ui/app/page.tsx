@@ -1,5 +1,6 @@
-import { ApplicationExplorer } from "../components/ApplicationExplorer";
+import { QueueIndex } from "../components/QueueIndex";
 import { getDashboardData } from "../lib/ledger-data";
+import { getQueueCounts } from "../lib/queues";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,7 @@ function summarizeArtifact(report: string): string[] {
 
 export default async function HomePage() {
   const dashboard = await getDashboardData();
+  const counts = getQueueCounts(dashboard.applications);
   const lagHighlights = summarizeArtifact(dashboard.operations.projectionLagReport);
   const occHighlights = summarizeArtifact(dashboard.operations.concurrencyReport);
 
@@ -86,7 +88,7 @@ export default async function HomePage() {
         </article>
       </section>
 
-      <ApplicationExplorer applications={dashboard.applications} sourceMode={dashboard.mode} />
+      <QueueIndex counts={counts} />
     </div>
   );
 }

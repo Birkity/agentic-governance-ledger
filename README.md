@@ -267,6 +267,14 @@ The repository also includes a Next.js interface in `ui/` for demos and operator
 - audit integrity status
 - projection lag and optimistic concurrency guardrail reports
 
+The application workspace is split into focused sections:
+
+- `Overview`
+- `Timeline`
+- `Evidence`
+- `Oversight`
+- `Agents`
+
 The UI reads from the live PostgreSQL ledger when `DATABASE_URL` is available. If not, it falls back to the seeded JSON event world in `data/`.
 
 Install and run the UI:

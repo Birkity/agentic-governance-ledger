@@ -4,53 +4,15 @@ import Link from "next/link";
 import { useState } from "react";
 
 import type { ApplicationListItem, DataSourceMode } from "../lib/ledger-data";
+import type { QueueLane } from "../lib/queues";
 import { formatCurrency, formatDateTime } from "../lib/presenters";
-
-type FilterKey = "human" | "open" | "approved" | "declined" | "all";
+import { QUEUE_DESCRIPTIONS, QUEUE_LABELS, getQueueCounts, matchesQueue } from "../lib/queues";
+import { QueueNav } from "./QueueNav";
 
 interface ApplicationExplorerProps {
   applications: ApplicationListItem[];
   sourceMode: DataSourceMode;
-}
-
-const FILTER_LABELS: Record<FilterKey, string> = {
-  human: "Human Review",
-  open: "In Flight",
-  approved: "Approved",
-  declined: "Declined",
-  all: "All"
-};
-
-function matchesFilter(item: ApplicationListItem, filter: FilterKey): boolean {
-  if (filter === "human") {
-    return item.hasHumanReview || item.state.includes("HUMAN");
-  }
-  if (filter === "open") {
-    return !item.state.startsWith("FINAL") && !item.state.startsWith("DECLINED_");
-  }
-  if (filter === "approved") {
-    return item.state === "FINAL_APPROVED";
-  }
-  if (filter === "declined") {
-    return item.state === "FINAL_DECLINED" || item.state === "DECLINED_COMPLIANCE";
-  }
-  return true;
-}
-
-function describeQueue(filter: FilterKey): string {
-  if (filter === "human") {
-    return "Applications that need, or already passed through, manual intervention.";
-  }
-  if (filter === "open") {
-    return "Active work in progress before a final outcome is locked.";
-  }
-  if (filter === "approved") {
-    return "Applications that reached a final approval outcome.";
-  }
-  if (filter === "declined") {
-    return "Applications that ended in decline, including compliance hard blocks.";
-  }
-  return "A searchable view across the full application ledger.";
+  queue: QueueLane;
 }
 
 function statusTone(item: ApplicationListItem): string {
@@ -66,21 +28,13 @@ function statusTone(item: ApplicationListItem): string {
   return "status-pill-neutral";
 }
 
-export function ApplicationExplorer({ applications, sourceMode }: ApplicationExplorerProps) {
+export function ApplicationExplorer({ applications, sourceMode, queue }: ApplicationExplorerProps) {
   const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<FilterKey>("human");
-
-  const counts = {
-    human: applications.filter((item) => matchesFilter(item, "human")).length,
-    open: applications.filter((item) => matchesFilter(item, "open")).length,
-    approved: applications.filter((item) => matchesFilter(item, "approved")).length,
-    declined: applications.filter((item) => matchesFilter(item, "declined")).length,
-    all: applications.length
-  };
+  const counts = getQueueCounts(applications);
 
   const lowered = query.trim().toLowerCase();
   const filtered = applications.filter((item) => {
-    if (!matchesFilter(item, filter)) {
+    if (!matchesQueue(item, queue)) {
       return false;
     }
     if (!lowered) {
@@ -103,9 +57,9 @@ export function ApplicationExplorer({ applications, sourceMode }: ApplicationExp
     <section className="panel stack-lg">
       <div className="section-header">
         <div>
-          <p className="eyebrow">Application Queues</p>
-          <h2>Select a lane, then open an application</h2>
-          <p className="muted-copy">{describeQueue(filter)}</p>
+          <p className="eyebrow">Application Queue</p>
+          <h2>{QUEUE_LABELS[queue]}</h2>
+          <p className="muted-copy">{QUEUE_DESCRIPTIONS[queue]}</p>
         </div>
         <span className="status-pill status-pill-neutral">
           Source {sourceMode === "database" ? "live database" : "seed replay"}
@@ -113,19 +67,7 @@ export function ApplicationExplorer({ applications, sourceMode }: ApplicationExp
       </div>
 
       <div className="toolbar-grid">
-        <div className="queue-grid" role="tablist" aria-label="Application queues">
-          {(Object.keys(FILTER_LABELS) as FilterKey[]).map((value) => (
-            <button
-              key={value}
-              type="button"
-              className={`queue-card ${filter === value ? "queue-card-active" : ""}`}
-              onClick={() => setFilter(value)}
-            >
-              <span className="queue-label">{FILTER_LABELS[value]}</span>
-              <strong>{counts[value]}</strong>
-            </button>
-          ))}
-        </div>
+        <QueueNav counts={counts} />
 
         <label className="field-shell search-shell">
           <span className="field-label">Search applications</span>
@@ -139,7 +81,7 @@ export function ApplicationExplorer({ applications, sourceMode }: ApplicationExp
       </div>
 
       <div className="results-meta">
-        <span>{filtered.length} in this queue</span>
+        <span>{filtered.length} in {QUEUE_LABELS[queue].toLowerCase()}</span>
         <span>{applications.length} tracked overall</span>
       </div>
 
@@ -151,12 +93,10 @@ export function ApplicationExplorer({ applications, sourceMode }: ApplicationExp
                 <p className="card-kicker">{item.applicationId}</p>
                 <h3>{item.companyName}</h3>
                 <p className="application-subtle">
-                  {item.industry ?? "Unknown industry"} · {item.jurisdiction ?? "No jurisdiction"}
+                  {[item.industry ?? "Unknown industry", item.jurisdiction ?? "No jurisdiction"].join(" / ")}
                 </p>
               </div>
-              <span className={`status-pill ${statusTone(item)}`}>
-                {item.state.replaceAll("_", " ")}
-              </span>
+              <span className={`status-pill ${statusTone(item)}`}>{item.state.replaceAll("_", " ")}</span>
             </div>
 
             <div className="compact-facts">
@@ -187,7 +127,7 @@ export function ApplicationExplorer({ applications, sourceMode }: ApplicationExp
         ))}
       </div>
 
-      {filtered.length === 0 ? <p className="muted-copy">No applications matched the current search and filter.</p> : null}
+      {filtered.length === 0 ? <p className="muted-copy">No applications matched the current search.</p> : null}
     </section>
   );
 }
