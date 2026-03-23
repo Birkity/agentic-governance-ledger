@@ -1,0 +1,24 @@
+Projection Lag and Seed Rebuild Report
+Generated at: 2026-03-22T18:23:27.635918+00:00
+
+Lag SLO Check
+- concurrent_submissions: 50
+- projected_applications: 50
+- lag_positions: 0
+- lag_ms: 0
+- slo_target_ms: 800
+- slo_met: True
+
+Seed Rebuild Validation
+- total_seed_events: 1198
+- total_applications: 29
+- application_summary_records: 29
+- compliance_current_records: 9
+- agent_performance_rows: 5
+- state_counts: {'ANALYSIS_COMPLETE': 3, 'AWAITING_ANALYSIS': 4, 'COMPLIANCE_REVIEW': 2, 'DECLINED_COMPLIANCE': 2, 'DOCUMENTS_PENDING': 6, 'DOCUMENTS_UPLOADED': 5, 'FINAL_APPROVED': 4, 'FINAL_DECLINED': 2, 'PENDING_HUMAN_REVIEW': 1}
+- compliance_verdict_counts: {'BLOCKED': 2, 'CLEAR': 6, 'CONDITIONAL': 1}
+- agent_type_counts: {'compliance': 1, 'credit_analysis': 1, 'decision_orchestrator': 1, 'document_processing': 1, 'fraud_detection': 1}
+- rebuild_matches_seed_expectations: True
+
+Mismatches
+- none

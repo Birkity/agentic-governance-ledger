@@ -144,6 +144,18 @@ Phase 3 adds the CQRS read side. Projections subscribe to the ordered event stre
 
 Checkpoint values store the next global position to process, which keeps replay semantics correct for both the PostgreSQL-backed store and the in-memory store used in tests.
 
+### Phase 3 Higher-Band Evidence
+
+The repository now includes two extra Phase 3 proof paths beyond the basic projection tests:
+
+- `tests/test_projection_seed_rebuild.py`
+  - replays the generated `data/seed_events.jsonl` history into the projections
+  - confirms the rebuilt `ApplicationSummary`, `AgentPerformance`, and `ComplianceAudit` views match expectations derived independently from the seed stream
+- `scripts/generate_projection_lag_report.py`
+  - runs the `<800ms` lag check under 50 concurrent submissions
+  - generates `artifacts/projection_lag_report.txt`
+  - includes seed-rebuild confirmation details in the same artifact
+
 ### Projection Tables
 
 `src/schema.sql` now includes:
@@ -178,6 +190,12 @@ Phase 3 projection checks:
 .\.venv\Scripts\python.exe -m pytest tests\test_projections.py -q
 ```
 
+Seed-backed Phase 3 rebuild verification:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests\test_projection_seed_rebuild.py -q
+```
+
 Real PostgreSQL EventStore tests:
 
 ```powershell
@@ -203,7 +221,7 @@ Full Phase 1 + Phase 2 + Phase 3 bundle:
 
 ```powershell
 $env:TEST_DB_URL='postgresql://postgres:YOUR_PASSWORD@localhost/apex_ledger'
-.\.venv\Scripts\python.exe -m pytest tests\phase1\test_event_store.py tests\test_event_store.py tests\test_concurrency.py tests\test_document_processing.py tests\test_schema_and_generator.py tests\phase2\test_domain_logic.py tests\test_projections.py -q
+.\.venv\Scripts\python.exe -m pytest tests\phase1\test_event_store.py tests\test_event_store.py tests\test_concurrency.py tests\test_document_processing.py tests\test_schema_and_generator.py tests\phase2\test_domain_logic.py tests\test_projections.py tests\test_projection_seed_rebuild.py -q
 ```
 
 Optional live Ollama smoke test:
@@ -236,10 +254,16 @@ $env:DATABASE_URL='postgresql://postgres:YOUR_PASSWORD@localhost/apex_ledger'
 .\.venv\Scripts\python.exe scripts\analyze_documents.py --company COMP-024 --application-id APEX-DOC-024 --persist-events
 ```
 
+Generate the Phase 3 projection lag artifact:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\generate_projection_lag_report.py
+```
+
 ## Current Status
 
 - `src/event_store.py` is ready for the interim Phase 1 deliverable path.
 - `src/document_processing/` gives us a working bridge from generated documents to structured facts, `docpkg-*` event streams, and optional package summaries.
 - `src/aggregates/` and `src/commands/handlers.py` now provide the replay-driven Phase 2 domain layer with business rule enforcement before append.
-- `src/projections/` now provides all 3 required read models, the async daemon, checkpointing, lag metrics, temporal compliance queries, and rebuild-from-scratch support.
+- `src/projections/` now provides all 3 required read models, the async daemon, checkpointing, lag metrics, temporal compliance queries, rebuild-from-scratch support, and seed-backed rebuild verification.
 - `reports/phase_1.md`, `reports/phase_2.md`, and `reports/phase_3.md` capture the implementation details, test results, and current rubric fit.
