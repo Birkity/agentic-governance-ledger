@@ -157,6 +157,31 @@ The regulatory package generator creates a self-contained JSON package with:
 - agent model metadata
 - package hash and verification support
 
+## Current Maturity
+
+### Challenge-Complete Today
+
+The repository already proves the Week 5 core architecture:
+
+- append-only event storage with optimistic concurrency control
+- replay-driven aggregates and command handlers
+- projection rebuilds, lag evidence, and temporal compliance history
+- read-time upcasting without mutating stored history
+- audit-chain verification and Gas Town recovery
+- MCP tools/resources, counterfactual replay, and regulatory package verification
+- live-backed runtime preference for the read-only Applicant Registry boundary when PostgreSQL is available
+- durable session telemetry for five modeled agent roles through a thin evented pipeline runner
+
+### Production-Hardening Next Steps
+
+The repository does not claim that everything is production-hardened yet. The clearest next steps are:
+
+- add auth and RBAC for MCP and UI access
+- add a real outbox publisher and snapshot compaction strategy
+- harden multi-worker projection ownership and operational monitoring
+- add browser end-to-end tests, backup/restore drills, and soak testing
+- replace workflow cost proxies with true external billing telemetry when paid providers are introduced
+
 ## Setup
 
 1. Create and activate a virtual environment.
@@ -275,9 +300,19 @@ Generate the NARR-05 submission artifacts:
 .\.venv\Scripts\python.exe tests\phase6\verify_package.py artifacts\regulatory_package_NARR05.json
 ```
 
-## UI Command Center
+Build the final report source if TeX is installed locally:
 
-The repository also includes a Next.js interface in `ui/` for demos and operator workflows. It is designed to show:
+```powershell
+.\scripts\build_final_report.ps1
+```
+
+## Final Report Source
+
+The versioned final report source lives at `reports/final_submission.tex`. The compiled PDF is treated as a build artifact derived from that source rather than as the only versioned copy of the report.
+
+## UI Investigation Console
+
+The repository also includes a Next.js interface in `ui/` for demos, investigation, and presentation workflows. It is designed to show:
 
 - application selection and lifecycle status
 - the full immutable event timeline for one application
@@ -285,6 +320,8 @@ The repository also includes a Next.js interface in `ui/` for demos and operator
 - human review state and override details
 - audit integrity status
 - projection lag and optimistic concurrency guardrail reports
+
+It should be described as a read-heavy investigation console, not as a production-hardened operator control plane.
 
 The application workspace is split into focused sections:
 
@@ -319,6 +356,8 @@ The default `npm.cmd run dev` and `npm.cmd run build` commands now clear stale o
 
 The UI dev server is configured to run with webpack as well, because Turbopack was intermittently producing missing-manifest and missing-runtime errors in this workspace under `.next-local/dev`.
 
+When `DATABASE_URL` is configured, the live-backed demo/runtime path prefers the read-only Applicant Registry adapter for company context. The seeded JSON profiles remain as a fallback for in-memory tests and seed-only demos.
+
 ## Tests
 
 Event store contract checks:
@@ -331,7 +370,7 @@ $env:TEST_DB_URL='postgresql://postgres:YOUR_PASSWORD@localhost/apex_ledger'
 Document-processing and seed-generation checks:
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest tests\test_document_processing.py tests\test_schema_and_generator.py tests\test_registry_client.py -q
+.\.venv\Scripts\python.exe -m pytest tests\test_document_processing.py tests\test_schema_and_generator.py tests\test_registry_client.py tests\test_demo_runtime.py -q
 ```
 
 Domain logic checks:

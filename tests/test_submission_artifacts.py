@@ -52,3 +52,8 @@ async def test_generate_narr05_artifacts_writes_verifiable_outputs():
     assert (output_dir / "counterfactual_narr05.json").exists()
     assert (output_dir / "api_cost_report.txt").exists()
     assert "regulatory_package_NARR05.json" in result["package_path"]
+
+
+def test_final_report_source_and_build_script_exist():
+    assert Path("reports/final_submission.tex").exists()
+    assert Path("scripts/build_final_report.ps1").exists()

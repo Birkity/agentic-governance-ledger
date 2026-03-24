@@ -109,6 +109,36 @@ class ApplicantRegistryClient:
             ip_region=row["ip_region"],
         )
 
+    async def find_company_by_jurisdiction(self, jurisdiction: str) -> CompanyProfile | None:
+        row = await self._pool.fetchrow(
+            """
+            SELECT company_id, name, industry, naics, jurisdiction, legal_type,
+                   founded_year, employee_count, risk_segment, trajectory,
+                   submission_channel, ip_region
+            FROM applicant_registry.companies
+            WHERE jurisdiction = $1
+            ORDER BY company_id ASC
+            LIMIT 1
+            """,
+            jurisdiction,
+        )
+        if row is None:
+            return None
+        return CompanyProfile(
+            company_id=row["company_id"],
+            name=row["name"],
+            industry=row["industry"],
+            naics=row["naics"],
+            jurisdiction=row["jurisdiction"],
+            legal_type=row["legal_type"],
+            founded_year=int(row["founded_year"]),
+            employee_count=int(row["employee_count"]),
+            risk_segment=row["risk_segment"],
+            trajectory=row["trajectory"],
+            submission_channel=row["submission_channel"],
+            ip_region=row["ip_region"],
+        )
+
     async def get_financial_history(
         self,
         company_id: str,

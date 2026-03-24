@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import re
-from dataclasses import asdict, is_dataclass
+from dataclasses import asdict, dataclass, is_dataclass
 from datetime import datetime, timezone
 from decimal import Decimal
 from pathlib import Path
@@ -45,6 +45,7 @@ from src.models.events import (
     LoanPurpose,
     RiskTier,
 )
+from src.registry import ApplicantRegistryClient
 from src.regulatory import generate_regulatory_package, verify_regulatory_package
 from src.what_if import run_what_if
 
@@ -63,6 +64,32 @@ NARRATIVE_COMPANIES = {
 }
 
 _API_COST_REPORT_CACHE: str | None = None
+
+
+@dataclass(frozen=True)
+class RuntimeApplicantContext:
+    company_id: str
+    name: str
+    industry: str
+    jurisdiction: str
+    risk_segment: str
+    trajectory: str
+    compliance_flags: list[dict[str, Any]]
+    loan_relationships: list[dict[str, Any]]
+    source: str
+
+    def as_profile_dict(self) -> dict[str, Any]:
+        return {
+            "company_id": self.company_id,
+            "name": self.name,
+            "industry": self.industry,
+            "jurisdiction": self.jurisdiction,
+            "risk_segment": self.risk_segment,
+            "trajectory": self.trajectory,
+            "compliance_flags": list(self.compliance_flags),
+            "loan_relationships": list(self.loan_relationships),
+            "source": self.source,
+        }
 
 
 def _now() -> datetime:
@@ -120,6 +147,76 @@ def default_company_for_application(application_id: str) -> str:
         if (DOCUMENTS_ROOT / candidate).exists():
             return candidate
     raise LookupError(f"Could not infer a company for application_id={application_id}")
+
+
+def _registry_client_for_store(store: EventStore | InMemoryEventStore) -> ApplicantRegistryClient | None:
+    if not isinstance(store, EventStore):
+        return None
+    if store.pool is None:
+        return None
+    return ApplicantRegistryClient(store.pool)
+
+
+def _seed_context(company_id: str) -> RuntimeApplicantContext:
+    profile = profile_for_company(company_id)
+    return RuntimeApplicantContext(
+        company_id=str(profile["company_id"]),
+        name=str(profile.get("name", company_id)),
+        industry=str(profile.get("industry", "")),
+        jurisdiction=str(profile.get("jurisdiction", "")),
+        risk_segment=str(profile.get("risk_segment", "MEDIUM")),
+        trajectory=str(profile.get("trajectory", "STABLE")),
+        compliance_flags=list(profile.get("compliance_flags", [])),
+        loan_relationships=list(profile.get("loan_relationships", [])),
+        source="seed_profiles",
+    )
+
+
+async def _resolve_company_context(
+    store: EventStore | InMemoryEventStore,
+    company_id: str,
+) -> RuntimeApplicantContext:
+    client = _registry_client_for_store(store)
+    if client is None:
+        return _seed_context(company_id)
+
+    company = await client.get_company(company_id)
+    if company is None:
+        return _seed_context(company_id)
+
+    compliance_flags = [
+        {
+            "flag_type": flag.flag_type,
+            "severity": flag.severity,
+            "is_active": flag.is_active,
+            "added_date": flag.added_date,
+            "note": flag.note,
+        }
+        for flag in await client.get_compliance_flags(company_id)
+    ]
+    loan_relationships = await client.get_loan_relationships(company_id)
+    return RuntimeApplicantContext(
+        company_id=company.company_id,
+        name=company.name,
+        industry=company.industry,
+        jurisdiction=company.jurisdiction,
+        risk_segment=company.risk_segment,
+        trajectory=company.trajectory,
+        compliance_flags=compliance_flags,
+        loan_relationships=loan_relationships,
+        source="applicant_registry",
+    )
+
+
+async def resolve_montana_company_id(store: EventStore | InMemoryEventStore) -> str:
+    client = _registry_client_for_store(store)
+    if client is None:
+        return find_montana_company_id()
+
+    company = await client.find_company_by_jurisdiction("MT")
+    if company is not None:
+        return company.company_id
+    return find_montana_company_id()
 
 
 async def _append_current(store: EventStore | InMemoryEventStore, stream_id: str, events: list[dict]) -> list[int]:
@@ -354,7 +451,7 @@ async def _submit_application(
     *,
     requested_amount_usd: Decimal | None = None,
 ) -> dict[str, list[int]]:
-    profile = profile_for_company(company_id)
+    profile = (await _resolve_company_context(store, company_id)).as_profile_dict()
     requested = requested_amount_usd or _requested_amount_from_analysis(analysis, company_id)
     proposal = analysis.get_document(DocumentType.APPLICATION_PROPOSAL)
     contact_name = str(proposal.structured_data.get("legal_entity_name")) if proposal else profile["name"]
@@ -521,7 +618,8 @@ async def run_credit_phase(
     company = company_id or default_company_for_application(application_id)
     doc_result = await run_document_phase(store, application_id, company)
     analysis = doc_result["analysis"]
-    profile = profile_for_company(company)
+    company_context = await _resolve_company_context(store, company)
+    profile = company_context.as_profile_dict()
 
     await _submit_application(
         store,
@@ -621,6 +719,7 @@ async def run_credit_phase(
         "company_id": company,
         "analysis": analysis,
         "profile": profile,
+        "profile_source": company_context.source,
         "credit_session_stream_id": stream_id,
         "credit_decision": decision,
         "requested_amount_usd": requested,
@@ -638,7 +737,8 @@ async def _run_fraud_stage(
     context_source: str = "fresh",
     ensure_started: bool = True,
 ) -> dict[str, Any]:
-    profile = profile_for_company(company_id)
+    company_context = await _resolve_company_context(store, company_id)
+    profile = company_context.as_profile_dict()
     stream_id = f"agent-{AgentType.FRAUD_DETECTION.value}-{session_id}"
     if ensure_started:
         stream_id = await _start_session(
@@ -727,6 +827,7 @@ async def _run_fraud_stage(
         "fraud_session_stream_id": stream_id,
         "fraud_score": fraud_score,
         "risk_level": risk_level,
+        "profile_source": company_context.source,
     }
 
 
@@ -738,7 +839,8 @@ async def _run_compliance_stage(
     session_id: str = "sess-compliance",
     hard_block: bool = False,
 ) -> dict[str, Any]:
-    profile = profile_for_company(company_id)
+    company_context = await _resolve_company_context(store, company_id)
+    profile = company_context.as_profile_dict()
     stream_id = await _start_session(
         store,
         application_id,
@@ -814,6 +916,7 @@ async def _run_compliance_stage(
         "compliance_session_stream_id": stream_id,
         "hard_block": hard_block,
         "rule_ids": [rule.rule_id for rule in rules],
+        "profile_source": company_context.source,
     }
 
 
@@ -835,55 +938,59 @@ def _recommended_decision(
     return "APPROVE", confidence, approved_amount, ["risk within policy"], "Automated decision falls within policy."
 
 
-async def run_full_pipeline(
+async def _run_decision_and_review(
     store: EventStore | InMemoryEventStore,
     application_id: str,
-    company_id: str | None = None,
+    company_id: str,
+    *,
+    recommendation: str,
+    confidence: float,
+    approved_amount_usd: Decimal | None,
+    review_approved_amount_usd: Decimal | None = None,
+    executive_summary: str,
+    key_risks: list[str],
+    credit_session_stream_id: str,
+    fraud_session_stream_id: str,
+    compliance_session_stream_id: str,
+    quality_caveats: list[str],
+    review_reason: str,
+    final_decision: str,
+    override: bool,
+    reviewer_id: str,
+    override_reason: str | None = None,
+    interest_rate_pct: float | None = None,
+    term_months: int | None = None,
+    conditions: list[str] | None = None,
+    decline_reasons: list[str] | None = None,
+    adverse_action_notice_required: bool = True,
+    adverse_action_codes: list[str] | None = None,
+    session_id: str = "sess-orch",
+    agent_id: str | None = None,
+    model_version: str = "orch-v1",
+    duration_ms: int = 690,
+    llm_tokens_input: int | None = None,
+    llm_tokens_output: int = 320,
+    llm_cost_usd: float | None = None,
 ) -> dict[str, Any]:
-    company = company_id or default_company_for_application(application_id)
-    credit_result = await run_credit_phase(store, application_id, company)
-    await _run_fraud_stage(store, application_id, company, fraud_score=0.11)
-    compliance_result = await _run_compliance_stage(store, application_id, company, hard_block=False)
-
-    recommendation, confidence, approved_amount, key_risks, summary = _recommended_decision(
-        credit_result["credit_decision"],
-        quality_caveats=credit_result["quality_caveats"],
-        fraud_score=0.11,
+    orchestrator_agent_id = agent_id or f"orch-{company_id.lower()}"
+    total_input_tokens = llm_tokens_input if llm_tokens_input is not None else 2200 + (150 * len(quality_caveats))
+    computed_cost = (
+        llm_cost_usd
+        if llm_cost_usd is not None
+        else round(
+            0.14
+            + (0.05 if recommendation == "DECLINE" else 0.03 if recommendation == "REFER" else 0.02)
+            + (0.03 if quality_caveats else 0.0),
+            4,
+        )
     )
-
-    session_id = "sess-orch"
-    await _start_session(
+    stream_id = await _start_session(
         store,
         application_id,
         AgentType.DECISION_ORCHESTRATOR,
         session_id,
-        agent_id=f"orch-{company.lower()}",
-        model_version="orch-v1",
-    )
-    positions = await handle_generate_decision(
-        GenerateDecisionCommand(
-            application_id=application_id,
-            session_id=session_id,
-            recommendation=recommendation,
-            confidence=confidence,
-            approved_amount_usd=approved_amount,
-            conditions=[],
-            executive_summary=summary,
-            key_risks=key_risks,
-            contributing_sessions=[
-                credit_result["credit_session_stream_id"],
-                "agent-fraud_detection-sess-fraud",
-                compliance_result["compliance_session_stream_id"],
-            ],
-            model_versions={"decision_orchestrator": "orch-v1"},
-        ),
-        store,
-    )
-    orchestrator_llm_cost = round(
-        0.14
-        + (0.05 if recommendation == "DECLINE" else 0.03 if recommendation == "REFER" else 0.02)
-        + (0.03 if credit_result["quality_caveats"] else 0.0),
-        4,
+        agent_id=orchestrator_agent_id,
+        model_version=model_version,
     )
     await _record_node(
         store,
@@ -894,10 +1001,29 @@ async def run_full_pipeline(
         llm_called=True,
         input_keys=["credit_decision", "fraud_assessment", "compliance_verdict"],
         output_keys=["decision_summary", "recommendation"],
-        duration_ms=690,
-        llm_tokens_input=2200 + (150 * len(credit_result["quality_caveats"])),
-        llm_tokens_output=320,
-        llm_cost_usd=orchestrator_llm_cost,
+        duration_ms=duration_ms,
+        llm_tokens_input=total_input_tokens,
+        llm_tokens_output=llm_tokens_output,
+        llm_cost_usd=computed_cost,
+    )
+    positions = await handle_generate_decision(
+        GenerateDecisionCommand(
+            application_id=application_id,
+            session_id=session_id,
+            recommendation=recommendation,
+            confidence=confidence,
+            approved_amount_usd=approved_amount_usd,
+            conditions=[],
+            executive_summary=executive_summary,
+            key_risks=key_risks,
+            contributing_sessions=[
+                credit_session_stream_id,
+                fraud_session_stream_id,
+                compliance_session_stream_id,
+            ],
+            model_versions={"decision_orchestrator": model_version},
+        ),
+        store,
     )
     decision_position = positions[f"loan-{application_id}"][0]
     await _record_agent_output(
@@ -917,34 +1043,82 @@ async def run_full_pipeline(
         next_agent_triggered="human_review",
         total_nodes=1,
         total_llm_calls=1,
-        total_tokens_used=2350 + (150 * len(credit_result["quality_caveats"])),
-        total_cost_usd=orchestrator_llm_cost,
+        total_tokens_used=total_input_tokens + llm_tokens_output,
+        total_cost_usd=computed_cost,
     )
 
-    await _request_human_review(store, application_id, reason="Standard post-decision adjudication.")
-    final_decision = "APPROVE" if recommendation != "DECLINE" else "DECLINE"
+    await _request_human_review(store, application_id, reason=review_reason)
     await handle_human_review_completed(
         HumanReviewCompletedCommand(
             application_id=application_id,
-            reviewer_id="loan-ops",
-            override=False,
+            reviewer_id=reviewer_id,
+            override=override,
+            override_reason=override_reason,
             original_recommendation=recommendation,
             final_decision=final_decision,
-            approved_amount_usd=approved_amount or Decimal("0"),
-            interest_rate_pct=8.75 if final_decision == "APPROVE" else None,
-            term_months=36 if final_decision == "APPROVE" else None,
-            conditions=["Quarterly covenant certificate"] if final_decision == "APPROVE" else [],
-            decline_reasons=["Automated decline confirmed"] if final_decision == "DECLINE" else [],
-            adverse_action_notice_required=True,
-            adverse_action_codes=["AUTO-DECLINE"] if final_decision == "DECLINE" else [],
+            approved_amount_usd=review_approved_amount_usd if review_approved_amount_usd is not None else (approved_amount_usd or Decimal("0")),
+            interest_rate_pct=interest_rate_pct,
+            term_months=term_months,
+            conditions=conditions or [],
+            decline_reasons=decline_reasons or [],
+            adverse_action_notice_required=adverse_action_notice_required,
+            adverse_action_codes=adverse_action_codes or [],
         ),
         store,
+    )
+    return {
+        "decision_session_stream_id": stream_id,
+        "recommendation": recommendation,
+        "final_decision": final_decision,
+    }
+
+
+async def run_full_pipeline(
+    store: EventStore | InMemoryEventStore,
+    application_id: str,
+    company_id: str | None = None,
+) -> dict[str, Any]:
+    company = company_id or default_company_for_application(application_id)
+    credit_result = await run_credit_phase(store, application_id, company)
+    fraud_result = await _run_fraud_stage(store, application_id, company, fraud_score=0.11)
+    compliance_result = await _run_compliance_stage(store, application_id, company, hard_block=False)
+
+    recommendation, confidence, approved_amount, key_risks, summary = _recommended_decision(
+        credit_result["credit_decision"],
+        quality_caveats=credit_result["quality_caveats"],
+        fraud_score=0.11,
+    )
+
+    final_decision = "APPROVE" if recommendation != "DECLINE" else "DECLINE"
+    await _run_decision_and_review(
+        store,
+        application_id,
+        company,
+        recommendation=recommendation,
+        confidence=confidence,
+        approved_amount_usd=approved_amount,
+        executive_summary=summary,
+        key_risks=key_risks,
+        credit_session_stream_id=credit_result["credit_session_stream_id"],
+        fraud_session_stream_id=fraud_result["fraud_session_stream_id"],
+        compliance_session_stream_id=compliance_result["compliance_session_stream_id"],
+        quality_caveats=credit_result["quality_caveats"],
+        review_reason="Standard post-decision adjudication.",
+        final_decision=final_decision,
+        override=False,
+        reviewer_id="loan-ops",
+        interest_rate_pct=8.75 if final_decision == "APPROVE" else None,
+        term_months=36 if final_decision == "APPROVE" else None,
+        conditions=["Quarterly covenant certificate"] if final_decision == "APPROVE" else [],
+        decline_reasons=["Automated decline confirmed"] if final_decision == "DECLINE" else [],
+        adverse_action_codes=["AUTO-DECLINE"] if final_decision == "DECLINE" else [],
     )
 
     loan_events = await store.load_stream(f"loan-{application_id}")
     return {
         "application_id": application_id,
         "company_id": company,
+        "profile_source": credit_result["profile_source"],
         "final_event_type": loan_events[-1].event_type if loan_events else None,
         "credit_risk_tier": credit_result["credit_decision"].risk_tier.value,
         "quality_caveats": credit_result["quality_caveats"],
@@ -1115,8 +1289,8 @@ async def narr04_montana_hard_block(
     application_id: str = "APEX-NARR04",
     company_id: str | None = None,
 ) -> dict[str, Any]:
-    company = company_id or find_montana_company_id()
-    await run_credit_phase(store, application_id, company)
+    company = company_id or await resolve_montana_company_id(store)
+    credit_result = await run_credit_phase(store, application_id, company)
     await _run_fraud_stage(store, application_id, company, fraud_score=0.12)
     await _run_compliance_stage(store, application_id, company, hard_block=True)
 
@@ -1125,6 +1299,7 @@ async def narr04_montana_hard_block(
     return {
         "application_id": application_id,
         "company_id": company,
+        "profile_source": credit_result["profile_source"],
         "compliance_events": [event.model_dump(mode="json") for event in compliance_events],
         "loan_events": [event.model_dump(mode="json") for event in loan_events],
     }
@@ -1219,95 +1394,45 @@ async def narr05_human_override(
 
     await _run_fraud_stage(store, application_id, company_id, fraud_score=0.08, session_id="sess-fraud")
     await _run_compliance_stage(store, application_id, company_id, hard_block=False, session_id="sess-compliance")
-
-    await _start_session(
+    await _run_decision_and_review(
         store,
         application_id,
-        AgentType.DECISION_ORCHESTRATOR,
-        "sess-orch",
+        company_id,
+        recommendation="DECLINE",
+        confidence=0.82,
+        approved_amount_usd=None,
+        review_approved_amount_usd=Decimal("750000"),
+        executive_summary="Automated decline recommendation due to high credit risk despite clean compliance.",
+        key_risks=["high leverage", "declining revenue trajectory"],
+        credit_session_stream_id="agent-credit_analysis-sess-credit",
+        fraud_session_stream_id="agent-fraud_detection-sess-fraud",
+        compliance_session_stream_id="agent-compliance-sess-compliance",
+        quality_caveats=[],
+        review_reason="Relationship manager requested manual adjudication.",
+        final_decision="APPROVE",
+        override=True,
+        reviewer_id="LO-Sarah-Chen",
+        override_reason="15-year customer, prior repayment history, collateral offered",
+        interest_rate_pct=9.10,
+        term_months=36,
+        conditions=[
+            "Monthly revenue reporting for 12 months",
+            "Personal guarantee from CEO",
+        ],
+        session_id="sess-orch",
         agent_id="orch-agent-068",
-        model_version="orch-v1",
-    )
-    await _record_node(
-        store,
-        AgentType.DECISION_ORCHESTRATOR,
-        "sess-orch",
-        node_name="synthesize_recommendation",
-        node_sequence=1,
-        llm_called=True,
-        input_keys=["credit_decision", "fraud_assessment", "compliance_verdict"],
-        output_keys=["recommendation", "summary"],
         duration_ms=710,
         llm_tokens_input=2350,
         llm_tokens_output=300,
         llm_cost_usd=0.22,
     )
-    loan_positions = await handle_generate_decision(
-        GenerateDecisionCommand(
-            application_id=application_id,
-            session_id="sess-orch",
-            recommendation="DECLINE",
-            confidence=0.82,
-            executive_summary="Automated decline recommendation due to high credit risk despite clean compliance.",
-            key_risks=["high leverage", "declining revenue trajectory"],
-            contributing_sessions=[
-                "agent-credit_analysis-sess-credit",
-                "agent-fraud_detection-sess-fraud",
-                "agent-compliance-sess-compliance",
-            ],
-            model_versions={"decision_orchestrator": "orch-v1"},
-        ),
-        store,
-    )
-    await _record_agent_output(
-        store,
-        application_id,
-        AgentType.DECISION_ORCHESTRATOR,
-        "sess-orch",
-        stream_id=f"loan-{application_id}",
-        event_type="DecisionGenerated",
-        stream_position=loan_positions[f"loan-{application_id}"][0],
-    )
-    await _complete_session(
-        store,
-        application_id,
-        AgentType.DECISION_ORCHESTRATOR,
-        "sess-orch",
-        next_agent_triggered="human_review",
-        total_nodes=1,
-        total_llm_calls=1,
-        total_tokens_used=2650,
-        total_cost_usd=0.22,
-    )
-
-    await _request_human_review(
-        store,
-        application_id,
-        reason="Relationship manager requested manual adjudication.",
-    )
-    await handle_human_review_completed(
-        HumanReviewCompletedCommand(
-            application_id=application_id,
-            reviewer_id="LO-Sarah-Chen",
-            override=True,
-            override_reason="15-year customer, prior repayment history, collateral offered",
-            original_recommendation="DECLINE",
-            final_decision="APPROVE",
-            approved_amount_usd=Decimal("750000"),
-            interest_rate_pct=9.10,
-            term_months=36,
-            conditions=[
-                "Monthly revenue reporting for 12 months",
-                "Personal guarantee from CEO",
-            ],
-        ),
-        store,
-    )
 
     loan_events = await store.load_stream(f"loan-{application_id}")
+    company_context = await _resolve_company_context(store, company_id)
     return {
         "application_id": application_id,
         "company_id": company_id,
+        "profile_source": company_context.source,
         "loan_events": [event.model_dump(mode="json") for event in loan_events],
     }
 

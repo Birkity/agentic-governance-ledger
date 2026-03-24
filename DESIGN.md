@@ -404,6 +404,31 @@ Given another full day, I would not bring back the old dead scaffolding. I would
 
 That would provide the prompt-design evidence the support rubric wants without polluting the core repository with placeholder classes.
 
+## 7. Current Maturity Framing
+
+### What This Repository Proves Today
+
+This repository already proves the challenge architecture at the code and test level:
+
+- append-only event storage with optimistic concurrency and replay
+- projection checkpoints, rebuild validation, and lag evidence
+- read-time upcasting without mutating stored rows
+- audit-chain verification and Gas Town recovery
+- MCP command/query separation
+- counterfactual replay and self-verifiable regulatory packaging
+- live-backed runtime preference for the read-only Applicant Registry adapter
+- a thin evented pipeline runner that records durable telemetry for five modeled agent roles
+
+### What Remains Production Hardening
+
+The following items should be described as next steps rather than as finished production guarantees:
+
+- auth and RBAC for UI and MCP access
+- a real outbox publisher and snapshot compaction strategy
+- distributed projection ownership beyond the single-process daemon model
+- browser end-to-end tests, failover drills, and longer-running soak tests
+- external provider billing telemetry instead of workflow cost proxies when paid model APIs are used
+
 ## Appendix A. Data Boundary Decisions
 
 The repository follows a strict data-boundary model:

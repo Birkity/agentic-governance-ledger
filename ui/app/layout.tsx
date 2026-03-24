@@ -5,8 +5,8 @@ import { PrimaryNav } from "../components/PrimaryNav";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "The Ledger Command Center",
-  description: "A streamlined operator interface for ledger timelines, audit evidence, and human review."
+  title: "The Ledger Investigation Console",
+  description: "A read-heavy demo interface for ledger timelines, evidence, and operational artifacts."
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -20,7 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <span className="brand-chip">TL</span>
                 <div>
                   <strong>The Ledger</strong>
-                  <span>Command Center</span>
+                  <span>Investigation Console</span>
                 </div>
               </Link>
 
@@ -28,7 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
 
             <div className="header-copy">
-              <p>Durable lending operations, evidence, and oversight.</p>
+              <p>Event history, evidence, and oversight for demos, review, and technical walkthroughs.</p>
             </div>
           </header>
 

@@ -113,6 +113,10 @@ class EventStore:
         if self.upcasters is not None and hasattr(self.upcasters, "bind_store"):
             self.upcasters.bind_store(self)
 
+    @property
+    def pool(self) -> asyncpg.Pool | None:
+        return self._pool
+
     async def connect(self) -> None:
         self._pool = await asyncpg.create_pool(self.db_url, min_size=1, max_size=self.max_pool_size)
         await self.ensure_schema()
