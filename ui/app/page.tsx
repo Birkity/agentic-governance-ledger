@@ -25,7 +25,7 @@ export default async function HomePage() {
         <div className="front-hero-copy stack-lg">
           <div className="hero-copy">
             <p className="eyebrow">The Ledger</p>
-            <h1>Investigation Console</h1>
+            <h1>Review Workspace</h1>
             <p className="hero-body">
               Review lending activity from a calmer front door, then move into a queue, application workspace, or
               operations view when you need more detail. This surface is designed for demos and investigation, not as a

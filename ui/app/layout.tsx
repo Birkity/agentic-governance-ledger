@@ -5,7 +5,7 @@ import { PrimaryNav } from "../components/PrimaryNav";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "The Ledger Investigation Console",
+  title: "The Ledger Review Workspace",
   description: "A read-heavy demo interface for ledger timelines, evidence, and operational artifacts."
 };
 
@@ -20,7 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <span className="brand-chip">TL</span>
                 <div>
                   <strong>The Ledger</strong>
-                  <span>Investigation Console</span>
+                  <span>Review Workspace</span>
                 </div>
               </Link>
 

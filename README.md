@@ -310,7 +310,7 @@ Build the final report source if TeX is installed locally:
 
 The versioned final report source lives at `reports/final_submission.tex`. The compiled PDF is treated as a build artifact derived from that source rather than as the only versioned copy of the report.
 
-## UI Investigation Console
+## UI Review Workspace
 
 The repository also includes a Next.js interface in `ui/` for demos, investigation, and presentation workflows. It is designed to show:
 
@@ -321,7 +321,7 @@ The repository also includes a Next.js interface in `ui/` for demos, investigati
 - audit integrity status
 - projection lag and optimistic concurrency guardrail reports
 
-It should be described as a read-heavy investigation console, not as a production-hardened operator control plane.
+It should be described as a read-heavy review workspace, not as a production-hardened operator control plane.
 
 The application workspace is split into focused sections:
 
