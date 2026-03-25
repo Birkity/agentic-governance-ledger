@@ -70,7 +70,7 @@ APPLICANT_PROFILES_PATH = ROOT / "data" / "applicant_profiles.json"
 DOCUMENTS_ROOT = ROOT / "documents"
 
 NARRATIVE_COMPANIES = {
-    "NARR-01": "COMP-024",
+    "NARR-01": "COMP-031",
     "NARR-02": "COMP-001",
     "NARR-03": "COMP-057",
     "NARR-05": "COMP-068",

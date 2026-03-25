@@ -40,6 +40,7 @@ from src.models.events import (
     AgentType,
     CreditAnalysisCompleted,
     CreditDecision,
+    CreditRecordOpened,
     DocumentType,
     HumanReviewRequested,
     LoanPurpose,
@@ -57,7 +58,7 @@ DOCUMENTS_ROOT = ROOT / "documents"
 ARTIFACTS_ROOT = ROOT / "artifacts"
 
 NARRATIVE_COMPANIES = {
-    "NARR-01": "COMP-024",
+    "NARR-01": "COMP-031",
     "NARR-02": "COMP-001",
     "NARR-03": "COMP-057",
     "NARR-05": "COMP-068",
@@ -110,6 +111,19 @@ def _json_default(value: Any) -> Any:
 
 def _serialize(value: Any) -> Any:
     return json.loads(json.dumps(value, default=_json_default))
+
+
+def _scenario_session_id(
+    store: EventStore | InMemoryEventStore,
+    application_id: str,
+    base_session_id: str,
+) -> str:
+    if not isinstance(store, EventStore):
+        return base_session_id
+    application_slug = application_id.lower().replace("_", "-")
+    if base_session_id.endswith(application_slug):
+        return base_session_id
+    return f"{base_session_id}-{application_slug}"
 
 
 def _load_profiles() -> list[dict[str, Any]]:
@@ -529,7 +543,7 @@ async def run_document_phase(
     session_stream_id: str | None = None
 
     if existing_version == -1:
-        session_id = "sess-doc"
+        session_id = _scenario_session_id(store, application_id, "sess-doc")
         session_stream_id = await _start_session(
             store,
             application_id,
@@ -630,7 +644,7 @@ async def run_credit_phase(
     )
     await _ensure_credit_requested(store, application_id)
 
-    session_id = "sess-credit"
+    session_id = _scenario_session_id(store, application_id, "sess-credit")
     stream_id = await _start_session(
         store,
         application_id,
@@ -737,6 +751,7 @@ async def _run_fraud_stage(
     context_source: str = "fresh",
     ensure_started: bool = True,
 ) -> dict[str, Any]:
+    session_id = _scenario_session_id(store, application_id, session_id)
     company_context = await _resolve_company_context(store, company_id)
     profile = company_context.as_profile_dict()
     stream_id = f"agent-{AgentType.FRAUD_DETECTION.value}-{session_id}"
@@ -839,6 +854,7 @@ async def _run_compliance_stage(
     session_id: str = "sess-compliance",
     hard_block: bool = False,
 ) -> dict[str, Any]:
+    session_id = _scenario_session_id(store, application_id, session_id)
     company_context = await _resolve_company_context(store, company_id)
     profile = company_context.as_profile_dict()
     stream_id = await _start_session(
@@ -972,6 +988,7 @@ async def _run_decision_and_review(
     llm_tokens_output: int = 320,
     llm_cost_usd: float | None = None,
 ) -> dict[str, Any]:
+    session_id = _scenario_session_id(store, application_id, session_id)
     orchestrator_agent_id = agent_id or f"orch-{company_id.lower()}"
     total_input_tokens = llm_tokens_input if llm_tokens_input is not None else 2200 + (150 * len(quality_caveats))
     computed_cost = (
@@ -1128,34 +1145,213 @@ async def run_full_pipeline(
 async def narr01_occ_collision(
     store: EventStore | InMemoryEventStore,
     application_id: str = "APEX-NARR01",
+    company_id: str = "COMP-031",
 ) -> dict[str, Any]:
-    stream_id = f"loan-{application_id}"
+    document_result = await run_document_phase(store, application_id, company_id)
+    analysis = document_result["analysis"]
+    await _submit_application(store, application_id, company_id, analysis)
+    await _ensure_credit_requested(store, application_id)
+
+    company_context = await _resolve_company_context(store, company_id)
+    requested_amount = _requested_amount_from_analysis(analysis, company_id)
+    decision_template = _credit_decision_from_profile(
+        company_id,
+        company_context.as_profile_dict(),
+        analysis,
+        requested_amount,
+    )
+
+    credit_stream_id = f"credit-{application_id}"
     await store.append(
-        stream_id,
+        credit_stream_id,
         [
-            {"event_type": "ApplicationSubmitted", "event_version": 1, "payload": {"application_id": application_id, "sequence": 1}},
-            {"event_type": "CreditAnalysisRequested", "event_version": 1, "payload": {"application_id": application_id, "sequence": 2}},
-            {"event_type": "FraudScreeningRequested", "event_version": 1, "payload": {"application_id": application_id, "sequence": 3}},
+            CreditRecordOpened(
+                application_id=application_id,
+                applicant_id=company_id,
+                opened_at=_now(),
+            ).to_store_dict()
         ],
         expected_version=-1,
     )
-    current_version = await store.stream_version(stream_id)
+    initial_version = await store.stream_version(credit_stream_id)
 
-    results = await asyncio.gather(
-        store.append(stream_id, [{"event_type": "DecisionGenerated", "event_version": 1, "payload": {"marker": "A"}}], expected_version=current_version),
-        store.append(stream_id, [{"event_type": "DecisionGenerated", "event_version": 1, "payload": {"marker": "B"}}], expected_version=current_version),
-        return_exceptions=True,
+    async def _resolve_causation_id(causation_id: str | None) -> bool:
+        if not causation_id or ":" not in causation_id:
+            return False
+        stream_ref, _, position_text = causation_id.rpartition(":")
+        try:
+            position = int(position_text)
+        except ValueError:
+            return False
+        events = await store.load_stream(stream_ref, from_position=position, to_position=position, apply_upcasters=False)
+        return bool(events)
+
+    async def _credit_agent(marker: str) -> dict[str, Any]:
+        session_id = _scenario_session_id(store, application_id, f"sess-credit-{marker.lower()}")
+        agent_stream_id = await _start_session(
+            store,
+            application_id,
+            AgentType.CREDIT_ANALYSIS,
+            session_id,
+            agent_id=f"credit-{company_id.lower()}-{marker.lower()}",
+            model_version="credit-v1",
+        )
+        await _record_node(
+            store,
+            AgentType.CREDIT_ANALYSIS,
+            session_id,
+            node_name="load_facts",
+            node_sequence=1,
+            llm_called=False,
+            input_keys=["docpkg", "credit_stream"],
+            output_keys=["financial_facts"],
+        )
+        await _record_tool(
+            store,
+            AgentType.CREDIT_ANALYSIS,
+            session_id,
+            tool_name="registry.lookup",
+            tool_input_summary=company_id,
+            tool_output_summary=f"industry={company_context.industry}; trajectory={company_context.trajectory}",
+        )
+        compose_positions = await _record_node(
+            store,
+            AgentType.CREDIT_ANALYSIS,
+            session_id,
+            node_name="compose_recommendation",
+            node_sequence=2,
+            llm_called=True,
+            input_keys=["financial_facts", "registry_profile"],
+            output_keys=["credit_decision"],
+            duration_ms=720,
+            llm_tokens_input=2200,
+            llm_tokens_output=320,
+            llm_cost_usd=0.21,
+        )
+        decision = CreditDecision(
+            risk_tier=decision_template.risk_tier,
+            recommended_limit_usd=decision_template.recommended_limit_usd,
+            confidence=decision_template.confidence,
+            rationale=f"{decision_template.rationale} Concurrent agent {marker} completed underwriting.",
+        )
+        credit_event = CreditAnalysisCompleted(
+            application_id=application_id,
+            session_id=session_id,
+            decision=decision,
+            model_version="credit-v1",
+            model_deployment_id="credit-dep-v1",
+            input_data_hash=f"credit-occ-{application_id.lower()}-{marker.lower()}",
+            analysis_duration_ms=640,
+            regulatory_basis=_quality_caveats(analysis),
+            completed_at=_now(),
+        ).to_store_dict()
+        causation_id = f"{agent_stream_id}:{compose_positions[-1]}"
+
+        optimistic_concurrency_failure = False
+        retry_version: int | None = None
+        retry_confirmed = False
+        try:
+            positions = await store.append(
+                credit_stream_id,
+                [credit_event],
+                expected_version=initial_version,
+                causation_id=causation_id,
+            )
+        except OptimisticConcurrencyError:
+            optimistic_concurrency_failure = True
+            reload_positions = await _record_node(
+                store,
+                AgentType.CREDIT_ANALYSIS,
+                session_id,
+                node_name="reload_after_occ",
+                node_sequence=3,
+                llm_called=False,
+                input_keys=["credit_stream"],
+                output_keys=["credit_events"],
+                duration_ms=140,
+            )
+            causation_id = f"{agent_stream_id}:{reload_positions[-1]}"
+            current_credit_events = await store.load_stream(credit_stream_id, apply_upcasters=False)
+            retry_version = await store.stream_version(credit_stream_id)
+            retry_confirmed = any(
+                event.event_type == "CreditAnalysisCompleted"
+                and event.payload.get("application_id") == application_id
+                for event in current_credit_events
+            )
+            positions = await store.append(
+                credit_stream_id,
+                [credit_event],
+                expected_version=retry_version,
+                causation_id=causation_id,
+            )
+
+        await _record_agent_output(
+            store,
+            application_id,
+            AgentType.CREDIT_ANALYSIS,
+            session_id,
+            stream_id=credit_stream_id,
+            event_type="CreditAnalysisCompleted",
+            stream_position=positions[-1],
+        )
+        await _complete_session(
+            store,
+            application_id,
+            AgentType.CREDIT_ANALYSIS,
+            session_id,
+            next_agent_triggered=None,
+            total_nodes=3 if optimistic_concurrency_failure else 2,
+            total_llm_calls=1,
+            total_tokens_used=2520,
+            total_cost_usd=0.21,
+        )
+        session_events = await store.load_stream(agent_stream_id, apply_upcasters=False)
+        return {
+            "session_id": session_id,
+            "agent_stream_id": agent_stream_id,
+            "marker": marker,
+            "read_version": initial_version,
+            "optimistic_concurrency_failure": optimistic_concurrency_failure,
+            "retry_version": retry_version,
+            "retry_confirmed_same_application": retry_confirmed,
+            "credit_stream_position": positions[-1],
+            "session_events": [_serialize(event.model_dump(mode="json")) for event in session_events],
+        }
+
+    agent_results = await asyncio.gather(_credit_agent("A"), _credit_agent("B"))
+    credit_events = await store.load_stream(credit_stream_id, apply_upcasters=False)
+    credit_record_opened = next(event for event in credit_events if event.event_type == "CreditRecordOpened")
+    credit_completed_events = [event for event in credit_events if event.event_type == "CreditAnalysisCompleted"]
+    second_event_causation_id = (
+        str(credit_completed_events[1].metadata.get("causation_id"))
+        if len(credit_completed_events) >= 2 and credit_completed_events[1].metadata.get("causation_id") is not None
+        else None
     )
-    stream_events = await store.load_stream(stream_id, apply_upcasters=False)
-    successes = [result for result in results if isinstance(result, list)]
-    failures = [result for result in results if isinstance(result, OptimisticConcurrencyError)]
     return {
         "application_id": application_id,
-        "stream_id": stream_id,
-        "successful_appends": len(successes),
-        "optimistic_concurrency_failures": len(failures),
-        "final_stream_length": len(stream_events),
-        "final_stream_positions": [event.stream_position for event in stream_events],
+        "company_id": company_id,
+        "stream_id": credit_stream_id,
+        "initial_credit_version": initial_version,
+        "successful_appends": len(credit_completed_events),
+        "optimistic_concurrency_failures": sum(
+            1 for result in agent_results if result["optimistic_concurrency_failure"]
+        ),
+        "credit_analysis_completed_count": len(credit_completed_events),
+        "credit_record_opened_position": credit_record_opened.stream_position,
+        "credit_stream_positions": [event.stream_position for event in credit_completed_events],
+        "credit_completion_offsets_from_open": [
+            event.stream_position - credit_record_opened.stream_position for event in credit_completed_events
+        ],
+        "credit_events": [_serialize(event.model_dump(mode="json")) for event in credit_events],
+        "agent_results": agent_results,
+        "agent_failures_logged": sum(
+            1
+            for result in agent_results
+            for event in result["session_events"]
+            if event["event_type"] == "AgentSessionFailed"
+        ),
+        "second_event_causation_id": second_event_causation_id,
+        "second_event_causation_id_resolvable": await _resolve_causation_id(second_event_causation_id),
     }
 
 
@@ -1186,8 +1382,8 @@ async def narr03_crash_recovery(
 ) -> dict[str, Any]:
     await run_credit_phase(store, application_id, company_id, requested_amount_usd=Decimal("1100000"))
 
-    crashed_session_id = "sess-fraud-crashed"
-    recovered_session_id = "sess-fraud-recovered"
+    crashed_session_id = _scenario_session_id(store, application_id, "sess-fraud-crashed")
+    recovered_session_id = _scenario_session_id(store, application_id, "sess-fraud-recovered")
     await _start_session(
         store,
         application_id,
@@ -1313,6 +1509,10 @@ async def narr05_human_override(
     requested_amount = Decimal("950000")
     analysis_result = await run_document_phase(store, application_id, company_id)
     analysis = analysis_result["analysis"]
+    credit_session_id = _scenario_session_id(store, application_id, "sess-credit")
+    fraud_session_id = _scenario_session_id(store, application_id, "sess-fraud")
+    compliance_session_id = _scenario_session_id(store, application_id, "sess-compliance")
+    orchestrator_session_id = _scenario_session_id(store, application_id, "sess-orch")
     await _submit_application(
         store,
         application_id,
@@ -1326,14 +1526,14 @@ async def narr05_human_override(
         store,
         application_id,
         AgentType.CREDIT_ANALYSIS,
-        "sess-credit",
+        credit_session_id,
         agent_id="credit-agent-068",
         model_version="credit-v1",
     )
     await _record_node(
         store,
         AgentType.CREDIT_ANALYSIS,
-        "sess-credit",
+        credit_session_id,
         node_name="load_facts",
         node_sequence=1,
         llm_called=False,
@@ -1343,7 +1543,7 @@ async def narr05_human_override(
     await _record_node(
         store,
         AgentType.CREDIT_ANALYSIS,
-        "sess-credit",
+        credit_session_id,
         node_name="compose_recommendation",
         node_sequence=2,
         llm_called=True,
@@ -1357,7 +1557,7 @@ async def narr05_human_override(
     credit_positions = await handle_credit_analysis_completed(
         CreditAnalysisCompletedCommand(
             application_id=application_id,
-            session_id="sess-credit",
+            session_id=credit_session_id,
             decision=CreditDecision(
                 risk_tier=RiskTier.HIGH,
                 recommended_limit_usd=Decimal("750000"),
@@ -1375,7 +1575,7 @@ async def narr05_human_override(
         store,
         application_id,
         AgentType.CREDIT_ANALYSIS,
-        "sess-credit",
+        credit_session_id,
         stream_id=f"credit-{application_id}",
         event_type="CreditAnalysisCompleted",
         stream_position=credit_positions[f"credit-{application_id}"][-1],
@@ -1384,7 +1584,7 @@ async def narr05_human_override(
         store,
         application_id,
         AgentType.CREDIT_ANALYSIS,
-        "sess-credit",
+        credit_session_id,
         next_agent_triggered="fraud_detection",
         total_nodes=2,
         total_llm_calls=1,
@@ -1392,8 +1592,8 @@ async def narr05_human_override(
         total_cost_usd=0.31,
     )
 
-    await _run_fraud_stage(store, application_id, company_id, fraud_score=0.08, session_id="sess-fraud")
-    await _run_compliance_stage(store, application_id, company_id, hard_block=False, session_id="sess-compliance")
+    await _run_fraud_stage(store, application_id, company_id, fraud_score=0.08, session_id=fraud_session_id)
+    await _run_compliance_stage(store, application_id, company_id, hard_block=False, session_id=compliance_session_id)
     await _run_decision_and_review(
         store,
         application_id,
@@ -1404,9 +1604,9 @@ async def narr05_human_override(
         review_approved_amount_usd=Decimal("750000"),
         executive_summary="Automated decline recommendation due to high credit risk despite clean compliance.",
         key_risks=["high leverage", "declining revenue trajectory"],
-        credit_session_stream_id="agent-credit_analysis-sess-credit",
-        fraud_session_stream_id="agent-fraud_detection-sess-fraud",
-        compliance_session_stream_id="agent-compliance-sess-compliance",
+        credit_session_stream_id=f"agent-credit_analysis-{credit_session_id}",
+        fraud_session_stream_id=f"agent-fraud_detection-{fraud_session_id}",
+        compliance_session_stream_id=f"agent-compliance-{compliance_session_id}",
         quality_caveats=[],
         review_reason="Relationship manager requested manual adjudication.",
         final_decision="APPROVE",
@@ -1419,7 +1619,7 @@ async def narr05_human_override(
             "Monthly revenue reporting for 12 months",
             "Personal guarantee from CEO",
         ],
-        session_id="sess-orch",
+        session_id=orchestrator_session_id,
         agent_id="orch-agent-068",
         duration_ms=710,
         llm_tokens_input=2350,
