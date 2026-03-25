@@ -13,16 +13,13 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src.demo import (
-    default_company_for_application,
     narr01_occ_collision,
     narr02_missing_ebitda,
     narr03_crash_recovery,
     narr04_montana_hard_block,
     narr05_human_override,
-    run_credit_phase,
-    run_document_phase,
-    run_full_pipeline,
 )
+from src.agents import LedgerAgentRuntime, default_company_for_application
 from src.event_store import EventStore, InMemoryEventStore
 
 
@@ -74,12 +71,14 @@ async def main() -> None:
             result = await narr04_montana_hard_block(store, application_id=args.application_id, company_id=company_id)
         elif args.scenario == "narr05":
             result = await narr05_human_override(store, application_id=args.application_id, company_id=company_id)
-        elif args.phase == "document":
-            result = await run_document_phase(store, args.application_id, company_id)
-        elif args.phase == "credit":
-            result = await run_credit_phase(store, args.application_id, company_id)
         else:
-            result = await run_full_pipeline(store, args.application_id, company_id)
+            runtime = LedgerAgentRuntime(store)
+            result = await runtime.start_application(
+                args.application_id,
+                company_id,
+                phase=args.phase,
+                auto_finalize_human_review=True,
+            )
 
         rendered = json.dumps(result, default=_json_default, indent=2)
         if args.output:

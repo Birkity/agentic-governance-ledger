@@ -240,4 +240,9 @@ async def persist_document_package(
         package_id=package_id or stream_id,
         pipeline_version=pipeline_version,
     )
-    return await store.append(stream_id, events, expected_version=expected_version)
+    return await store.append(
+        stream_id,
+        events,
+        expected_version=expected_version,
+        metadata={"outbox_destinations": ["ledger.downstream"]},
+    )

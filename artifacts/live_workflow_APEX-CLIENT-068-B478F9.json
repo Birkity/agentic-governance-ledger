@@ -1,0 +1,64 @@
+{
+  "application_id": "APEX-CLIENT-068-B478F9",
+  "final_event_type": "ApplicationApproved",
+  "loan_event_types": [
+    "ApplicationSubmitted",
+    "DocumentUploadRequested",
+    "CreditAnalysisRequested",
+    "FraudScreeningRequested",
+    "ComplianceCheckRequested",
+    "DecisionRequested",
+    "DecisionGenerated",
+    "HumanReviewRequested",
+    "HumanReviewCompleted",
+    "ApplicationApproved"
+  ],
+  "credit_event_types": [
+    "CreditRecordOpened",
+    "HistoricalProfileConsumed",
+    "ExtractedFactsConsumed",
+    "CreditAnalysisCompleted"
+  ],
+  "fraud_event_types": [
+    "FraudScreeningInitiated",
+    "FraudScreeningCompleted"
+  ],
+  "compliance_event_types": [
+    "ComplianceCheckInitiated",
+    "ComplianceRulePassed",
+    "ComplianceRulePassed",
+    "ComplianceRulePassed",
+    "ComplianceRulePassed",
+    "ComplianceRulePassed",
+    "ComplianceRuleNoted",
+    "ComplianceCheckCompleted"
+  ],
+  "cost_summary": {
+    "generated_at": "2026-03-25T16:11:06.196003+00:00",
+    "application_ids": [
+      "APEX-CLIENT-068-B478F9"
+    ],
+    "application_count": 1,
+    "provider_calls_observed": 3,
+    "billable_calls_observed": 3,
+    "total_cost_usd": 0.001342,
+    "average_cost_usd": 0.001342,
+    "totals_by_application": {
+      "APEX-CLIENT-068-B478F9": 0.001342
+    },
+    "totals_by_agent": {
+      "credit_analysis": 0.000576,
+      "decision_orchestrator": 0.000366,
+      "fraud_detection": 0.0004
+    },
+    "totals_by_model": {
+      "openai/gpt-4.1-2025-04-14": 0.001342
+    },
+    "totals_by_provider": {
+      "openrouter": 0.001342
+    },
+    "tokens_by_provider": {
+      "openrouter": 311
+    }
+  }
+}

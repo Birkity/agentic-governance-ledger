@@ -1,178 +1,185 @@
 {
-  "application_id": "APEX-NARR05",
+  "application_id": "APEX-NARR05-LIVE-20260325T180500Z",
   "branch_event_type": "CreditAnalysisCompleted",
-  "branch_stream_id": "credit-APEX-NARR05",
-  "branch_event_id": "66324404-9917-4f8f-901c-a04508d81f09",
-  "total_real_events": 62,
-  "total_counterfactual_events": 47,
+  "branch_stream_id": "credit-APEX-NARR05-LIVE-20260325T180500Z",
+  "branch_event_id": "8e00fa96-c9d0-4d10-8dce-d6ac0ce2ae69",
+  "total_real_events": 75,
+  "total_counterfactual_events": 59,
   "injected_events": [
     {
       "event_type": "CreditAnalysisCompleted",
       "event_version": 2,
       "payload": {
-        "application_id": "APEX-NARR05",
-        "session_id": "sess-credit",
+        "application_id": "APEX-NARR05-LIVE-20260325T180500Z",
+        "session_id": "whatif-credit-session",
         "decision": {
           "risk_tier": "MEDIUM",
-          "recommended_limit_usd": "950000",
+          "recommended_limit_usd": "750000",
           "confidence": 0.88,
-          "rationale": "Counterfactual replay assumes leverage improved to medium risk.",
+          "rationale": "Counterfactual replay assumes relationship and collateral support a medium-risk credit posture.",
           "key_concerns": [],
           "data_quality_caveats": [],
           "policy_overrides_applied": []
         },
         "model_version": "credit-whatif-v1",
         "model_deployment_id": "credit-whatif-dep",
-        "input_data_hash": "whatif-input-narr05",
+        "input_data_hash": "whatif-input-narr05-live",
         "analysis_duration_ms": 5,
         "regulatory_basis": [],
-        "completed_at": "2026-03-23T16:37:20.563007Z"
+        "completed_at": "2026-03-25T17:02:42.901313Z"
       },
       "recorded_at": null,
       "metadata": {},
-      "stream_id": "credit-APEX-NARR05"
+      "stream_id": "credit-APEX-NARR05-LIVE-20260325T180500Z"
     }
   ],
   "divergence_events": [
     {
       "kind": "replaced",
       "event_type": "CreditAnalysisCompleted",
-      "stream_id": "credit-APEX-NARR05",
-      "stream_position": 0,
-      "event_id": "66324404-9917-4f8f-901c-a04508d81f09"
+      "stream_id": "credit-APEX-NARR05-LIVE-20260325T180500Z",
+      "stream_position": 4,
+      "event_id": "8e00fa96-c9d0-4d10-8dce-d6ac0ce2ae69"
     },
     {
       "kind": "skipped_dependent",
       "event_type": "FraudScreeningRequested",
-      "stream_id": "loan-APEX-NARR05",
-      "stream_position": 3,
-      "event_id": "25ead8dc-0e01-437f-8bcb-72e14b04bc39"
+      "stream_id": "loan-APEX-NARR05-LIVE-20260325T180500Z",
+      "stream_position": 4,
+      "event_id": "fdbdb094-6d96-4906-84a3-d3cea781acd8"
     },
     {
       "kind": "skipped_dependent",
       "event_type": "AgentOutputWritten",
-      "stream_id": "agent-credit_analysis-sess-credit",
-      "stream_position": 3,
-      "event_id": "efca753c-2920-4676-9220-16ce08e843be"
+      "stream_id": "agent-credit_analysis-sess-credit-d2253a",
+      "stream_position": 12,
+      "event_id": "3fa53431-d12b-4135-890c-c0e499ffeae9"
     },
     {
       "kind": "skipped_dependent",
       "event_type": "AgentSessionCompleted",
-      "stream_id": "agent-credit_analysis-sess-credit",
+      "stream_id": "agent-credit_analysis-sess-credit-d2253a",
+      "stream_position": 13,
+      "event_id": "94490c22-c86f-4c66-817c-c6afa47ea29d"
+    },
+    {
+      "kind": "skipped_dependent",
+      "event_type": "AgentOutputWritten",
+      "stream_id": "agent-fraud_detection-sess-fraud-b26d61",
       "stream_position": 4,
-      "event_id": "f57e0bbc-fdaa-4217-a010-c3c20375dfe0"
+      "event_id": "0fd12063-99fe-4692-8e58-8663c26e3484"
     },
     {
       "kind": "skipped_dependent",
       "event_type": "ComplianceCheckRequested",
-      "stream_id": "loan-APEX-NARR05",
-      "stream_position": 4,
-      "event_id": "6372b0e4-2a86-4489-bbac-e25e520d79e1"
+      "stream_id": "loan-APEX-NARR05-LIVE-20260325T180500Z",
+      "stream_position": 5,
+      "event_id": "3089e2aa-90f2-4d19-953e-e427f6d89364"
     },
     {
       "kind": "skipped_dependent",
       "event_type": "AgentOutputWritten",
-      "stream_id": "agent-fraud_detection-sess-fraud",
-      "stream_position": 4,
-      "event_id": "b62c2dc6-ab49-42d8-9b89-c7d19b4ac5af"
+      "stream_id": "agent-fraud_detection-sess-fraud-b26d61",
+      "stream_position": 9,
+      "event_id": "df13cfd7-cad9-4e55-adf2-337fb34ffbca"
     },
     {
       "kind": "skipped_dependent",
       "event_type": "AgentSessionCompleted",
-      "stream_id": "agent-fraud_detection-sess-fraud",
-      "stream_position": 5,
-      "event_id": "8d246390-314e-4dbb-b9f3-39beb8fbcdb6"
+      "stream_id": "agent-fraud_detection-sess-fraud-b26d61",
+      "stream_position": 10,
+      "event_id": "4030c639-30f8-4584-9f04-7866912f47c1"
     },
     {
       "kind": "skipped_dependent",
       "event_type": "DecisionRequested",
-      "stream_id": "loan-APEX-NARR05",
-      "stream_position": 5,
-      "event_id": "4364fbb6-1702-4bda-9702-e1e4a2bfd14b"
+      "stream_id": "loan-APEX-NARR05-LIVE-20260325T180500Z",
+      "stream_position": 6,
+      "event_id": "8acdc58d-38d9-4298-8c63-3ebc77189b37"
     },
     {
       "kind": "skipped_dependent",
       "event_type": "AgentOutputWritten",
-      "stream_id": "agent-compliance-sess-compliance",
-      "stream_position": 2,
-      "event_id": "fa9e91c1-18ee-44ba-aeb2-a3b440f13251"
+      "stream_id": "agent-compliance-sess-compliance-cb23ae",
+      "stream_position": 7,
+      "event_id": "608a5723-d415-4c2d-a466-ed7bdea50402"
     },
     {
       "kind": "skipped_dependent",
       "event_type": "AgentSessionCompleted",
-      "stream_id": "agent-compliance-sess-compliance",
-      "stream_position": 3,
-      "event_id": "59ccd79d-690b-4205-a128-257393f8477e"
+      "stream_id": "agent-compliance-sess-compliance-cb23ae",
+      "stream_position": 8,
+      "event_id": "e32d6665-5405-4f2b-addd-b0fdbf7307d2"
     },
     {
       "kind": "skipped_dependent",
       "event_type": "DecisionGenerated",
-      "stream_id": "loan-APEX-NARR05",
-      "stream_position": 6,
-      "event_id": "71168f79-5dc8-40d0-996b-0e6e29a731db"
+      "stream_id": "loan-APEX-NARR05-LIVE-20260325T180500Z",
+      "stream_position": 7,
+      "event_id": "2a3cc204-fde5-4ed4-821a-4d7dde2f697b"
     },
     {
       "kind": "skipped_dependent",
       "event_type": "AgentOutputWritten",
-      "stream_id": "agent-decision_orchestrator-sess-orch",
-      "stream_position": 2,
-      "event_id": "d27d0b5c-19ec-4ac9-9d15-25b073ffc661"
-    },
-    {
-      "kind": "skipped_dependent",
-      "event_type": "AgentSessionCompleted",
-      "stream_id": "agent-decision_orchestrator-sess-orch",
-      "stream_position": 3,
-      "event_id": "d2dbfbef-005e-4862-856e-50620e03a308"
+      "stream_id": "agent-decision_orchestrator-sess-orch-f95fb0",
+      "stream_position": 5,
+      "event_id": "33473b75-4196-40e8-9990-e8db4e90c117"
     },
     {
       "kind": "skipped_dependent",
       "event_type": "HumanReviewRequested",
-      "stream_id": "loan-APEX-NARR05",
+      "stream_id": "loan-APEX-NARR05-LIVE-20260325T180500Z",
+      "stream_position": 8,
+      "event_id": "31b656f9-cf9d-4631-9e82-953defb26037"
+    },
+    {
+      "kind": "skipped_dependent",
+      "event_type": "AgentSessionCompleted",
+      "stream_id": "agent-decision_orchestrator-sess-orch-f95fb0",
       "stream_position": 7,
-      "event_id": "3d52dcbc-5fe9-4b25-856c-6a90ecba6789"
+      "event_id": "b450ed17-5499-4e3b-ad63-c87a72f5b974"
     },
     {
       "kind": "skipped_dependent",
       "event_type": "HumanReviewCompleted",
-      "stream_id": "loan-APEX-NARR05",
-      "stream_position": 8,
-      "event_id": "ca3c7ba3-0e19-4c64-8f82-939f2817092b"
+      "stream_id": "loan-APEX-NARR05-LIVE-20260325T180500Z",
+      "stream_position": 9,
+      "event_id": "b738a046-e457-43a4-9fe0-14f7f77ca562"
     },
     {
       "kind": "skipped_dependent",
       "event_type": "ApplicationApproved",
-      "stream_id": "loan-APEX-NARR05",
-      "stream_position": 9,
-      "event_id": "8bbea9b3-7773-45b9-8c7c-0f3d4129dd57"
+      "stream_id": "loan-APEX-NARR05-LIVE-20260325T180500Z",
+      "stream_position": 10,
+      "event_id": "1607773a-a9f7-4c2a-8dca-816c9cac57bd"
     }
   ],
   "real_outcome": {
     "application_summary": {
-      "application_id": "APEX-NARR05",
+      "application_id": "APEX-NARR05-LIVE-20260325T180500Z",
       "state": "FINAL_APPROVED",
       "applicant_id": "COMP-068",
       "requested_amount_usd": "950000",
-      "approved_amount_usd": "750000",
+      "approved_amount_usd": "633115",
       "risk_tier": "HIGH",
       "fraud_score": 0.08,
       "compliance_status": "CLEAR",
       "decision": "APPROVE",
       "agent_sessions_completed": [
-        "sess-doc",
-        "sess-credit",
-        "sess-fraud",
-        "sess-compliance",
-        "sess-orch"
+        "sess-doc-057aaa",
+        "sess-credit-d2253a",
+        "sess-fraud-b26d61",
+        "sess-compliance-cb23ae",
+        "sess-orch-f95fb0"
       ],
       "last_event_type": "ApplicationApproved",
-      "last_event_at": "2026-03-23T16:37:20.515262+00:00",
+      "last_event_at": "2026-03-25T17:02:42.467695+00:00",
       "human_reviewer_id": "LO-Sarah-Chen",
-      "final_decision_at": "2026-03-23T16:37:20.513698+00:00"
+      "final_decision_at": "2026-03-25T17:02:42.463071+00:00"
     },
     "compliance_audit": {
-      "application_id": "APEX-NARR05",
-      "session_id": "sess-compliance",
+      "application_id": "APEX-NARR05-LIVE-20260325T180500Z",
+      "session_id": "sess-compliance-cb23ae",
       "regulation_set_version": "2026-Q1",
       "required_rules": [
         "REG-001",
@@ -187,41 +194,41 @@
           "rule_id": "REG-001",
           "rule_name": "AML",
           "rule_version": "1",
-          "evidence_hash": "e1",
-          "evaluation_notes": "Customer cleared sanctions screening.",
-          "evaluated_at": "2026-03-23T16:37:20.498154Z"
+          "evidence_hash": "aml-evidence",
+          "evaluation_notes": "Customer cleared AML screening.",
+          "evaluated_at": "2026-03-25T17:02:42.125841Z"
         },
         {
           "rule_id": "REG-002",
           "rule_name": "OFAC",
           "rule_version": "1",
-          "evidence_hash": "e2",
-          "evaluation_notes": "No OFAC match.",
-          "evaluated_at": "2026-03-23T16:37:20.498154Z"
+          "evidence_hash": "ofac-evidence",
+          "evaluation_notes": "No OFAC match present.",
+          "evaluated_at": "2026-03-25T17:02:42.125841Z"
         },
         {
           "rule_id": "REG-003",
           "rule_name": "Jurisdiction",
           "rule_version": "1",
-          "evidence_hash": "e3",
-          "evaluation_notes": "Jurisdiction allowed.",
-          "evaluated_at": "2026-03-23T16:37:20.498154Z"
+          "evidence_hash": "jurisdiction-evidence",
+          "evaluation_notes": "Jurisdiction is allowed.",
+          "evaluated_at": "2026-03-25T17:02:42.125841Z"
         },
         {
           "rule_id": "REG-004",
           "rule_name": "Entity Type",
           "rule_version": "1",
-          "evidence_hash": "e4",
+          "evidence_hash": "entity-evidence",
           "evaluation_notes": "Entity type is eligible.",
-          "evaluated_at": "2026-03-23T16:37:20.498154Z"
+          "evaluated_at": "2026-03-25T17:02:42.125841Z"
         },
         {
           "rule_id": "REG-005",
           "rule_name": "Operating History",
           "rule_version": "1",
-          "evidence_hash": "e5",
-          "evaluation_notes": "Operating history satisfies the policy.",
-          "evaluated_at": "2026-03-23T16:37:20.498154Z"
+          "evidence_hash": "history-evidence",
+          "evaluation_notes": "Operating history satisfies policy.",
+          "evaluated_at": "2026-03-25T17:02:42.125841Z"
         }
       ],
       "failed_rules": [],
@@ -231,22 +238,22 @@
           "rule_name": "CRA",
           "note_type": "CRA",
           "note_text": "CRA consideration recorded.",
-          "evaluated_at": "2026-03-23T16:37:20.498154Z"
+          "evaluated_at": "2026-03-25T17:02:42.125841Z"
         }
       ],
       "hard_block_rules": [],
       "completed": true,
       "overall_verdict": "CLEAR",
       "last_event_type": "ComplianceCheckCompleted",
-      "as_of": "2026-03-23T16:37:20.499962+00:00",
-      "checkpoint_position": 52,
+      "as_of": "2026-03-25T17:02:42.139333+00:00",
+      "checkpoint_position": 64,
       "snapshot_version": 8
     },
     "agent_performance": [
       {
         "agent_type": "document_processing",
         "agent_id": "doc-comp-068",
-        "model_version": "docproc-v1",
+        "model_version": "deterministic-fallback",
         "total_sessions": 1,
         "analyses_completed": 0,
         "decisions_generated": 0,
@@ -260,19 +267,19 @@
         "decline_rate": 0.0,
         "refer_rate": 0.0,
         "human_override_rate": 0.0,
-        "first_seen_at": "2026-03-23T16:37:20.441460+00:00",
-        "last_seen_at": "2026-03-23T16:37:20.441460+00:00",
+        "first_seen_at": "2026-03-25T17:01:26.025900+00:00",
+        "last_seen_at": "2026-03-25T17:01:26.025900+00:00",
         "confidence_samples": 0,
         "duration_samples": 0
       },
       {
         "agent_type": "credit_analysis",
-        "agent_id": "credit-agent-068",
-        "model_version": "credit-v1",
+        "agent_id": "credit-comp-068",
+        "model_version": "openai/gpt-4.1",
         "total_sessions": 1,
         "analyses_completed": 1,
         "decisions_generated": 0,
-        "avg_confidence_score": 0.82,
+        "avg_confidence_score": 0.78,
         "avg_duration_ms": 640.0,
         "approve_count": 0,
         "decline_count": 0,
@@ -282,15 +289,15 @@
         "decline_rate": 0.0,
         "refer_rate": 0.0,
         "human_override_rate": 0.0,
-        "first_seen_at": "2026-03-23T16:37:20.479879+00:00",
-        "last_seen_at": "2026-03-23T16:37:20.487087+00:00",
+        "first_seen_at": "2026-03-25T17:02:41.211121+00:00",
+        "last_seen_at": "2026-03-25T17:02:41.721966+00:00",
         "confidence_samples": 1,
         "duration_samples": 1
       },
       {
         "agent_type": "fraud_detection",
         "agent_id": "fraud-comp-068",
-        "model_version": "fraud-v1",
+        "model_version": "openai/gpt-4.1",
         "total_sessions": 1,
         "analyses_completed": 1,
         "decisions_generated": 0,
@@ -304,15 +311,15 @@
         "decline_rate": 0.0,
         "refer_rate": 0.0,
         "human_override_rate": 0.0,
-        "first_seen_at": "2026-03-23T16:37:20.489370+00:00",
-        "last_seen_at": "2026-03-23T16:37:20.492738+00:00",
+        "first_seen_at": "2026-03-25T17:02:41.869374+00:00",
+        "last_seen_at": "2026-03-25T17:02:41.973041+00:00",
         "confidence_samples": 0,
         "duration_samples": 0
       },
       {
         "agent_type": "compliance",
         "agent_id": "compliance-comp-068",
-        "model_version": "compliance-v1",
+        "model_version": "compliance-v2",
         "total_sessions": 1,
         "analyses_completed": 1,
         "decisions_generated": 0,
@@ -326,19 +333,19 @@
         "decline_rate": 0.0,
         "refer_rate": 0.0,
         "human_override_rate": 0.0,
-        "first_seen_at": "2026-03-23T16:37:20.495775+00:00",
-        "last_seen_at": "2026-03-23T16:37:20.499962+00:00",
+        "first_seen_at": "2026-03-25T17:02:42.069591+00:00",
+        "last_seen_at": "2026-03-25T17:02:42.139333+00:00",
         "confidence_samples": 0,
         "duration_samples": 0
       },
       {
         "agent_type": "decision_orchestrator",
-        "agent_id": "orch-agent-068",
-        "model_version": "orch-v1",
+        "agent_id": "orch-comp-068",
+        "model_version": "openai/gpt-4.1",
         "total_sessions": 1,
         "analyses_completed": 0,
         "decisions_generated": 1,
-        "avg_confidence_score": 0.82,
+        "avg_confidence_score": 0.78,
         "avg_duration_ms": null,
         "approve_count": 0,
         "decline_count": 1,
@@ -348,8 +355,8 @@
         "decline_rate": 1.0,
         "refer_rate": 0.0,
         "human_override_rate": 1.0,
-        "first_seen_at": "2026-03-23T16:37:20.501495+00:00",
-        "last_seen_at": "2026-03-23T16:37:20.515011+00:00",
+        "first_seen_at": "2026-03-25T17:02:42.317212+00:00",
+        "last_seen_at": "2026-03-25T17:02:42.466431+00:00",
         "confidence_samples": 1,
         "duration_samples": 0
       }
@@ -361,7 +368,7 @@
   },
   "counterfactual_outcome": {
     "application_summary": {
-      "application_id": "APEX-NARR05",
+      "application_id": "APEX-NARR05-LIVE-20260325T180500Z",
       "state": "AWAITING_ANALYSIS",
       "applicant_id": "COMP-068",
       "requested_amount_usd": "950000",
@@ -371,16 +378,16 @@
       "compliance_status": "CLEAR",
       "decision": null,
       "agent_sessions_completed": [
-        "sess-doc"
+        "sess-doc-057aaa"
       ],
       "last_event_type": "CreditAnalysisCompleted",
-      "last_event_at": "2026-03-23T16:37:20.587546+00:00",
+      "last_event_at": "2026-03-25T17:02:43.642311+00:00",
       "human_reviewer_id": null,
       "final_decision_at": null
     },
     "compliance_audit": {
-      "application_id": "APEX-NARR05",
-      "session_id": "sess-compliance",
+      "application_id": "APEX-NARR05-LIVE-20260325T180500Z",
+      "session_id": "sess-compliance-cb23ae",
       "regulation_set_version": "2026-Q1",
       "required_rules": [
         "REG-001",
@@ -395,41 +402,41 @@
           "rule_id": "REG-001",
           "rule_name": "AML",
           "rule_version": "1",
-          "evidence_hash": "e1",
-          "evaluation_notes": "Customer cleared sanctions screening.",
-          "evaluated_at": "2026-03-23T16:37:20.498154Z"
+          "evidence_hash": "aml-evidence",
+          "evaluation_notes": "Customer cleared AML screening.",
+          "evaluated_at": "2026-03-25T17:02:42.125841Z"
         },
         {
           "rule_id": "REG-002",
           "rule_name": "OFAC",
           "rule_version": "1",
-          "evidence_hash": "e2",
-          "evaluation_notes": "No OFAC match.",
-          "evaluated_at": "2026-03-23T16:37:20.498154Z"
+          "evidence_hash": "ofac-evidence",
+          "evaluation_notes": "No OFAC match present.",
+          "evaluated_at": "2026-03-25T17:02:42.125841Z"
         },
         {
           "rule_id": "REG-003",
           "rule_name": "Jurisdiction",
           "rule_version": "1",
-          "evidence_hash": "e3",
-          "evaluation_notes": "Jurisdiction allowed.",
-          "evaluated_at": "2026-03-23T16:37:20.498154Z"
+          "evidence_hash": "jurisdiction-evidence",
+          "evaluation_notes": "Jurisdiction is allowed.",
+          "evaluated_at": "2026-03-25T17:02:42.125841Z"
         },
         {
           "rule_id": "REG-004",
           "rule_name": "Entity Type",
           "rule_version": "1",
-          "evidence_hash": "e4",
+          "evidence_hash": "entity-evidence",
           "evaluation_notes": "Entity type is eligible.",
-          "evaluated_at": "2026-03-23T16:37:20.498154Z"
+          "evaluated_at": "2026-03-25T17:02:42.125841Z"
         },
         {
           "rule_id": "REG-005",
           "rule_name": "Operating History",
           "rule_version": "1",
-          "evidence_hash": "e5",
-          "evaluation_notes": "Operating history satisfies the policy.",
-          "evaluated_at": "2026-03-23T16:37:20.498154Z"
+          "evidence_hash": "history-evidence",
+          "evaluation_notes": "Operating history satisfies policy.",
+          "evaluated_at": "2026-03-25T17:02:42.125841Z"
         }
       ],
       "failed_rules": [],
@@ -439,22 +446,22 @@
           "rule_name": "CRA",
           "note_type": "CRA",
           "note_text": "CRA consideration recorded.",
-          "evaluated_at": "2026-03-23T16:37:20.498154Z"
+          "evaluated_at": "2026-03-25T17:02:42.125841Z"
         }
       ],
       "hard_block_rules": [],
       "completed": true,
       "overall_verdict": "CLEAR",
       "last_event_type": "ComplianceCheckCompleted",
-      "as_of": "2026-03-23T16:37:20.499962+00:00",
-      "checkpoint_position": 45,
+      "as_of": "2026-03-25T17:02:42.139333+00:00",
+      "checkpoint_position": 56,
       "snapshot_version": 8
     },
     "agent_performance": [
       {
         "agent_type": "document_processing",
         "agent_id": "doc-comp-068",
-        "model_version": "docproc-v1",
+        "model_version": "deterministic-fallback",
         "total_sessions": 1,
         "analyses_completed": 0,
         "decisions_generated": 0,
@@ -468,20 +475,20 @@
         "decline_rate": 0.0,
         "refer_rate": 0.0,
         "human_override_rate": 0.0,
-        "first_seen_at": "2026-03-23T16:37:20.441460+00:00",
-        "last_seen_at": "2026-03-23T16:37:20.441460+00:00",
+        "first_seen_at": "2026-03-25T17:01:26.025900+00:00",
+        "last_seen_at": "2026-03-25T17:01:26.025900+00:00",
         "confidence_samples": 0,
         "duration_samples": 0
       },
       {
         "agent_type": "credit_analysis",
-        "agent_id": "credit-agent-068",
-        "model_version": "credit-v1",
+        "agent_id": "credit-comp-068",
+        "model_version": "openai/gpt-4.1",
         "total_sessions": 1,
-        "analyses_completed": 1,
+        "analyses_completed": 0,
         "decisions_generated": 0,
-        "avg_confidence_score": 0.88,
-        "avg_duration_ms": 5.0,
+        "avg_confidence_score": null,
+        "avg_duration_ms": null,
         "approve_count": 0,
         "decline_count": 0,
         "refer_count": 0,
@@ -490,15 +497,15 @@
         "decline_rate": 0.0,
         "refer_rate": 0.0,
         "human_override_rate": 0.0,
-        "first_seen_at": "2026-03-23T16:37:20.479879+00:00",
-        "last_seen_at": "2026-03-23T16:37:20.587546+00:00",
-        "confidence_samples": 1,
-        "duration_samples": 1
+        "first_seen_at": "2026-03-25T17:02:41.211121+00:00",
+        "last_seen_at": "2026-03-25T17:02:41.211121+00:00",
+        "confidence_samples": 0,
+        "duration_samples": 0
       },
       {
         "agent_type": "fraud_detection",
         "agent_id": "fraud-comp-068",
-        "model_version": "fraud-v1",
+        "model_version": "openai/gpt-4.1",
         "total_sessions": 1,
         "analyses_completed": 1,
         "decisions_generated": 0,
@@ -512,15 +519,15 @@
         "decline_rate": 0.0,
         "refer_rate": 0.0,
         "human_override_rate": 0.0,
-        "first_seen_at": "2026-03-23T16:37:20.489370+00:00",
-        "last_seen_at": "2026-03-23T16:37:20.492738+00:00",
+        "first_seen_at": "2026-03-25T17:02:41.869374+00:00",
+        "last_seen_at": "2026-03-25T17:02:41.973041+00:00",
         "confidence_samples": 0,
         "duration_samples": 0
       },
       {
         "agent_type": "compliance",
         "agent_id": "compliance-comp-068",
-        "model_version": "compliance-v1",
+        "model_version": "compliance-v2",
         "total_sessions": 1,
         "analyses_completed": 1,
         "decisions_generated": 0,
@@ -534,15 +541,15 @@
         "decline_rate": 0.0,
         "refer_rate": 0.0,
         "human_override_rate": 0.0,
-        "first_seen_at": "2026-03-23T16:37:20.495775+00:00",
-        "last_seen_at": "2026-03-23T16:37:20.499962+00:00",
+        "first_seen_at": "2026-03-25T17:02:42.069591+00:00",
+        "last_seen_at": "2026-03-25T17:02:42.139333+00:00",
         "confidence_samples": 0,
         "duration_samples": 0
       },
       {
         "agent_type": "decision_orchestrator",
-        "agent_id": "orch-agent-068",
-        "model_version": "orch-v1",
+        "agent_id": "orch-comp-068",
+        "model_version": "openai/gpt-4.1",
         "total_sessions": 1,
         "analyses_completed": 0,
         "decisions_generated": 0,
@@ -556,15 +563,15 @@
         "decline_rate": 0.0,
         "refer_rate": 0.0,
         "human_override_rate": 0.0,
-        "first_seen_at": "2026-03-23T16:37:20.501495+00:00",
-        "last_seen_at": "2026-03-23T16:37:20.501495+00:00",
+        "first_seen_at": "2026-03-25T17:02:42.317212+00:00",
+        "last_seen_at": "2026-03-25T17:02:42.317212+00:00",
         "confidence_samples": 0,
         "duration_samples": 0
       }
     ],
     "decision_recommendation": null,
-    "projected_recommendation": "APPROVE",
-    "projected_approved_amount_usd": "950000.00",
-    "reasoning": "Risk tier, confidence, compliance, and fraud signals support approval."
+    "projected_recommendation": "REFER",
+    "projected_approved_amount_usd": "750000.00",
+    "reasoning": "The counterfactual credit limit does not fully cover the request."
   }
 }

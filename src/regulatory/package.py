@@ -10,7 +10,7 @@ from uuid import UUID
 
 from src.integrity import run_integrity_check
 from src.integrity.audit_chain import _expected_chain_hash
-from src.models.events import StoredEvent
+from src.models.events import AGENT_SESSION_ANCHOR_EVENT_TYPES, StoredEvent
 from src.what_if.projector import collect_related_events, replay_projection_snapshot
 
 
@@ -91,7 +91,7 @@ def _narrative_sentence(event: StoredEvent) -> str:
         return f"{timestamp}: The application was approved for ${payload.get('approved_amount_usd')}."
     if event_type == "ApplicationDeclined":
         return f"{timestamp}: The application was declined."
-    if event_type == "AgentSessionStarted":
+    if event_type in AGENT_SESSION_ANCHOR_EVENT_TYPES:
         return f"{timestamp}: Agent session {payload.get('session_id')} started for {payload.get('agent_type')}."
     return f"{timestamp}: {event_type} was recorded."
 
@@ -101,7 +101,7 @@ def _extract_agent_model_metadata(events: list[StoredEvent], application_id: str
     outputs: list[dict[str, Any]] = []
 
     for event in events:
-        if event.event_type == "AgentSessionStarted" and event.payload.get("application_id") == application_id:
+        if event.event_type in AGENT_SESSION_ANCHOR_EVENT_TYPES and event.payload.get("application_id") == application_id:
             sessions[str(event.payload["session_id"])] = {
                 "session_id": str(event.payload["session_id"]),
                 "agent_type": str(event.payload["agent_type"]),

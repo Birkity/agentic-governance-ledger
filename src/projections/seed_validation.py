@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from src.event_store import InMemoryEventStore
+from src.models.events import AGENT_SESSION_ANCHOR_EVENT_TYPES
 
 
 def _to_decimal(value: Any) -> Decimal | None:
@@ -242,7 +243,7 @@ def _build_agent_performance_expectations(seed_events: list[dict[str, Any]]) -> 
         event_type = raw_event["event_type"]
         payload = raw_event.get("payload", {})
 
-        if event_type == "AgentSessionStarted":
+        if event_type in AGENT_SESSION_ANCHOR_EVENT_TYPES:
             key = (
                 str(payload["agent_type"]),
                 str(payload["agent_id"]),

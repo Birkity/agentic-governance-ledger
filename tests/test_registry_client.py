@@ -102,8 +102,12 @@ class FakePool:
 
     async def fetchrow(self, query: str, *args):
         if "FROM applicant_registry.companies" in query:
-            company_id = args[0]
-            return self.company if company_id == self.company["company_id"] else None
+            if "WHERE company_id = $1" in query:
+                company_id = args[0]
+                return self.company if company_id == self.company["company_id"] else None
+            if "WHERE jurisdiction = $1" in query:
+                jurisdiction = args[0]
+                return self.company if jurisdiction == self.company["jurisdiction"] else None
         raise AssertionError(f"Unexpected fetchrow query: {query}")
 
     async def fetch(self, query: str, *args):
@@ -132,6 +136,16 @@ async def test_registry_client_returns_company_profile():
     assert company is not None
     assert company.company_id == "COMP-001"
     assert company.risk_segment == "LOW"
+
+
+@pytest.mark.asyncio
+async def test_registry_client_can_find_company_by_jurisdiction():
+    client = ApplicantRegistryClient(FakePool())
+
+    company = await client.find_company_by_jurisdiction("TX")
+
+    assert company is not None
+    assert company.company_id == "COMP-001"
 
 
 @pytest.mark.asyncio

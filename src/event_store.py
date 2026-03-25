@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from collections import defaultdict
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal
 from pathlib import Path
@@ -101,6 +102,27 @@ def _row_to_stream_metadata(row: asyncpg.Record) -> StreamMetadata:
     )
 
 
+@dataclass(frozen=True)
+class SnapshotRecord:
+    stream_id: str
+    stream_position: int
+    aggregate_type: str
+    snapshot_version: int
+    state: dict[str, Any]
+    created_at: datetime
+
+
+@dataclass(frozen=True)
+class OutboxRecord:
+    id: UUID | str
+    event_id: UUID | str
+    destination: str
+    payload: dict[str, Any]
+    created_at: datetime
+    published_at: datetime | None
+    attempts: int
+
+
 class EventStore:
     """PostgreSQL-backed append-only event store."""
 
@@ -112,6 +134,10 @@ class EventStore:
         self._schema_path = Path(__file__).with_name("schema.sql")
         if self.upcasters is not None and hasattr(self.upcasters, "bind_store"):
             self.upcasters.bind_store(self)
+
+    @property
+    def pool(self) -> asyncpg.Pool | None:
+        return self._pool
 
     async def connect(self) -> None:
         self._pool = await asyncpg.create_pool(self.db_url, min_size=1, max_size=self.max_pool_size)
@@ -402,6 +428,117 @@ class EventStore:
             )
         return _row_to_stream_metadata(row) if row else None
 
+    async def save_snapshot(
+        self,
+        *,
+        stream_id: str,
+        stream_position: int,
+        aggregate_type: str,
+        snapshot_version: int,
+        state: dict[str, Any],
+    ) -> None:
+        if self._pool is None:
+            raise RuntimeError("EventStore.connect() must be called before save_snapshot()")
+
+        async with self._pool.acquire() as conn:
+            await conn.execute(
+                """
+                INSERT INTO snapshots(stream_id, stream_position, aggregate_type, snapshot_version, state)
+                VALUES($1, $2, $3, $4, $5::jsonb)
+                """,
+                stream_id,
+                stream_position,
+                aggregate_type,
+                snapshot_version,
+                _json_dumps(_to_json_compatible(state)),
+            )
+
+    async def load_latest_snapshot(self, stream_id: str) -> SnapshotRecord | None:
+        if self._pool is None:
+            raise RuntimeError("EventStore.connect() must be called before load_latest_snapshot()")
+
+        async with self._pool.acquire() as conn:
+            row = await conn.fetchrow(
+                """
+                SELECT stream_id, stream_position, aggregate_type, snapshot_version, state, created_at
+                FROM snapshots
+                WHERE stream_id = $1
+                ORDER BY stream_position DESC, created_at DESC
+                LIMIT 1
+                """,
+                stream_id,
+            )
+        if row is None:
+            return None
+        state = row["state"]
+        if isinstance(state, str):
+            state = json.loads(state)
+        return SnapshotRecord(
+            stream_id=row["stream_id"],
+            stream_position=int(row["stream_position"]),
+            aggregate_type=row["aggregate_type"],
+            snapshot_version=int(row["snapshot_version"]),
+            state=dict(state),
+            created_at=row["created_at"],
+        )
+
+    async def list_outbox_pending(self, destination: str | None = None, limit: int = 100) -> list[OutboxRecord]:
+        if self._pool is None:
+            raise RuntimeError("EventStore.connect() must be called before list_outbox_pending()")
+
+        if destination:
+            query = """
+                SELECT id, event_id, destination, payload, created_at, published_at, attempts
+                FROM outbox
+                WHERE published_at IS NULL AND destination = $1
+                ORDER BY created_at ASC
+                LIMIT $2
+            """
+            params = (destination, limit)
+        else:
+            query = """
+                SELECT id, event_id, destination, payload, created_at, published_at, attempts
+                FROM outbox
+                WHERE published_at IS NULL
+                ORDER BY created_at ASC
+                LIMIT $1
+            """
+            params = (limit,)
+
+        async with self._pool.acquire() as conn:
+            rows = await conn.fetch(query, *params)
+        records: list[OutboxRecord] = []
+        for row in rows:
+            payload = row["payload"]
+            if isinstance(payload, str):
+                payload = json.loads(payload)
+            records.append(
+                OutboxRecord(
+                    id=row["id"],
+                    event_id=row["event_id"],
+                    destination=row["destination"],
+                    payload=dict(payload),
+                    created_at=row["created_at"],
+                    published_at=row["published_at"],
+                    attempts=int(row["attempts"]),
+                )
+            )
+        return records
+
+    async def mark_outbox_published(self, record_id: UUID | str) -> None:
+        if self._pool is None:
+            raise RuntimeError("EventStore.connect() must be called before mark_outbox_published()")
+
+        async with self._pool.acquire() as conn:
+            await conn.execute(
+                """
+                UPDATE outbox
+                SET published_at = NOW(), attempts = attempts + 1
+                WHERE id = $1
+                """,
+                UUID(str(record_id)),
+            )
+
     async def save_checkpoint(self, projection_name: str, position: int) -> None:
         if self._pool is None:
             raise RuntimeError("EventStore.connect() must be called before save_checkpoint()")
@@ -465,6 +602,8 @@ class InMemoryEventStore:
         self._streams: dict[str, list[StoredEvent]] = defaultdict(list)
         self._versions: dict[str, int] = {}
         self._stream_metadata: dict[str, StreamMetadata] = {}
+        self._snapshots: dict[str, list[SnapshotRecord]] = defaultdict(list)
+        self._outbox: list[OutboxRecord] = []
         self._global: list[StoredEvent] = []
         self._checkpoints: dict[str, int] = {}
         self._locks: dict[str, Any] = defaultdict(__import__("asyncio").Lock)
@@ -500,6 +639,7 @@ class InMemoryEventStore:
             for key, value in (metadata or {}).items()
             if key not in {"stream_metadata", "outbox_destinations"}
         }
+        outbox_destinations = list((metadata or {}).get("outbox_destinations", []))
 
         async with self._locks[stream_id]:
             current_version = self._versions.get(stream_id, -1)
@@ -547,6 +687,25 @@ class InMemoryEventStore:
                 )
                 self._streams[stream_id].append(stored_event)
                 self._global.append(stored_event)
+                for destination in outbox_destinations:
+                    self._outbox.append(
+                        OutboxRecord(
+                            id=uuid4(),
+                            event_id=stored_event.event_id,
+                            destination=destination,
+                            payload={
+                                "stream_id": stream_id,
+                                "stream_position": stream_position,
+                                "event_type": event_type,
+                                "event_version": stored_event.event_version,
+                                "payload": stored_event.payload,
+                                "metadata": stored_event.metadata,
+                            },
+                            created_at=stored_event.recorded_at,
+                            published_at=None,
+                            attempts=0,
+                        )
+                    )
                 positions.append(stream_position)
 
             self._versions[stream_id] = positions[-1]
@@ -607,6 +766,56 @@ class InMemoryEventStore:
     async def get_stream_metadata(self, stream_id: str) -> StreamMetadata | None:
         return self._stream_metadata.get(stream_id)
 
+    async def save_snapshot(
+        self,
+        *,
+        stream_id: str,
+        stream_position: int,
+        aggregate_type: str,
+        snapshot_version: int,
+        state: dict[str, Any],
+    ) -> None:
+        self._snapshots[stream_id].append(
+            SnapshotRecord(
+                stream_id=stream_id,
+                stream_position=stream_position,
+                aggregate_type=aggregate_type,
+                snapshot_version=snapshot_version,
+                state=_to_json_compatible(state),
+                created_at=datetime.now(timezone.utc),
+            )
+        )
+
+    async def load_latest_snapshot(self, stream_id: str) -> SnapshotRecord | None:
+        snapshots = self._snapshots.get(stream_id, [])
+        return snapshots[-1] if snapshots else None
+
+    async def list_outbox_pending(self, destination: str | None = None, limit: int = 100) -> list[OutboxRecord]:
+        records = [record for record in self._outbox if record.published_at is None]
+        if destination is not None:
+            records = [record for record in records if record.destination == destination]
+        return records[:limit]
+
+    async def mark_outbox_published(self, record_id: UUID | str) -> None:
+        normalized = str(record_id)
+        updated: list[OutboxRecord] = []
+        for record in self._outbox:
+            if str(record.id) == normalized:
+                updated.append(
+                    OutboxRecord(
+                        id=record.id,
+                        event_id=record.event_id,
+                        destination=record.destination,
+                        payload=record.payload,
+                        created_at=record.created_at,
+                        published_at=datetime.now(timezone.utc),
+                        attempts=record.attempts + 1,
+                    )
+                )
+            else:
+                updated.append(record)
+        self._outbox = updated
+
     async def save_checkpoint(self, projection_name: str, position: int) -> None:
         self._checkpoints[projection_name] = position
 
@@ -640,6 +849,8 @@ __all__ = [
     "EventStore",
     "InMemoryEventStore",
     "OptimisticConcurrencyError",
+    "OutboxRecord",
+    "SnapshotRecord",
     "StoredEvent",
     "StreamMetadata",
 ]

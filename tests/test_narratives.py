@@ -25,10 +25,12 @@ async def test_narr01_occ_collision_guardrail():
     store = InMemoryEventStore()
     result = await narr01_occ_collision(store)
 
-    assert result["successful_appends"] == 1
+    assert result["successful_appends"] == 2
     assert result["optimistic_concurrency_failures"] == 1
-    assert result["final_stream_length"] == 4
-    assert result["final_stream_positions"] == [0, 1, 2, 3]
+    assert result["credit_analysis_completed_count"] == 2
+    assert result["credit_completion_offsets_from_open"] == [1, 2]
+    assert result["agent_failures_logged"] == 0
+    assert result["second_event_causation_id_resolvable"] is True
 
 
 @pytest.mark.asyncio

@@ -311,3 +311,12 @@ The operating guide adds the context that makes the design concrete:
 Taken together, the correct Phase 0 conclusion is this:
 
 **The Ledger is not an audit feature attached to an AI workflow. It is the event-sourced operating model that makes the workflow recoverable, explainable, and safe enough to use in a regulated financial decision system.**
+
+## 15. Current maturity language
+
+For presentation accuracy, the strongest honest phrasing is:
+
+- challenge-complete today: event store, OCC, replay-driven domain logic, projections, upcasting, integrity checks, Gas Town recovery, MCP surfaces, counterfactual replay, regulatory packaging, a LangGraph-backed five-agent runtime, and an interactive review workspace
+- production-hardening next steps: auth and RBAC, outbox publishing, snapshot compaction, distributed projection ownership, browser end-to-end testing, operational failover drills, and external billing telemetry when paid providers are used
+
+That framing keeps the core architectural claims strong without overclaiming production readiness in areas the repository does not yet operationalize.

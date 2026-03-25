@@ -1,7 +1,14 @@
 import Link from "next/link";
 
 import type { ApplicationDetail } from "../lib/ledger-data";
-import { formatCurrency, formatDateTime } from "../lib/presenters";
+import {
+  formatComplianceLabel,
+  formatCurrency,
+  formatDateTime,
+  formatDecisionLabel,
+  formatOriginLabel,
+  formatStateLabel
+} from "../lib/presenters";
 import { ApplicationSectionNav } from "./ApplicationSectionNav";
 
 interface ApplicationHeaderProps {
@@ -31,6 +38,7 @@ export function ApplicationHeader({ detail }: ApplicationHeaderProps) {
         <span className="status-pill status-pill-neutral">
           Source {detail.sourceMode === "database" ? "live database" : "seed replay"}
         </span>
+        <span className="status-pill status-pill-neutral">{formatOriginLabel(detail.item.origin)}</span>
       </div>
 
       <div className="application-shell-main">
@@ -38,7 +46,7 @@ export function ApplicationHeader({ detail }: ApplicationHeaderProps) {
           <p className="eyebrow">{detail.item.applicationId}</p>
           <h1>{detail.item.companyName}</h1>
           <p className="application-subtle">
-            {detail.company?.industry ?? detail.item.industry ?? "Unknown industry"} ·{" "}
+            {detail.company?.industry ?? detail.item.industry ?? "Unknown industry"} /{" "}
             {detail.company?.jurisdiction ?? detail.item.jurisdiction ?? "No jurisdiction"}
           </p>
         </div>
@@ -46,7 +54,7 @@ export function ApplicationHeader({ detail }: ApplicationHeaderProps) {
         <div className="application-shell-metrics">
           <div className="mini-metric">
             <span>Status</span>
-            <strong>{detail.item.state.replaceAll("_", " ")}</strong>
+            <strong>{formatStateLabel(detail.item.state)}</strong>
           </div>
           <div className="mini-metric">
             <span>Requested</span>
@@ -54,11 +62,11 @@ export function ApplicationHeader({ detail }: ApplicationHeaderProps) {
           </div>
           <div className="mini-metric">
             <span>Decision</span>
-            <strong>{detail.item.decision ?? "Pending"}</strong>
+            <strong>{formatDecisionLabel(detail.item.decision, detail.item.state)}</strong>
           </div>
           <div className="mini-metric">
             <span>Compliance</span>
-            <strong>{detail.item.complianceStatus ?? "In progress"}</strong>
+            <strong>{formatComplianceLabel(detail.item.complianceStatus)}</strong>
           </div>
           <div className="mini-metric">
             <span>Updated</span>
@@ -66,10 +74,16 @@ export function ApplicationHeader({ detail }: ApplicationHeaderProps) {
           </div>
           <div className="mini-metric">
             <span>Human review</span>
-            <strong>{detail.review.requested || detail.review.completed ? "Involved" : "Not required"}</strong>
+            <strong>
+              {detail.item.reviewState === "completed"
+                ? "Completed"
+                : detail.item.reviewState === "pending"
+                  ? "Required"
+                  : "Not required"}
+            </strong>
           </div>
           <div className="mini-metric mini-metric-pill">
-            <span className={`status-pill ${statusTone(detail.item.state)}`}>{detail.item.state.replaceAll("_", " ")}</span>
+            <span className={`status-pill ${statusTone(detail.item.state)}`}>{formatStateLabel(detail.item.state)}</span>
           </div>
         </div>
       </div>

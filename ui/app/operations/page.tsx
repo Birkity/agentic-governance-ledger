@@ -42,10 +42,10 @@ export default async function OperationsPage() {
       <section className="hero-panel operations-hero">
         <div className="hero-copy">
           <p className="eyebrow">Operations</p>
-          <h1>System health and guardrails</h1>
+          <h1>Read-side health and guardrails</h1>
           <p className="hero-body">
             Inspect projection freshness, rebuild evidence, and concurrency protection without crowding the application
-            workspace.
+            workspace. These panels surface demo and submission artifacts; they do not replace production monitoring.
           </p>
         </div>
 
@@ -57,6 +57,10 @@ export default async function OperationsPage() {
           <div className="metric-card">
             <span>Last projection report</span>
             <strong>{formatArtifactTimestamp(generatedAt)}</strong>
+          </div>
+          <div className="metric-card">
+            <span>Pending outbox</span>
+            <strong>{dashboard.operations.outboxPending ?? "N/A"}</strong>
           </div>
         </div>
       </section>

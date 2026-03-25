@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 
 import type { ApplicationListItem, DataSourceMode } from "../lib/ledger-data";
 import type { QueueLane } from "../lib/queues";
-import { formatCurrency, formatDateTime } from "../lib/presenters";
+import { formatComplianceLabel, formatCurrency, formatDateTime, formatDecisionLabel, formatOriginLabel, formatStateLabel } from "../lib/presenters";
 import { QUEUE_DESCRIPTIONS, QUEUE_LABELS, getQueueCounts, matchesQueue } from "../lib/queues";
 import { QueueNav } from "./QueueNav";
 
@@ -28,6 +28,16 @@ function statusTone(item: ApplicationListItem): string {
     return "status-pill-warning";
   }
   return "status-pill-neutral";
+}
+
+function reviewTag(item: ApplicationListItem): string {
+  if (item.reviewState === "completed") {
+    return "Review completed";
+  }
+  if (item.reviewState === "pending") {
+    return "Manual review";
+  }
+  return "Automated path";
 }
 
 export function ApplicationExplorer({ applications, sourceMode, queue }: ApplicationExplorerProps) {
@@ -66,6 +76,8 @@ export function ApplicationExplorer({ applications, sourceMode, queue }: Applica
   const visibleItems = filtered.slice(startIndex, startIndex + PAGE_SIZE);
   const pageStart = filtered.length === 0 ? 0 : startIndex + 1;
   const pageEnd = filtered.length === 0 ? 0 : startIndex + visibleItems.length;
+  const filteredSeeded = filtered.filter((item) => item.origin === "seeded").length;
+  const filteredLive = filtered.filter((item) => item.origin === "live").length;
 
   useEffect(() => {
     setPage((value) => Math.min(value, totalPages));
@@ -103,7 +115,10 @@ export function ApplicationExplorer({ applications, sourceMode, queue }: Applica
 
       <div className="results-meta">
         <span>{filtered.length} in {QUEUE_LABELS[queue].toLowerCase()}</span>
-        <span>{applications.length} tracked overall</span>
+        <span>
+          {filteredSeeded} seeded / {filteredLive} live
+        </span>
+        <span>{applications.length} client-visible overall</span>
         <span>
           Showing {pageStart}-{pageEnd}
         </span>
@@ -123,8 +138,9 @@ export function ApplicationExplorer({ applications, sourceMode, queue }: Applica
             </div>
 
             <div className="application-row-status">
-              <span className={`status-pill ${statusTone(item)}`}>{item.state.replaceAll("_", " ")}</span>
-              <span className="tag">{item.hasHumanReview || item.state.includes("HUMAN") ? "Human review path" : "Automated path"}</span>
+              <span className={`status-pill ${statusTone(item)}`}>{formatStateLabel(item.state)}</span>
+              <span className="tag">{reviewTag(item)}</span>
+              <span className="tag">{formatOriginLabel(item.origin)}</span>
             </div>
 
             <div className="application-row-metrics">
@@ -134,11 +150,11 @@ export function ApplicationExplorer({ applications, sourceMode, queue }: Applica
               </div>
               <div>
                 <span className="fact-label">Decision</span>
-                <strong>{item.decision ?? "Pending"}</strong>
+                <strong>{formatDecisionLabel(item.decision, item.state)}</strong>
               </div>
               <div>
                 <span className="fact-label">Compliance</span>
-                <strong>{item.complianceStatus ?? "In progress"}</strong>
+                <strong>{formatComplianceLabel(item.complianceStatus)}</strong>
               </div>
               <div>
                 <span className="fact-label">Risk tier</span>

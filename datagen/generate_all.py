@@ -17,7 +17,10 @@ from datagen.excel_generator import generate_financial_excel
 from datagen.event_simulator import EventSimulator
 from datagen.schema_validator import SchemaValidator
 
-fake = Faker()
+NARRATIVE_INCOME_VARIANTS = {
+    "COMP-001": "clean",
+    "COMP-044": "missing_ebitda",
+}
 
 SEED_SCENARIOS = [
     ("SUBMITTED",             6),   # Docs requested, nothing uploaded yet
@@ -198,6 +201,17 @@ async def write_to_db(db_url: str, companies, all_events):
     finally:
         await conn.close()
 
+
+def _income_statement_variant(company_id: str, index: int) -> str:
+    explicit_variant = NARRATIVE_INCOME_VARIANTS.get(company_id)
+    if explicit_variant is not None:
+        return explicit_variant
+    if index % 15 == 0:
+        return "dense"
+    if index % 12 == 0:
+        return "scanned"
+    return "clean"
+
 def main():
     p = argparse.ArgumentParser(description="Apex Financial Services Data Generator")
     p.add_argument("--applicants", type=int, default=80)
@@ -242,7 +256,7 @@ def main():
             d = Path(args.docs_dir)/c.company_id; d.mkdir(exist_ok=True)
             y = 2024
             # Distribute PDF variants for realism
-            inc_variant = "missing_ebitda" if i%20==0 else "dense" if i%15==0 else "scanned" if i%12==0 else "clean"
+            inc_variant = _income_statement_variant(c.company_id, i)
             bs_variant = "scanned" if i%10==0 else "clean"
             generate_income_statement_pdf(c, y, str(d/f"income_statement_{y}.pdf"), inc_variant)
             generate_balance_sheet_pdf(c, y, str(d/f"balance_sheet_{y}.pdf"), bs_variant)

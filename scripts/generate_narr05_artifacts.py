@@ -1,19 +1,8 @@
 from __future__ import annotations
 
-import asyncio
-import json
-import sys
+import runpy
 from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
-from src.demo import generate_narr05_artifacts
-
-
-async def main() -> None:
-    result = await generate_narr05_artifacts()
-    print(json.dumps(result, indent=2))
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    runpy.run_path(str(Path(__file__).with_name("demo_narr05.py")), run_name="__main__")

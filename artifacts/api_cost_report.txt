@@ -1,5 +1,5 @@
 Sentinel Cost Attribution Report
-Generated at: 2026-03-23T16:48:01.002963+00:00
+Generated at: 2026-03-25T20:38:08.065831+00:00
 Billable API Cost Status: honest external billing measurement is $0.00 for the reproduced local workflow in this repository.
 Reason: the standard seeded pipeline, narrative scenarios, and committed artifacts do not call a paid external model provider.
 Optional Ollama usage is local inference and is not treated here as external billable API spend.
@@ -16,11 +16,11 @@ Actual measured external API cost:
 - provider calls observed in reproduced workflow: 0
 
 Workflow telemetry cost proxy:
-- total for all 34 applications: $19.42
-- average per application: avg $0.57, range $0.00-$0.71
+- total for all 34 applications: $19.92
+- average per application: avg $0.59, range $0.34-$0.71
 Telemetry by agent:
-- DocProc $2.66
-- Credit $7.70
+- DocProc $2.78
+- Credit $8.06
 - Fraud $3.76
 - Compliance $0.00
 - Orchestrator $5.24

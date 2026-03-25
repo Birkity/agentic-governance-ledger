@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { ApplicationActionsPanel } from "../../../components/ApplicationActionsPanel";
 import { CompactInfoCard } from "../../../components/CompactInfoCard";
+import { HumanReviewActionCard } from "../../../components/HumanReviewActionCard";
 import { SectionDataList } from "../../../components/SectionDataList";
 import { StageRail } from "../../../components/StageRail";
 import { getApplicationDetail } from "../../../lib/ledger-data";
-import { formatCurrency, formatDateTime } from "../../../lib/presenters";
+import { formatComplianceLabel, formatCurrency, formatDateTime, formatDecisionLabel, formatOriginLabel, formatStateLabel } from "../../../lib/presenters";
 
 export const dynamic = "force-dynamic";
 
@@ -32,9 +34,10 @@ export default async function ApplicationPage({ params }: ApplicationPageProps) 
           <CompactInfoCard title="Current Snapshot" description="The most useful state at a glance.">
             <SectionDataList
               items={[
-                { label: "Status", value: detail.item.state.replaceAll("_", " ") },
-                { label: "Decision", value: detail.item.decision ?? "Pending" },
-                { label: "Compliance", value: detail.item.complianceStatus ?? "In progress" },
+                { label: "Status", value: formatStateLabel(detail.item.state) },
+                { label: "Origin", value: formatOriginLabel(detail.item.origin) },
+                { label: "Decision", value: formatDecisionLabel(detail.item.decision, detail.item.state) },
+                { label: "Compliance", value: formatComplianceLabel(detail.item.complianceStatus) },
                 { label: "Risk tier", value: detail.item.riskTier ?? "Not recorded" },
                 { label: "Requested", value: formatCurrency(detail.item.requestedAmountUsd) },
                 { label: "Approved", value: formatCurrency(detail.item.approvedAmountUsd) }
@@ -84,6 +87,15 @@ export default async function ApplicationPage({ params }: ApplicationPageProps) 
         </div>
 
         <div className="stack-lg">
+          <CompactInfoCard title="Workflow Actions">
+            <ApplicationActionsPanel
+              applicationId={detail.item.applicationId}
+              companyId={detail.item.applicantId}
+              state={detail.item.state}
+              reviewState={detail.item.reviewState}
+            />
+          </CompactInfoCard>
+
           <CompactInfoCard title="Applicant Context">
             <SectionDataList
               items={[
@@ -103,6 +115,15 @@ export default async function ApplicationPage({ params }: ApplicationPageProps) 
               items={[
                 { label: "Requested", value: detail.review.requested ? "Yes" : "No" },
                 { label: "Completed", value: detail.review.completed ? "Yes" : "No" },
+                {
+                  label: "Status",
+                  value:
+                    detail.item.reviewState === "completed"
+                      ? "Completed"
+                      : detail.item.reviewState === "pending"
+                        ? "Awaiting review"
+                        : "Not required"
+                },
                 { label: "Reviewer", value: detail.review.reviewerId ?? "Not recorded" },
                 { label: "Override", value: detail.review.override ? "Yes" : "No" },
                 { label: "Final decision", value: detail.review.finalDecision ?? "Not recorded" },
@@ -112,10 +133,19 @@ export default async function ApplicationPage({ params }: ApplicationPageProps) 
             />
           </CompactInfoCard>
 
+          <CompactInfoCard title="Review Action">
+            <HumanReviewActionCard
+              applicationId={detail.item.applicationId}
+              currentRecommendation={detail.item.decision}
+              approvedAmountUsd={detail.item.approvedAmountUsd}
+              reviewPending={detail.item.reviewState === "pending"}
+            />
+          </CompactInfoCard>
+
           <CompactInfoCard title="Oversight Snapshot">
             <SectionDataList
               items={[
-                { label: "Verdict", value: detail.compliance.overallVerdict ?? "In progress" },
+                { label: "Verdict", value: formatComplianceLabel(detail.compliance.overallVerdict) },
                 { label: "Passed rules", value: detail.compliance.passedRules.length },
                 { label: "Failed rules", value: detail.compliance.failedRules.length },
                 { label: "Hard blocks", value: detail.compliance.hardBlockRules.join(", ") || "None recorded" },

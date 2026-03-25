@@ -29,10 +29,14 @@ The Ledger is an event-sourced lending platform for document-to-decision workflo
   - command handlers that follow load -> replay -> validate -> determine -> append
 - `src/document_processing/`
   - PDF/XLSX/CSV parsing, normalization, event writing, and optional local-model summarization
+- `src/agents/`
+  - LangGraph-backed workflow runtime for document processing, credit, fraud, compliance, and decision orchestration
 - `src/registry/`
   - read-only adapter for the seeded Applicant Registry schema
 - `src/projections/`
   - application summary, agent performance, compliance audit, daemon, and seed validation helpers
+- `src/outbox.py`
+  - outbox publisher helper and JSONL sink for downstream publication demos
 - `src/upcasting/`
   - version-chain registry and concrete upcasters for evolved events
 - `src/integrity/`
@@ -157,6 +161,43 @@ The regulatory package generator creates a self-contained JSON package with:
 - agent model metadata
 - package hash and verification support
 
+## Current Maturity
+
+### Challenge-Complete Today
+
+The repository already proves the Week 5 core architecture:
+
+- append-only event storage with optimistic concurrency control
+- replay-driven aggregates and command handlers
+- projection rebuilds, lag evidence, and temporal compliance history
+- read-time upcasting without mutating stored history
+- audit-chain verification and Gas Town recovery
+- MCP tools/resources, counterfactual replay, and regulatory package verification
+- live-backed runtime preference for the read-only Applicant Registry boundary when PostgreSQL is available
+- LangGraph-backed runtime for five modeled agent roles with durable session telemetry and optional LLM summaries outside compliance
+- interactive review workspace actions for launching applications, continuing workflow, recording human review, and running integrity checks
+
+### Production-Hardening Next Steps
+
+The repository does not claim that everything is production-hardened yet. The clearest next steps are:
+
+- add auth and RBAC for MCP and UI access
+- move from the JSONL outbox publisher helper to durable downstream delivery infrastructure
+- add a broader snapshot compaction policy for very long-lived streams
+- harden multi-worker projection ownership and operational monitoring
+- add browser end-to-end tests, backup/restore drills, and soak testing
+- replace workflow cost proxies with true external billing telemetry when paid providers are introduced
+
+## Operating Rules
+
+The runtime follows a few non-negotiable rules:
+
+- do not overwrite events
+- do not skip `AgentSessionStarted`
+- do not fabricate missing data
+- do not use LLM logic for compliance
+- do not ignore hard blocks
+
 ## Setup
 
 1. Create and activate a virtual environment.
@@ -170,10 +211,22 @@ Example environment values:
 DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost/apex_ledger
 TEST_DB_URL=postgresql://postgres:YOUR_PASSWORD@localhost/apex_ledger
 DOCUMENTS_DIR=./documents
+LEDGER_AGENT_BACKEND=deterministic
+LEDGER_CRUCIAL_AGENT_BACKEND=openrouter
+LEDGER_CRUCIAL_AGENT_MODEL=openai/gpt-4.1
+OPENROUTER_API_KEY=YOUR_OPENROUTER_API_KEY
+OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
 OLLAMA_BASE_URL=http://127.0.0.1:11434
 OLLAMA_PART_MODEL=qwen3-coder:480b-cloud
 OLLAMA_PACKAGE_MODEL=deepseek-v3.1:671b-cloud
 ```
+
+For a local paid-provider setup, the runtime now supports OpenRouter on the three crucial agent stages:
+- `credit_analysis`
+- `fraud_detection`
+- `decision_orchestrator`
+
+The default document-quality stage can remain deterministic or local Ollama. The loader also accepts local `.env` aliases `api_key` and `api_model`, but the committed example only uses the standard OpenRouter variable names.
 
 If you want Docling support for richer PDF extraction:
 
@@ -256,16 +309,30 @@ Generate the projection lag artifact:
 .\.venv\Scripts\python.exe scripts\generate_projection_lag_report.py
 ```
 
-Generate the API cost attribution artifact:
+Generate the demo proxy API cost artifact:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\generate_api_cost_report.py
+```
+
+Generate a live billable cost report for one or more real PostgreSQL-backed applications:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\generate_api_cost_report.py --mode live --db-url $env:DATABASE_URL --application-id APEX-CLIENT-068-ABC123
 ```
 
 Run one application through the demo pipeline:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\run_pipeline.py --application-id APEX-DEMO-024 --company-id COMP-024 --phase full
+```
+
+Run one live client-style application through the LangGraph runtime and then resolve human review if required:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\ui_workflow.py start-application --company-id COMP-068 --phase full
+.\.venv\Scripts\python.exe scripts\ui_workflow.py record-human-review --application-id APEX-CLIENT-068-ABC123 --reviewer-id LO-Sarah-Chen --final-decision APPROVE --override --override-reason "Relationship depth and collateral support approval" --approved-amount-usd 146580 --interest-rate-pct 9.1 --term-months 36 --condition "Monthly revenue reporting for 12 months" --condition "Personal guarantee from CEO"
+.\.venv\Scripts\python.exe scripts\generate_api_cost_report.py --mode live --db-url $env:DATABASE_URL --application-id APEX-CLIENT-068-ABC123
 ```
 
 Generate the NARR-05 submission artifacts:
@@ -275,16 +342,48 @@ Generate the NARR-05 submission artifacts:
 .\.venv\Scripts\python.exe tests\phase6\verify_package.py artifacts\regulatory_package_NARR05.json
 ```
 
-## UI Command Center
+Force the live PostgreSQL-backed NARR-05 path instead of the in-memory fallback:
 
-The repository also includes a Next.js interface in `ui/` for demos and operator workflows. It is designed to show:
+```powershell
+$env:DATABASE_URL='postgresql://postgres:YOUR_PASSWORD@localhost/apex_ledger'
+.\.venv\Scripts\python.exe scripts\demo_narr05.py --mode live --db-url $env:DATABASE_URL --application-id APEX-NARR05-LIVE-DEMO
+.\.venv\Scripts\python.exe tests\phase6\verify_package.py artifacts\regulatory_package_NARR05.json
+```
+
+In seed-only or in-memory mode, the runtime now supplements missing registry-style fields such as `naics`, `founded_year`, and `employee_count` from the application proposal PDF instead of inventing them.
+
+Build the final report source if TeX is installed locally:
+
+```powershell
+.\scripts\build_final_report.ps1
+```
+
+Publish pending outbox records to a JSONL sink:
+
+```powershell
+$env:DATABASE_URL='postgresql://postgres:YOUR_PASSWORD@localhost/apex_ledger'
+.\.venv\Scripts\python.exe scripts\publish_outbox.py --output-path artifacts\outbox_published.jsonl
+```
+
+## Final Report Source
+
+The versioned final report source lives at `reports/final_submission.tex`. The compiled PDF is treated as a build artifact derived from that source rather than as the only versioned copy of the report.
+
+## UI Review Workspace
+
+The repository also includes a Next.js interface in `ui/` for demos, investigation, and presentation workflows. It is designed to show:
 
 - application selection and lifecycle status
 - the full immutable event timeline for one application
 - source documents and evidence previews
 - human review state and override details
+- interactive application launch from the seeded document corpus
+- live workflow continuation for in-flight applications
+- integrity checks from the oversight workspace
 - audit integrity status
 - projection lag and optimistic concurrency guardrail reports
+
+It should be described as a read-heavy review workspace, not as a production-hardened operator control plane.
 
 The application workspace is split into focused sections:
 
@@ -315,9 +414,11 @@ npm.cmd run clean
 npm.cmd run dev
 ```
 
-The default `npm.cmd run dev` and `npm.cmd run build` commands now clear stale output automatically before starting. The UI also uses a dedicated Next build directory, `.next-local`, to avoid collisions with stale `.next` artifacts in this Windows/OneDrive workspace.
+The default `npm.cmd run dev` and `npm.cmd run build` commands now clear stale output automatically before starting. The UI uses the default `.next` directory again, which is more reliable in this Windows/OneDrive workspace when paired with the automatic clean step.
 
-The UI dev server is configured to run with webpack as well, because Turbopack was intermittently producing missing-manifest and missing-runtime errors in this workspace under `.next-local/dev`.
+The UI dev server is configured to run with webpack as well, because Turbopack was intermittently producing missing-manifest and missing-runtime errors in this workspace.
+
+When `DATABASE_URL` is configured, the live-backed demo/runtime path prefers the read-only Applicant Registry adapter for company context. The seeded JSON profiles remain as a fallback for in-memory tests and seed-only demos.
 
 ## Tests
 
@@ -331,7 +432,13 @@ $env:TEST_DB_URL='postgresql://postgres:YOUR_PASSWORD@localhost/apex_ledger'
 Document-processing and seed-generation checks:
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest tests\test_document_processing.py tests\test_schema_and_generator.py tests\test_registry_client.py -q
+.\.venv\Scripts\python.exe -m pytest tests\test_document_processing.py tests\test_schema_and_generator.py tests\test_registry_client.py tests\test_demo_runtime.py -q
+```
+
+Agent runtime, outbox, and MCP workflow checks:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests\test_agent_runtime_and_outbox.py tests\test_mcp_lifecycle.py -q
 ```
 
 Domain logic checks:

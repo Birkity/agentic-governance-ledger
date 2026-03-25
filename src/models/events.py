@@ -501,6 +501,8 @@ class AgentNodeExecuted(BaseEvent):
     input_keys: list[str]
     output_keys: list[str]
     llm_called: bool
+    llm_provider: str | None = None
+    llm_model: str | None = None
     llm_tokens_input: int | None = None
     llm_tokens_output: int | None = None
     llm_cost_usd: float | None = None
@@ -774,7 +776,13 @@ EVENT_REGISTRY: dict[str, type[BaseEvent]] = {
     "AuditIntegrityCheckRun": AuditIntegrityCheckRun,
 }
 
+AGENT_SESSION_ANCHOR_EVENT_TYPES = {"AgentSessionStarted", "AgentContextLoaded"}
+
 def deserialize_event(event_type: str, payload: dict) -> BaseEvent:
+    # Compatibility bridge: the challenge doc names the anchor as AgentContextLoaded
+    # while the support doc and runtime use AgentSessionStarted.
+    if event_type == "AgentContextLoaded":
+        return AgentSessionStarted(event_type="AgentSessionStarted", **payload)
     cls = EVENT_REGISTRY.get(event_type)
     if not cls:
         raise ValueError(f"Unknown event_type: {event_type!r}")

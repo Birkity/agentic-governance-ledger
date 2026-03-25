@@ -13,6 +13,7 @@ from src.projections import (
     ComplianceAuditProjection,
     ProjectionDaemon,
 )
+from src.models.events import AGENT_SESSION_ANCHOR_EVENT_TYPES
 
 
 STAGE_ORDER: dict[str, int] = {
@@ -179,7 +180,7 @@ async def replay_projection_snapshot(events: list[StoredEvent], application_id: 
     related_agent_ids = {
         str(event.payload["agent_id"])
         for event in events
-        if event.event_type == "AgentSessionStarted" and event.payload.get("application_id") == application_id
+        if event.event_type in AGENT_SESSION_ANCHOR_EVENT_TYPES and event.payload.get("application_id") == application_id
     }
     performance_rows = [
         asdict(record)

@@ -14,7 +14,7 @@ export function QueueIndex({ counts }: QueueIndexProps) {
         <div>
           <p className="eyebrow">Application Queues</p>
           <h2>Enter a dedicated workspace</h2>
-          <p className="muted-copy">Pick one queue to work from instead of filtering through every category at once.</p>
+          <p className="muted-copy">Start from the business lane you need instead of scanning the entire portfolio at once.</p>
         </div>
       </div>
 

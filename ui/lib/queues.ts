@@ -5,19 +5,19 @@ export type QueueLane = "human" | "open" | "approved" | "declined" | "all";
 export const QUEUE_ORDER: QueueLane[] = ["human", "open", "approved", "declined", "all"];
 
 export const QUEUE_LABELS: Record<QueueLane, string> = {
-  human: "Human Review",
-  open: "In Flight",
+  human: "Manual Review",
+  open: "Active Pipeline",
   approved: "Approved",
   declined: "Declined",
-  all: "All Applications"
+  all: "All Client Applications"
 };
 
 export const QUEUE_DESCRIPTIONS: Record<QueueLane, string> = {
-  human: "Applications that need, or already passed through, manual intervention.",
-  open: "Active work in progress before a final outcome is locked.",
+  human: "Applications waiting on a reviewer or already resolved through manual intervention.",
+  open: "Applications still moving through documents, underwriting, compliance, or recommendation.",
   approved: "Applications that reached a final approval outcome.",
   declined: "Applications that ended in decline, including compliance hard blocks.",
-  all: "A searchable view across the full application ledger."
+  all: "A searchable view across the client-visible lending portfolio."
 };
 
 export function isQueueLane(value: string): value is QueueLane {
@@ -26,10 +26,10 @@ export function isQueueLane(value: string): value is QueueLane {
 
 export function matchesQueue(item: ApplicationListItem, lane: QueueLane): boolean {
   if (lane === "human") {
-    return item.hasHumanReview || item.state.includes("HUMAN");
+    return item.reviewState !== "not_required";
   }
   if (lane === "open") {
-    return !item.state.startsWith("FINAL") && !item.state.startsWith("DECLINED_");
+    return !item.state.startsWith("FINAL") && !item.state.startsWith("DECLINED_") && item.reviewState === "not_required";
   }
   if (lane === "approved") {
     return item.state === "FINAL_APPROVED";
