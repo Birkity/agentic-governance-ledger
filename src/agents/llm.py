@@ -6,10 +6,11 @@ from dataclasses import dataclass
 from typing import Any
 from urllib import error, request
 
-from dotenv import load_dotenv
+from dotenv import dotenv_values, load_dotenv
 
 
 _ENV_LOADED = False
+_DOTENV_VALUES: dict[str, str] = {}
 
 _CRITICAL_STAGES = {
     "credit_analysis",
@@ -26,9 +27,16 @@ _STAGE_ENV_KEYS = {
 
 
 def _ensure_env_loaded() -> None:
-    global _ENV_LOADED
+    global _ENV_LOADED, _DOTENV_VALUES
     if not _ENV_LOADED:
         load_dotenv()
+        # Keep a direct copy of .env defaults so lookups remain stable even if
+        # tests temporarily override and then unset process env vars.
+        _DOTENV_VALUES = {
+            key: value
+            for key, value in dotenv_values().items()
+            if isinstance(value, str) and value.strip()
+        }
         _ENV_LOADED = True
 
 
@@ -38,6 +46,9 @@ def _env(*names: str) -> str | None:
         value = os.getenv(name)
         if value is not None and value.strip():
             return value.strip()
+        dot_value = _DOTENV_VALUES.get(name)
+        if dot_value is not None and dot_value.strip():
+            return dot_value.strip()
     return None
 
 

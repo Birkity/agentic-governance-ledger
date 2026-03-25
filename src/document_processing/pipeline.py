@@ -225,7 +225,20 @@ class DocumentPackageProcessor:
         self.summarizer = summarizer
         self.prefer_docling = prefer_docling
 
-    def process_company(self, company_id: str, include_summaries: bool = True) -> DocumentPackageAnalysis:
+    def _proposal_path(self, company_id: str, application_id: str | None = None) -> Path:
+        if application_id:
+            application_path = self.documents_root / "_applications" / application_id / "application_proposal.pdf"
+            if application_path.exists():
+                return application_path
+        return self.documents_root / company_id / "application_proposal.pdf"
+
+    def process_company(
+        self,
+        company_id: str,
+        include_summaries: bool = True,
+        *,
+        application_id: str | None = None,
+    ) -> DocumentPackageAnalysis:
         company_dir = self.documents_root / company_id
         if not company_dir.exists():
             raise FileNotFoundError(f"Document directory not found: {company_dir}")
@@ -233,7 +246,7 @@ class DocumentPackageProcessor:
         documents = [
             self._parse_income_statement(company_id, company_dir / "income_statement_2024.pdf"),
             self._parse_balance_sheet(company_id, company_dir / "balance_sheet_2024.pdf"),
-            self._parse_application_proposal(company_id, company_dir / "application_proposal.pdf"),
+            self._parse_application_proposal(company_id, self._proposal_path(company_id, application_id)),
             self._parse_excel_workbook(company_id, company_dir / "financial_statements.xlsx"),
             self._parse_csv_summary(company_id, company_dir / "financial_summary.csv"),
         ]

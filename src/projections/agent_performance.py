@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-from src.models.events import StoredEvent
+from src.models.events import AGENT_SESSION_ANCHOR_EVENT_TYPES, StoredEvent
 from src.projections.base import Projection
 
 
@@ -54,7 +54,7 @@ class AgentPerformanceProjection(Projection):
 
     def handles(self, event: StoredEvent) -> bool:
         return event.event_type in {
-            "AgentSessionStarted",
+            *AGENT_SESSION_ANCHOR_EVENT_TYPES,
             "CreditAnalysisCompleted",
             "FraudScreeningCompleted",
             "ComplianceCheckCompleted",
@@ -112,7 +112,7 @@ class AgentPerformanceProjection(Projection):
         ]
 
     async def apply(self, event: StoredEvent) -> None:
-        if event.event_type == "AgentSessionStarted":
+        if event.event_type in AGENT_SESSION_ANCHOR_EVENT_TYPES:
             await self._handle_agent_session_started(event)
             return
 

@@ -1,23 +1,27 @@
-Live API Cost Report
-Generated at: 2026-03-25T17:02:43.834849+00:00
-Applications included: 1
-Provider calls observed: 0
-Billable calls observed: 0
-Total billable external cost: $0.000000
-Average cost per application: $0.000000
+Sentinel Cost Attribution Report
+Generated at: 2026-03-25T20:38:08.065831+00:00
+Billable API Cost Status: honest external billing measurement is $0.00 for the reproduced local workflow in this repository.
+Reason: the standard seeded pipeline, narrative scenarios, and committed artifacts do not call a paid external model provider.
+Optional Ollama usage is local inference and is not treated here as external billable API spend.
 
-Applications:
-- APEX-NARR05-LIVE-20260325T180500Z: $0.000000
+Telemetry Attribution Methodology:
+Seed applications are replayed through the in-repo demo pipeline to produce session telemetry.
+Narrative applications use their dedicated scenario runners and their emitted session telemetry.
+The telemetry numbers below are workflow cost proxies derived from stored agent-session events.
+Applications processed: 29 seed + 5 narrative = 34 total
 
-By agent:
-- none
+Actual measured external API cost:
+- total $0.00
+- average per application $0.00
+- provider calls observed in reproduced workflow: 0
 
-By provider:
-- none
-
-By model:
-- none
-
-Note:
-- No billable provider usage was observed for the selected applications.
-- Deterministic fallbacks and local Ollama runs are treated as non-billable external cost.
+Workflow telemetry cost proxy:
+- total for all 34 applications: $19.92
+- average per application: avg $0.59, range $0.34-$0.71
+Telemetry by agent:
+- DocProc $2.78
+- Credit $8.06
+- Fraud $3.76
+- Compliance $0.00
+- Orchestrator $5.24
+Most expensive single telemetry call: APEX-NARR05 Credit Analysis: $0.31 (2600 input tokens)

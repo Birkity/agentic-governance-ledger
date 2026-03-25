@@ -6,7 +6,6 @@ from typing import Any
 
 from fastmcp import FastMCP
 
-from src.agents import LedgerAgentRuntime, build_client_application_id, list_document_companies
 from src.aggregates.loan_application import LoanApplicationAggregate
 from src.commands.handlers import (
     ComplianceCheckCommand,
@@ -211,50 +210,6 @@ async def _find_agent_session_stream_id(runtime: MCPRuntime, session_id: str) ->
 
 
 def register_tools(app: FastMCP, runtime: MCPRuntime) -> None:
-    @app.tool(
-        name="list_document_companies",
-        description=(
-            "List the seeded company document packages that can be launched into the runtime workflow. "
-            "Use this to drive client-facing application intake without inventing company ids."
-        ),
-    )
-    async def list_document_companies_tool() -> dict[str, Any]:
-        companies = [item.__dict__ for item in list_document_companies()]
-        return _ok(companies=companies, count=len(companies))
-
-    @app.tool(
-        name="run_application_workflow",
-        description=(
-            "Launch or continue an application from a company document package using the LangGraph-backed runtime. "
-            "This path keeps AgentSessionStarted, document processing, compliance, and human-review rules intact."
-        ),
-    )
-    async def run_application_workflow(
-        company_id: str,
-        application_id: str | None = None,
-        phase: str = "full",
-        requested_amount_usd: str | None = None,
-        auto_finalize_human_review: bool = False,
-        reviewer_id: str = "loan-ops",
-    ) -> dict[str, Any]:
-        try:
-            ledger_runtime = LedgerAgentRuntime(runtime.store)
-            resolved_application_id = application_id or build_client_application_id(company_id)
-            result = await ledger_runtime.start_application(
-                resolved_application_id,
-                company_id,
-                phase=phase,
-                requested_amount_usd=_to_decimal(requested_amount_usd),
-                auto_finalize_human_review=auto_finalize_human_review,
-                reviewer_id=reviewer_id,
-            )
-            await runtime.sync()
-            payload = dict(result)
-            payload["application_id"] = resolved_application_id
-            return _ok(**payload)
-        except Exception as exc:  # noqa: BLE001
-            return _failed(exc)
-
     @app.tool(
         name="submit_application",
         description=(

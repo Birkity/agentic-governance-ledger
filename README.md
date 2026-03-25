@@ -285,8 +285,7 @@ $env:DATABASE_URL='postgresql://postgres:YOUR_PASSWORD@localhost/apex_ledger'
 The exposed interface includes:
 
 - command tools for application submission, session start, credit/fraud/compliance recording, decision generation, human review, and integrity checks
-- workflow tools for listing document companies and launching an application through the runtime
-- resources for applications, compliance, audit trails, agent performance, agent sessions, company catalog, and ledger health
+- resources for applications, compliance, audit trails, agent performance, agent sessions, and ledger health
 
 ## Counterfactual Replay And Regulatory Packages
 

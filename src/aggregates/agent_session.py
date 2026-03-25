@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from src.models.events import DomainError, StoredEvent
+from src.models.events import AGENT_SESSION_ANCHOR_EVENT_TYPES, DomainError, StoredEvent
 
 
 @dataclass
@@ -54,6 +54,10 @@ class AgentSessionAggregate:
         self.context_source = event.payload["context_source"]
         self.context_token_count = int(event.payload["context_token_count"])
 
+    def _on_AgentContextLoaded(self, event: StoredEvent) -> None:
+        # Compatibility alias for challenge-doc naming.
+        self._on_AgentSessionStarted(event)
+
     def _on_AgentSessionRecovered(self, event: StoredEvent) -> None:
         self.recovered = True
 
@@ -68,7 +72,8 @@ class AgentSessionAggregate:
 
     def assert_context_loaded(self, application_id: str | None = None) -> None:
         if not self.started:
-            raise DomainError("Gas Town violation: session must start with AgentSessionStarted before any decision")
+            allowed = "/".join(sorted(AGENT_SESSION_ANCHOR_EVENT_TYPES))
+            raise DomainError(f"Gas Town violation: session must start with {allowed} before any decision")
         if application_id is not None and self.application_id != application_id:
             raise DomainError(
                 f"Agent session {self.stream_id} belongs to {self.application_id}, not {application_id}"

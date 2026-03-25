@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from src.event_store import EventStore, InMemoryEventStore
+from src.models.events import AGENT_SESSION_ANCHOR_EVENT_TYPES
 
 
 StoreType = EventStore | InMemoryEventStore
@@ -52,7 +53,7 @@ async def collect_llm_costs(
 
     async for event in store.load_all(from_position=0, apply_upcasters=False):
         payload = event.payload
-        if event.event_type == "AgentSessionStarted":
+        if event.event_type in AGENT_SESSION_ANCHOR_EVENT_TYPES:
             application_id = str(payload.get("application_id", ""))
             should_include = (
                 (not filter_by_ids or application_id in wanted_ids)

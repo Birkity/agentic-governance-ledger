@@ -34,6 +34,7 @@ from src.document_processing.models import DocumentPackageAnalysis
 from src.event_store import EventStore, InMemoryEventStore, OptimisticConcurrencyError
 from src.integrity import reconstruct_agent_context
 from src.models.events import (
+    AGENT_SESSION_ANCHOR_EVENT_TYPES,
     AgentNodeExecuted,
     AgentOutputWritten,
     AgentSessionCompleted,
@@ -1737,7 +1738,7 @@ def _collect_cost_metrics_from_event_dicts(events: list[dict[str, Any]]) -> dict
         event_type = event.get("event_type")
         stream_id = str(event.get("stream_id", ""))
         payload = event.get("payload", {})
-        if event_type == "AgentSessionStarted":
+        if event_type in AGENT_SESSION_ANCHOR_EVENT_TYPES:
             session_context[stream_id] = {
                 "application_id": str(payload.get("application_id", "")),
                 "agent_type": str(payload.get("agent_type", "")),

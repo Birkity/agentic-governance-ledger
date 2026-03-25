@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
+from src.models.events import AGENT_SESSION_ANCHOR_EVENT_TYPES
 from src.upcasting.registry import UpcasterRegistry
 
 
@@ -50,7 +51,7 @@ async def infer_model_versions_from_sessions(
     for session_ref in contributing_sessions:
         session_stream_id = _normalize_session_stream_id(session_ref)
         session_events = await registry.store.load_stream(session_stream_id)
-        anchor = next((event for event in session_events if event.event_type == "AgentSessionStarted"), None)
+        anchor = next((event for event in session_events if event.event_type in AGENT_SESSION_ANCHOR_EVENT_TYPES), None)
         if anchor is None:
             continue
         agent_type = str(anchor.payload.get("agent_type", "unknown"))

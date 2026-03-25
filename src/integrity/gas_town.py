@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from src.models.events import StoredEvent
+from src.models.events import AGENT_SESSION_ANCHOR_EVENT_TYPES, StoredEvent
 
 
 @dataclass(frozen=True)
@@ -43,10 +43,10 @@ async def reconstruct_agent_context(
     anchor = events[0] if events else None
     if anchor is None:
         reasons.append("session_stream_missing")
-    elif anchor.event_type != "AgentSessionStarted":
+    elif anchor.event_type not in AGENT_SESSION_ANCHOR_EVENT_TYPES:
         reasons.append("missing_gas_town_anchor")
 
-    session_payload = anchor.payload if anchor and anchor.event_type == "AgentSessionStarted" else {}
+    session_payload = anchor.payload if anchor and anchor.event_type in AGENT_SESSION_ANCHOR_EVENT_TYPES else {}
     last_node = None
     next_node_sequence = 1
     tools_called: list[str] = []
