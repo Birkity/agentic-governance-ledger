@@ -565,6 +565,14 @@ function hasSubmissionAnchor(timeline: TimelineEvent[]): boolean {
   return timeline.some((event) => event.eventType === "ApplicationSubmitted");
 }
 
+function hasClientSubmissionPayload(timeline: TimelineEvent[]): boolean {
+  const submitted = timeline.find((event) => event.eventType === "ApplicationSubmitted");
+  if (!submitted) {
+    return false;
+  }
+  return typeof submitted.payload.applicant_id === "string" && submitted.payload.requested_amount_usd !== undefined;
+}
+
 function requiresHumanReview(state: string): boolean {
   return state.includes("HUMAN") || state.endsWith("_PENDING_HUMAN");
 }
@@ -598,7 +606,7 @@ function isClientVisibleApplication(applicationId: string, timeline: TimelineEve
     return false;
   }
 
-  return hasSubmissionAnchor(timeline);
+  return hasSubmissionAnchor(timeline) && hasClientSubmissionPayload(timeline);
 }
 
 function summarizeApplication(

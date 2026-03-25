@@ -33,6 +33,17 @@ function scriptPath(): string {
   return path.join(PROJECT_ROOT, "scripts", "ui_workflow.py");
 }
 
+function parseWorkflowOutput(output: string): Record<string, unknown> {
+  if (!output) {
+    throw new Error("Workflow command returned no output");
+  }
+  return JSON.parse(output) as Record<string, unknown>;
+}
+
+function extractWorkflowOutput(stdout: string, stderr: string, fallback?: string): string {
+  return stdout.trim() || stderr.trim() || fallback || "Workflow command failed";
+}
+
 export async function runWorkflowCommand(args: string[]): Promise<Record<string, unknown>> {
   const dbUrl = process.env.DATABASE_URL;
   const commandArgs = [scriptPath()];
@@ -46,19 +57,14 @@ export async function runWorkflowCommand(args: string[]): Promise<Record<string,
       cwd: PROJECT_ROOT,
       maxBuffer: 10 * 1024 * 1024
     });
-
-    const output = stdout.trim() || stderr.trim();
-    if (!output) {
-      throw new Error("Workflow command returned no output");
-    }
-    return JSON.parse(output) as Record<string, unknown>;
+    return parseWorkflowOutput(extractWorkflowOutput(stdout, stderr));
   } catch (error) {
     const stdout = typeof error === "object" && error && "stdout" in error ? String(error.stdout ?? "") : "";
     const stderr = typeof error === "object" && error && "stderr" in error ? String(error.stderr ?? "") : "";
-    const output = stdout.trim() || stderr.trim() || (error instanceof Error ? error.message : "Workflow command failed");
+    const output = extractWorkflowOutput(stdout, stderr, error instanceof Error ? error.message : "Workflow command failed");
 
     try {
-      return JSON.parse(output) as Record<string, unknown>;
+      return parseWorkflowOutput(output);
     } catch {
       throw new Error(output);
     }

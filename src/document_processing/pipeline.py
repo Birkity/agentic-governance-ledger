@@ -41,7 +41,11 @@ _PROPOSAL_PATTERNS: dict[str, tuple[str, ...]] = {
     "legal_entity_name": (r"Legal Entity Name:\s*(.+)",),
     "business_type": (r"Business Type:\s*(.+)",),
     "industry": (r"Industry:\s*(.+)",),
+    "naics": (r"NAICS:\s*([0-9-]+)",),
+    "ein": (r"EIN:\s*([0-9-]+)",),
     "jurisdiction": (r"Jurisdiction:\s*([A-Z]{2})",),
+    "founded_year": (r"Founded:\s*(\d{4})",),
+    "employee_count": (r"Employees:\s*([0-9,]+)",),
     "requested_amount_usd": (r"Requested Amount:\s*(\(?\$?[0-9,]+(?:\.[0-9]+)?\)?)",),
     "purpose": (r"Purpose:\s*(.+)",),
     "use_of_proceeds": (r"Use of Proceeds:\s*(.+)",),
@@ -83,6 +87,20 @@ def _extract_first(text: str, patterns: tuple[str, ...]) -> str | None:
         if match:
             return match.group(1).strip()
     return None
+
+
+def _parse_int(raw_value: Any) -> int | None:
+    if raw_value is None or raw_value == "":
+        return None
+    if isinstance(raw_value, int):
+        return raw_value
+    if isinstance(raw_value, float):
+        return int(raw_value)
+
+    text = str(raw_value).strip().replace(",", "")
+    if not text:
+        return None
+    return int(text)
 
 
 def _normalize_docling_markdown(text: str) -> str:
@@ -138,10 +156,11 @@ def _try_docling_extract(path: Path) -> str | None:
         return None
 
 
-def _extract_pdf_text(path: Path) -> tuple[str, str]:
-    docling_text = _try_docling_extract(path)
-    if docling_text:
-        return docling_text, "docling"
+def _extract_pdf_text(path: Path, *, prefer_docling: bool = True) -> tuple[str, str]:
+    if prefer_docling:
+        docling_text = _try_docling_extract(path)
+        if docling_text:
+            return docling_text, "docling"
 
     try:
         with pdfplumber.open(path) as pdf:
@@ -195,9 +214,16 @@ def _material_difference(left: Any, right: Any) -> bool:
 class DocumentPackageProcessor:
     """Read generated company documents and normalize them into one package analysis."""
 
-    def __init__(self, documents_root: str | Path = "documents", summarizer: BaseSummarizer | None = None):
+    def __init__(
+        self,
+        documents_root: str | Path = "documents",
+        summarizer: BaseSummarizer | None = None,
+        *,
+        prefer_docling: bool = True,
+    ):
         self.documents_root = Path(documents_root)
         self.summarizer = summarizer
+        self.prefer_docling = prefer_docling
 
     def process_company(self, company_id: str, include_summaries: bool = True) -> DocumentPackageAnalysis:
         company_dir = self.documents_root / company_id
@@ -234,7 +260,7 @@ class DocumentPackageProcessor:
         return analysis
 
     def _parse_income_statement(self, company_id: str, path: Path) -> DocumentPartResult:
-        text, parser_used = _extract_pdf_text(path)
+        text, parser_used = _extract_pdf_text(path, prefer_docling=self.prefer_docling)
         facts = FinancialFacts()
         notes: list[str] = []
 
@@ -276,7 +302,7 @@ class DocumentPackageProcessor:
         )
 
     def _parse_balance_sheet(self, company_id: str, path: Path) -> DocumentPartResult:
-        text, parser_used = _extract_pdf_text(path)
+        text, parser_used = _extract_pdf_text(path, prefer_docling=self.prefer_docling)
         facts = FinancialFacts()
         notes: list[str] = []
 
@@ -314,7 +340,7 @@ class DocumentPackageProcessor:
         )
 
     def _parse_application_proposal(self, company_id: str, path: Path) -> DocumentPartResult:
-        text, parser_used = _extract_pdf_text(path)
+        text, parser_used = _extract_pdf_text(path, prefer_docling=self.prefer_docling)
         structured_data: dict[str, Any] = {}
         notes: list[str] = []
 
@@ -325,6 +351,8 @@ class DocumentPackageProcessor:
                 continue
             if field_name == "requested_amount_usd":
                 structured_data[field_name] = _parse_decimal(raw_value)
+            elif field_name in {"founded_year", "employee_count"}:
+                structured_data[field_name] = _parse_int(raw_value)
             else:
                 structured_data[field_name] = raw_value
 

@@ -26,6 +26,9 @@ from src.commands.handlers import (
     handle_start_agent_session,
     handle_submit_application,
 )
+from src.agents import LedgerAgentRuntime
+from src.agents.llm import AgentLLMBackend
+from src.agents.cost_reporting import collect_llm_costs, render_live_cost_report
 from src.document_processing import DocumentPackageProcessor, persist_document_package
 from src.document_processing.models import DocumentPackageAnalysis
 from src.event_store import EventStore, InMemoryEventStore, OptimisticConcurrencyError
@@ -111,6 +114,17 @@ def _json_default(value: Any) -> Any:
 
 def _serialize(value: Any) -> Any:
     return json.loads(json.dumps(value, default=_json_default))
+
+
+async def _latest_credit_limit(store: EventStore | InMemoryEventStore, application_id: str) -> Decimal | None:
+    credit_events = await store.load_stream(f"credit-{application_id}")
+    for event in reversed(credit_events):
+        if event.event_type == "CreditAnalysisCompleted":
+            decision = event.payload.get("decision", {})
+            raw = decision.get("recommended_limit_usd")
+            if raw is not None:
+                return Decimal(str(raw))
+    return None
 
 
 def _scenario_session_id(
@@ -553,9 +567,11 @@ async def run_document_phase(
     company_id: str,
     *,
     include_summaries: bool = False,
+    analysis: DocumentPackageAnalysis | None = None,
 ) -> dict[str, Any]:
-    processor = DocumentPackageProcessor(documents_root=DOCUMENTS_ROOT)
-    analysis = processor.process_company(company_id, include_summaries=include_summaries)
+    if analysis is None:
+        processor = DocumentPackageProcessor(documents_root=DOCUMENTS_ROOT)
+        analysis = processor.process_company(company_id, include_summaries=include_summaries)
     quality_caveats = _quality_caveats(analysis)
     stream_id = f"docpkg-{application_id}"
     existing_version = await store.stream_version(stream_id)
@@ -647,9 +663,10 @@ async def run_credit_phase(
     company_id: str | None = None,
     *,
     requested_amount_usd: Decimal | None = None,
+    document_analysis: DocumentPackageAnalysis | None = None,
 ) -> dict[str, Any]:
     company = company_id or default_company_for_application(application_id)
-    doc_result = await run_document_phase(store, application_id, company)
+    doc_result = await run_document_phase(store, application_id, company, analysis=document_analysis)
     analysis = doc_result["analysis"]
     quality_caveats = list(doc_result["quality_caveats"])
     company_context = await _resolve_company_context(store, company)
@@ -1120,9 +1137,11 @@ async def run_full_pipeline(
     store: EventStore | InMemoryEventStore,
     application_id: str,
     company_id: str | None = None,
+    *,
+    document_analysis: DocumentPackageAnalysis | None = None,
 ) -> dict[str, Any]:
     company = company_id or default_company_for_application(application_id)
-    credit_result = await run_credit_phase(store, application_id, company)
+    credit_result = await run_credit_phase(store, application_id, company, document_analysis=document_analysis)
     fraud_result = await _run_fraud_stage(store, application_id, company, fraud_score=0.11)
     compliance_result = await _run_compliance_stage(store, application_id, company, hard_block=False)
 
@@ -1683,9 +1702,13 @@ def _seed_application_rows() -> list[dict[str, Any]]:
     return rows
 
 
-def _analysis_cache(company_id: str, cache: dict[str, DocumentPackageAnalysis]) -> DocumentPackageAnalysis:
+def _analysis_cache(
+    company_id: str,
+    cache: dict[str, DocumentPackageAnalysis],
+    *,
+    processor: DocumentPackageProcessor,
+) -> DocumentPackageAnalysis:
     if company_id not in cache:
-        processor = DocumentPackageProcessor(documents_root=DOCUMENTS_ROOT)
         cache[company_id] = processor.process_company(company_id, include_summaries=False)
     return cache[company_id]
 
@@ -1759,9 +1782,17 @@ def _collect_cost_metrics_from_event_dicts(events: list[dict[str, Any]]) -> dict
 
 async def _load_seed_cost_metrics() -> dict[str, Any]:
     seed_events: list[dict[str, Any]] = []
+    analysis_cache: dict[str, DocumentPackageAnalysis] = {}
+    processor = DocumentPackageProcessor(documents_root=DOCUMENTS_ROOT, prefer_docling=False)
     for row in _seed_application_rows():
         store = InMemoryEventStore()
-        await run_full_pipeline(store, application_id=str(row["application_id"]), company_id=str(row["company_id"]))
+        analysis = _analysis_cache(str(row["company_id"]), analysis_cache, processor=processor)
+        await run_full_pipeline(
+            store,
+            application_id=str(row["application_id"]),
+            company_id=str(row["company_id"]),
+            document_analysis=analysis,
+        )
         async for event in store.load_all(from_position=0, apply_upcasters=False):
             seed_events.append(_event_to_dict(event))
     return _collect_cost_metrics_from_event_dicts(seed_events)
@@ -1916,11 +1947,119 @@ async def generate_narr05_artifacts(output_dir: str | Path = ARTIFACTS_ROOT) -> 
     }
 
 
+async def generate_runtime_narr05_artifacts(
+    store: EventStore | InMemoryEventStore,
+    output_dir: str | Path = ARTIFACTS_ROOT,
+    *,
+    application_id: str,
+    company_id: str = NARRATIVE_COMPANIES["NARR-05"],
+    requested_amount_usd: Decimal = Decimal("950000"),
+    target_approved_amount_usd: Decimal = Decimal("750000"),
+    reviewer_id: str = "LO-Sarah-Chen",
+    override_reason: str = "15-year customer, prior repayment history, collateral offered",
+    interest_rate_pct: float = 9.10,
+    term_months: int = 36,
+    conditions: list[str] | None = None,
+    llm_backend: AgentLLMBackend | None = None,
+) -> dict[str, Any]:
+    output_root = Path(output_dir)
+    output_root.mkdir(parents=True, exist_ok=True)
+    runtime = LedgerAgentRuntime(store, llm_backend=llm_backend)
+    conditions = conditions or [
+        "Monthly revenue reporting for 12 months",
+        "Personal guarantee from CEO",
+    ]
+
+    workflow = await runtime.start_application(
+        application_id,
+        company_id,
+        phase="full",
+        requested_amount_usd=requested_amount_usd,
+        auto_finalize_human_review=False,
+        reviewer_id=reviewer_id,
+    )
+
+    latest_credit_limit = await _latest_credit_limit(store, application_id)
+    approved_amount_usd = min(target_approved_amount_usd, latest_credit_limit or target_approved_amount_usd)
+    review = await runtime.complete_human_review(
+        application_id,
+        reviewer_id=reviewer_id,
+        final_decision="APPROVE",
+        override=True,
+        override_reason=override_reason,
+        approved_amount_usd=approved_amount_usd,
+        interest_rate_pct=interest_rate_pct,
+        term_months=term_months,
+        conditions=conditions,
+        decline_reasons=[],
+        adverse_action_codes=[],
+    )
+
+    package = await generate_regulatory_package(store, application_id, examination_date=_now())
+    verification = verify_regulatory_package(package)
+    package_document = {
+        "package": package,
+        "verification": _serialize(verification),
+    }
+    package_path = output_root / "regulatory_package_NARR05.json"
+    package_path.write_text(json.dumps(package_document, default=_json_default, indent=2), encoding="utf-8")
+
+    counterfactual = await run_what_if(
+        store,
+        application_id,
+        branch_at_event_type="CreditAnalysisCompleted",
+        counterfactual_events=[
+            CreditAnalysisCompleted(
+                application_id=application_id,
+                session_id="whatif-credit-session",
+                decision=CreditDecision(
+                    risk_tier=RiskTier.MEDIUM,
+                    recommended_limit_usd=max(target_approved_amount_usd, approved_amount_usd),
+                    confidence=0.88,
+                    rationale="Counterfactual replay assumes relationship and collateral support a medium-risk credit posture.",
+                ),
+                model_version="credit-whatif-v1",
+                model_deployment_id="credit-whatif-dep",
+                input_data_hash="whatif-input-narr05-live",
+                analysis_duration_ms=5,
+                completed_at=_now(),
+            )
+        ],
+    )
+    counterfactual_path = output_root / "counterfactual_narr05.json"
+    counterfactual_path.write_text(
+        json.dumps(_serialize(counterfactual), default=_json_default, indent=2),
+        encoding="utf-8",
+    )
+
+    cost_summary = await collect_llm_costs(store, application_ids=[application_id])
+    api_cost_report = render_live_cost_report(cost_summary)
+    api_cost_path = output_root / "api_cost_report.txt"
+    api_cost_path.write_text(api_cost_report, encoding="utf-8")
+
+    return {
+        "application_id": application_id,
+        "company_id": company_id,
+        "workflow": _serialize(workflow),
+        "review": _serialize(review),
+        "requested_amount_usd": str(requested_amount_usd),
+        "target_approved_amount_usd": str(target_approved_amount_usd),
+        "approved_amount_usd": str(approved_amount_usd),
+        "approval_capped_by_credit_limit": approved_amount_usd != target_approved_amount_usd,
+        "latest_credit_limit_usd": str(latest_credit_limit) if latest_credit_limit is not None else None,
+        "package_path": str(package_path),
+        "counterfactual_path": str(counterfactual_path),
+        "api_cost_report_path": str(api_cost_path),
+        "verification": _serialize(verification),
+    }
+
+
 __all__ = [
     "build_api_cost_report",
     "default_company_for_application",
     "find_montana_company_id",
     "generate_narr05_artifacts",
+    "generate_runtime_narr05_artifacts",
     "narr01_occ_collision",
     "narr02_missing_ebitda",
     "narr03_crash_recovery",

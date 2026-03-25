@@ -44,6 +44,22 @@ def test_document_processor_extracts_pdf_excel_and_csv_sources():
     assert analysis.merged_financial_facts.interest_coverage > 0
 
 
+def test_application_proposal_extracts_registry_style_fields(monkeypatch):
+    import src.document_processing.pipeline as pipeline_module
+
+    monkeypatch.setattr(pipeline_module, "_try_docling_extract", lambda path: None)
+
+    processor = DocumentPackageProcessor(documents_root="documents")
+    analysis = processor.process_company("COMP-068", include_summaries=False)
+    proposal = analysis.get_document(DocumentType.APPLICATION_PROPOSAL)
+
+    assert proposal is not None
+    assert proposal.structured_data["naics"] == "621111"
+    assert proposal.structured_data["ein"] == "42-5196677"
+    assert proposal.structured_data["founded_year"] == 2002
+    assert proposal.structured_data["employee_count"] == 494
+
+
 def test_missing_ebitda_from_pdf_is_preserved_and_backfilled():
     processor = DocumentPackageProcessor(documents_root="documents")
     analysis = processor.process_company("COMP-044", include_summaries=False)

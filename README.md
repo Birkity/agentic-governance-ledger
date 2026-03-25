@@ -343,6 +343,16 @@ Generate the NARR-05 submission artifacts:
 .\.venv\Scripts\python.exe tests\phase6\verify_package.py artifacts\regulatory_package_NARR05.json
 ```
 
+Force the live PostgreSQL-backed NARR-05 path instead of the in-memory fallback:
+
+```powershell
+$env:DATABASE_URL='postgresql://postgres:YOUR_PASSWORD@localhost/apex_ledger'
+.\.venv\Scripts\python.exe scripts\demo_narr05.py --mode live --db-url $env:DATABASE_URL --application-id APEX-NARR05-LIVE-DEMO
+.\.venv\Scripts\python.exe tests\phase6\verify_package.py artifacts\regulatory_package_NARR05.json
+```
+
+In seed-only or in-memory mode, the runtime now supplements missing registry-style fields such as `naics`, `founded_year`, and `employee_count` from the application proposal PDF instead of inventing them.
+
 Build the final report source if TeX is installed locally:
 
 ```powershell

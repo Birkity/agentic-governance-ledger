@@ -1,21 +1,23 @@
 Live API Cost Report
-Generated at: 2026-03-25T16:06:39.292914+00:00
+Generated at: 2026-03-25T17:02:43.834849+00:00
 Applications included: 1
-Provider calls observed: 3
-Billable calls observed: 3
-Total billable external cost: $0.001342
-Average cost per application: $0.001342
+Provider calls observed: 0
+Billable calls observed: 0
+Total billable external cost: $0.000000
+Average cost per application: $0.000000
 
 Applications:
-- APEX-CLIENT-068-B478F9: $0.001342
+- APEX-NARR05-LIVE-20260325T180500Z: $0.000000
 
 By agent:
-- credit_analysis: $0.000576
-- decision_orchestrator: $0.000366
-- fraud_detection: $0.000400
+- none
 
 By provider:
-- openrouter: $0.001342 (311 tokens)
+- none
 
 By model:
-- openai/gpt-4.1-2025-04-14: $0.001342
+- none
+
+Note:
+- No billable provider usage was observed for the selected applications.
+- Deterministic fallbacks and local Ollama runs are treated as non-billable external cost.

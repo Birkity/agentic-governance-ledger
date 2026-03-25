@@ -6,6 +6,7 @@ import re
 from dataclasses import asdict, dataclass, is_dataclass
 from datetime import datetime, timezone
 from decimal import Decimal
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, NotRequired, TypedDict
 from uuid import uuid4
@@ -218,6 +219,17 @@ def _load_profiles() -> list[dict[str, Any]]:
     return json.loads(APPLICANT_PROFILES_PATH.read_text(encoding="utf-8"))
 
 
+@lru_cache(maxsize=256)
+def _proposal_seed_fields(company_id: str) -> dict[str, Any]:
+    proposal_path = DOCUMENTS_ROOT / company_id / "application_proposal.pdf"
+    if not proposal_path.exists():
+        return {}
+
+    processor = DocumentPackageProcessor(documents_root=DOCUMENTS_ROOT)
+    proposal = processor._parse_application_proposal(company_id, proposal_path)
+    return dict(proposal.structured_data)
+
+
 def default_company_for_application(application_id: str) -> str:
     normalized = application_id.upper()
     for key, company_id in NARRATIVE_COMPANIES.items():
@@ -284,15 +296,32 @@ def _registry_client_for_store(store: StoreType) -> ApplicantRegistryClient | No
 def _seed_context(company_id: str) -> RuntimeApplicantContext:
     for profile in _load_profiles():
         if str(profile["company_id"]) == company_id:
+            proposal_fields = _proposal_seed_fields(company_id)
             return RuntimeApplicantContext(
                 company_id=company_id,
-                name=str(profile.get("name", company_id)),
-                industry=str(profile.get("industry", "")),
-                naics=str(profile.get("naics", "")),
-                jurisdiction=str(profile.get("jurisdiction", "")),
-                legal_type=str(profile.get("legal_type", "")),
-                founded_year=int(profile["founded_year"]) if profile.get("founded_year") is not None else None,
-                employee_count=int(profile["employee_count"]) if profile.get("employee_count") is not None else None,
+                name=str(profile.get("name", proposal_fields.get("legal_entity_name", company_id))),
+                industry=str(profile.get("industry", proposal_fields.get("industry", ""))),
+                naics=str(profile.get("naics", proposal_fields.get("naics", ""))),
+                jurisdiction=str(profile.get("jurisdiction", proposal_fields.get("jurisdiction", ""))),
+                legal_type=str(profile.get("legal_type", proposal_fields.get("business_type", ""))),
+                founded_year=(
+                    int(profile["founded_year"])
+                    if profile.get("founded_year") is not None
+                    else (
+                        int(proposal_fields["founded_year"])
+                        if proposal_fields.get("founded_year") is not None
+                        else None
+                    )
+                ),
+                employee_count=(
+                    int(profile["employee_count"])
+                    if profile.get("employee_count") is not None
+                    else (
+                        int(proposal_fields["employee_count"])
+                        if proposal_fields.get("employee_count") is not None
+                        else None
+                    )
+                ),
                 risk_segment=str(profile.get("risk_segment", "MEDIUM")),
                 trajectory=str(profile.get("trajectory", "STABLE")),
                 submission_channel=str(profile.get("submission_channel", "seed")),
@@ -870,6 +899,28 @@ class LedgerAgentRuntime:
         model = descriptor.model.strip()
         return model or fallback
 
+    async def _invoke_graph(
+        self,
+        compiled: Any,
+        initial_state: dict[str, Any],
+        *,
+        application_id: str,
+        agent_type: AgentType,
+        session_id: str,
+    ) -> dict[str, Any]:
+        try:
+            return await compiled.ainvoke(initial_state)
+        except Exception as exc:
+            await _fail_session(
+                self.store,
+                application_id,
+                agent_type,
+                session_id,
+                error_type=exc.__class__.__name__,
+                error_message=str(exc),
+            )
+            raise
+
     async def sync(self) -> None:
         if self._daemon is None:
             summary = ApplicationSummaryProjection(self.store)
@@ -905,18 +956,13 @@ class LedgerAgentRuntime:
             "session_stream_id": session_stream_id,
             "include_summaries": include_summaries,
         }
-        try:
-            state = await compiled.ainvoke(initial_state)
-        except Exception as exc:  # noqa: BLE001
-            await _fail_session(
-                self.store,
-                application_id,
-                AgentType.DOCUMENT_PROCESSING,
-                session_id,
-                error_type=exc.__class__.__name__,
-                error_message=str(exc),
-            )
-            raise
+        state = await self._invoke_graph(
+            compiled,
+            initial_state,
+            application_id=application_id,
+            agent_type=AgentType.DOCUMENT_PROCESSING,
+            session_id=session_id,
+        )
 
         await self.sync()
         return {
@@ -972,6 +1018,7 @@ class LedgerAgentRuntime:
         return await self.run_full_pipeline(
             application_id,
             company_id,
+            requested_amount_usd=requested_amount_usd,
             auto_finalize_human_review=auto_finalize_human_review,
             reviewer_id=reviewer_id,
         )
@@ -1011,18 +1058,13 @@ class LedgerAgentRuntime:
             "analysis": analysis,
             "requested_amount_usd": requested_amount_usd or _requested_amount_from_analysis(analysis, company_id),
         }
-        try:
-            state = await compiled.ainvoke(initial_state)
-        except Exception as exc:  # noqa: BLE001
-            await _fail_session(
-                self.store,
-                application_id,
-                AgentType.CREDIT_ANALYSIS,
-                session_id,
-                error_type=exc.__class__.__name__,
-                error_message=str(exc),
-            )
-            raise
+        state = await self._invoke_graph(
+            compiled,
+            initial_state,
+            application_id=application_id,
+            agent_type=AgentType.CREDIT_ANALYSIS,
+            session_id=session_id,
+        )
 
         await self.sync()
         return {
@@ -1073,18 +1115,13 @@ class LedgerAgentRuntime:
             "company_context": company_context,
             "credit_decision": credit_result["credit_decision"],
         }
-        try:
-            result = await compiled.ainvoke(state)
-        except Exception as exc:  # noqa: BLE001
-            await _fail_session(
-                self.store,
-                application_id,
-                AgentType.FRAUD_DETECTION,
-                session_id,
-                error_type=exc.__class__.__name__,
-                error_message=str(exc),
-            )
-            raise
+        result = await self._invoke_graph(
+            compiled,
+            state,
+            application_id=application_id,
+            agent_type=AgentType.FRAUD_DETECTION,
+            session_id=session_id,
+        )
 
         await self.sync()
         return {
@@ -1123,18 +1160,13 @@ class LedgerAgentRuntime:
             "session_stream_id": session_stream_id,
             "company_context": company_context,
         }
-        try:
-            result = await compiled.ainvoke(state)
-        except Exception as exc:  # noqa: BLE001
-            await _fail_session(
-                self.store,
-                application_id,
-                AgentType.COMPLIANCE,
-                session_id,
-                error_type=exc.__class__.__name__,
-                error_message=str(exc),
-            )
-            raise
+        result = await self._invoke_graph(
+            compiled,
+            state,
+            application_id=application_id,
+            agent_type=AgentType.COMPLIANCE,
+            session_id=session_id,
+        )
 
         await self.sync()
         return {
@@ -1181,18 +1213,13 @@ class LedgerAgentRuntime:
             "fraud_session_stream_id": fraud_result["fraud_session_stream_id"],
             "compliance_session_stream_id": compliance_result["compliance_session_stream_id"],
         }
-        try:
-            result = await compiled.ainvoke(state)
-        except Exception as exc:  # noqa: BLE001
-            await _fail_session(
-                self.store,
-                application_id,
-                AgentType.DECISION_ORCHESTRATOR,
-                session_id,
-                error_type=exc.__class__.__name__,
-                error_message=str(exc),
-            )
-            raise
+        result = await self._invoke_graph(
+            compiled,
+            state,
+            application_id=application_id,
+            agent_type=AgentType.DECISION_ORCHESTRATOR,
+            session_id=session_id,
+        )
 
         await self.sync()
         return {
@@ -1269,11 +1296,16 @@ class LedgerAgentRuntime:
         application_id: str,
         company_id: str | None = None,
         *,
+        requested_amount_usd: Decimal | None = None,
         auto_finalize_human_review: bool = False,
         reviewer_id: str = "loan-ops",
     ) -> dict[str, Any]:
         company = company_id or default_company_for_application(application_id)
-        credit_result = await self.run_credit_stage(application_id, company)
+        credit_result = await self.run_credit_stage(
+            application_id,
+            company,
+            requested_amount_usd=requested_amount_usd,
+        )
         if credit_result.get("deferred"):
             return {
                 "application_id": application_id,
