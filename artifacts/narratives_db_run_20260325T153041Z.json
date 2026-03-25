@@ -1,17 +1,17 @@
 {
-  "generated_at": "2026-03-25T14:36:25.307301+00:00",
+  "generated_at": "2026-03-25T15:35:23.002163+00:00",
   "db_url_redacted": "localhost/apex_ledger",
   "application_ids": {
-    "narr01": "APEX-DB-NARR01-20260325T143107Z",
-    "narr02": "APEX-DB-NARR02-20260325T143107Z",
-    "narr03": "APEX-DB-NARR03-20260325T143107Z",
-    "narr04": "APEX-DB-NARR04-20260325T143107Z",
-    "narr05": "APEX-DB-NARR05-20260325T143107Z"
+    "narr01": "APEX-DB-NARR01-20260325T153041Z",
+    "narr02": "APEX-DB-NARR02-20260325T153041Z",
+    "narr03": "APEX-DB-NARR03-20260325T153041Z",
+    "narr04": "APEX-DB-NARR04-20260325T153041Z",
+    "narr05": "APEX-DB-NARR05-20260325T153041Z"
   },
   "overall_passed": true,
   "results": {
     "narr01": {
-      "application_id": "APEX-DB-NARR01-20260325T143107Z",
+      "application_id": "APEX-DB-NARR01-20260325T153041Z",
       "support_doc_company": "COMP-031",
       "runtime_company": "COMP-031",
       "support_doc_profile": {
@@ -42,14 +42,14 @@
           2
         ],
         "agent_failures_logged": 0,
-        "second_event_causation_id": "agent-credit_analysis-sess-credit-b-apex-db-narr01-20260325t143107z:5",
+        "second_event_causation_id": "agent-credit_analysis-sess-credit-b-apex-db-narr01-20260325t153041z:5",
         "second_event_causation_id_resolvable": true
       }
     },
     "narr02": {
-      "application_id": "APEX-DB-NARR02-20260325T143107Z",
+      "application_id": "APEX-DB-NARR02-20260325T153041Z",
       "support_doc_company": "COMP-044",
-      "runtime_company": "COMP-001",
+      "runtime_company": "COMP-044",
       "support_doc_profile": {
         "company_id": "COMP-044",
         "industry": "healthcare",
@@ -58,24 +58,24 @@
         "risk_segment": "LOW"
       },
       "runtime_profile": {
-        "company_id": "COMP-001",
-        "industry": "construction",
-        "jurisdiction": "VA",
-        "trajectory": "DECLINING",
-        "risk_segment": "MEDIUM"
+        "company_id": "COMP-044",
+        "industry": "healthcare",
+        "jurisdiction": "OK",
+        "trajectory": "GROWTH",
+        "risk_segment": "LOW"
       },
       "assertions": {
         "passed": true,
         "income_notes": [
           "Missing ebitda in income statement PDF"
         ],
-        "merged_ebitda": "514335.41",
+        "merged_ebitda": "2706043.82",
         "ebitda_source": "financial_workbook",
-        "credit_confidence": 0.66
+        "credit_confidence": 0.75
       }
     },
     "narr03": {
-      "application_id": "APEX-DB-NARR03-20260325T143107Z",
+      "application_id": "APEX-DB-NARR03-20260325T153041Z",
       "support_doc_company": "COMP-057",
       "runtime_company": "COMP-057",
       "support_doc_profile": {
@@ -96,12 +96,12 @@
         "passed": true,
         "fraud_completed_events": 1,
         "reconstructed_last_successful_node": "load_facts",
-        "recovered_session_context_source": "prior_session_replay:sess-fraud-crashed-apex-db-narr03-20260325t143107z",
+        "recovered_session_context_source": "prior_session_replay:sess-fraud-crashed-apex-db-narr03-20260325t153041z",
         "load_facts_node_events": 1
       }
     },
     "narr04": {
-      "application_id": "APEX-DB-NARR04-20260325T143107Z",
+      "application_id": "APEX-DB-NARR04-20260325T153041Z",
       "support_doc_company": "MT company",
       "runtime_company": "COMP-075",
       "runtime_profile": {
@@ -125,7 +125,7 @@
       }
     },
     "narr05": {
-      "application_id": "APEX-DB-NARR05-20260325T143107Z",
+      "application_id": "APEX-DB-NARR05-20260325T153041Z",
       "support_doc_company": "COMP-068",
       "runtime_company": "COMP-068",
       "support_doc_profile": {
@@ -157,11 +157,11 @@
     }
   },
   "projection_state": {
-    "events_processed": 288,
+    "events_processed": 315,
     "records": {
-      "APEX-DB-NARR01-20260325T143107Z": {
+      "APEX-DB-NARR01-20260325T153041Z": {
         "application_summary": {
-          "application_id": "APEX-DB-NARR01-20260325T143107Z",
+          "application_id": "APEX-DB-NARR01-20260325T153041Z",
           "state": "AWAITING_ANALYSIS",
           "applicant_id": "COMP-031",
           "requested_amount_usd": "1476190",
@@ -171,42 +171,42 @@
           "compliance_status": null,
           "decision": null,
           "agent_sessions_completed": [
-            "sess-doc-apex-db-narr01-20260325t143107z",
-            "sess-credit-a-apex-db-narr01-20260325t143107z",
-            "sess-credit-b-apex-db-narr01-20260325t143107z"
+            "sess-doc-apex-db-narr01-20260325t153041z",
+            "sess-credit-a-apex-db-narr01-20260325t153041z",
+            "sess-credit-b-apex-db-narr01-20260325t153041z"
           ],
           "last_event_type": "AgentSessionCompleted",
-          "last_event_at": "2026-03-25T14:32:38.298100+00:00",
+          "last_event_at": "2026-03-25T15:31:57.504326+00:00",
           "human_reviewer_id": null,
           "final_decision_at": null
         },
         "compliance_audit": null
       },
-      "APEX-DB-NARR02-20260325T143107Z": {
+      "APEX-DB-NARR02-20260325T153041Z": {
         "application_summary": {
-          "application_id": "APEX-DB-NARR02-20260325T143107Z",
+          "application_id": "APEX-DB-NARR02-20260325T153041Z",
           "state": "ANALYSIS_COMPLETE",
-          "applicant_id": "COMP-001",
-          "requested_amount_usd": "2152226",
+          "applicant_id": "COMP-044",
+          "requested_amount_usd": "2329181",
           "approved_amount_usd": null,
-          "risk_tier": "HIGH",
+          "risk_tier": "LOW",
           "fraud_score": null,
           "compliance_status": null,
           "decision": null,
           "agent_sessions_completed": [
-            "sess-doc-apex-db-narr02-20260325t143107z",
-            "sess-credit-apex-db-narr02-20260325t143107z"
+            "sess-doc-apex-db-narr02-20260325t153041z",
+            "sess-credit-apex-db-narr02-20260325t153041z"
           ],
           "last_event_type": "AgentSessionCompleted",
-          "last_event_at": "2026-03-25T14:33:33.963507+00:00",
+          "last_event_at": "2026-03-25T15:32:48.805929+00:00",
           "human_reviewer_id": null,
           "final_decision_at": null
         },
         "compliance_audit": null
       },
-      "APEX-DB-NARR03-20260325T143107Z": {
+      "APEX-DB-NARR03-20260325T153041Z": {
         "application_summary": {
-          "application_id": "APEX-DB-NARR03-20260325T143107Z",
+          "application_id": "APEX-DB-NARR03-20260325T153041Z",
           "state": "COMPLIANCE_REVIEW",
           "applicant_id": "COMP-057",
           "requested_amount_usd": "1100000",
@@ -216,20 +216,20 @@
           "compliance_status": null,
           "decision": null,
           "agent_sessions_completed": [
-            "sess-doc-apex-db-narr03-20260325t143107z",
-            "sess-credit-apex-db-narr03-20260325t143107z",
-            "sess-fraud-recovered-apex-db-narr03-20260325t143107z"
+            "sess-doc-apex-db-narr03-20260325t153041z",
+            "sess-credit-apex-db-narr03-20260325t153041z",
+            "sess-fraud-recovered-apex-db-narr03-20260325t153041z"
           ],
           "last_event_type": "AgentSessionCompleted",
-          "last_event_at": "2026-03-25T14:34:29.633723+00:00",
+          "last_event_at": "2026-03-25T15:33:33.922972+00:00",
           "human_reviewer_id": null,
           "final_decision_at": null
         },
         "compliance_audit": null
       },
-      "APEX-DB-NARR04-20260325T143107Z": {
+      "APEX-DB-NARR04-20260325T153041Z": {
         "application_summary": {
-          "application_id": "APEX-DB-NARR04-20260325T143107Z",
+          "application_id": "APEX-DB-NARR04-20260325T153041Z",
           "state": "DECLINED_COMPLIANCE",
           "applicant_id": "COMP-075",
           "requested_amount_usd": "6929185",
@@ -239,19 +239,19 @@
           "compliance_status": "BLOCKED",
           "decision": "DECLINE",
           "agent_sessions_completed": [
-            "sess-doc-apex-db-narr04-20260325t143107z",
-            "sess-credit-apex-db-narr04-20260325t143107z",
-            "sess-fraud-apex-db-narr04-20260325t143107z",
-            "sess-compliance-apex-db-narr04-20260325t143107z"
+            "sess-doc-apex-db-narr04-20260325t153041z",
+            "sess-credit-apex-db-narr04-20260325t153041z",
+            "sess-fraud-apex-db-narr04-20260325t153041z",
+            "sess-compliance-apex-db-narr04-20260325t153041z"
           ],
           "last_event_type": "AgentSessionCompleted",
-          "last_event_at": "2026-03-25T14:35:27.321823+00:00",
+          "last_event_at": "2026-03-25T15:34:22.957802+00:00",
           "human_reviewer_id": null,
-          "final_decision_at": "2026-03-25T14:35:27.289362+00:00"
+          "final_decision_at": "2026-03-25T15:34:22.926104+00:00"
         },
         "compliance_audit": {
-          "application_id": "APEX-DB-NARR04-20260325T143107Z",
-          "session_id": "sess-compliance-apex-db-narr04-20260325t143107z",
+          "application_id": "APEX-DB-NARR04-20260325T153041Z",
+          "session_id": "sess-compliance-apex-db-narr04-20260325t153041z",
           "regulation_set_version": "2026-Q1",
           "required_rules": [
             "REG-001",
@@ -265,7 +265,7 @@
               "rule_version": "1",
               "evidence_hash": "e1",
               "evaluation_notes": "Customer cleared sanctions screening.",
-              "evaluated_at": "2026-03-25T14:35:27.289362Z"
+              "evaluated_at": "2026-03-25T15:34:22.926104Z"
             },
             {
               "rule_id": "REG-002",
@@ -273,7 +273,7 @@
               "rule_version": "1",
               "evidence_hash": "e2",
               "evaluation_notes": "No OFAC match.",
-              "evaluated_at": "2026-03-25T14:35:27.289362Z"
+              "evaluated_at": "2026-03-25T15:34:22.926104Z"
             }
           ],
           "failed_rules": [
@@ -286,7 +286,7 @@
               "remediation_available": false,
               "remediation_description": null,
               "evidence_hash": "e3",
-              "evaluated_at": "2026-03-25T14:35:27.289362Z"
+              "evaluated_at": "2026-03-25T15:34:22.926104Z"
             }
           ],
           "noted_rules": [],
@@ -296,14 +296,14 @@
           "completed": true,
           "overall_verdict": "BLOCKED",
           "last_event_type": "ComplianceCheckCompleted",
-          "as_of": "2026-03-25T14:35:27.299706+00:00",
-          "checkpoint_position": 3342,
+          "as_of": "2026-03-25T15:34:22.937441+00:00",
+          "checkpoint_position": 3657,
           "snapshot_version": 5
         }
       },
-      "APEX-DB-NARR05-20260325T143107Z": {
+      "APEX-DB-NARR05-20260325T153041Z": {
         "application_summary": {
-          "application_id": "APEX-DB-NARR05-20260325T143107Z",
+          "application_id": "APEX-DB-NARR05-20260325T153041Z",
           "state": "FINAL_APPROVED",
           "applicant_id": "COMP-068",
           "requested_amount_usd": "950000",
@@ -313,20 +313,20 @@
           "compliance_status": "CLEAR",
           "decision": "APPROVE",
           "agent_sessions_completed": [
-            "sess-doc-apex-db-narr05-20260325t143107z",
-            "sess-credit-apex-db-narr05-20260325t143107z",
-            "sess-fraud-apex-db-narr05-20260325t143107z",
-            "sess-compliance-apex-db-narr05-20260325t143107z",
-            "sess-orch-apex-db-narr05-20260325t143107z"
+            "sess-doc-apex-db-narr05-20260325t153041z",
+            "sess-credit-apex-db-narr05-20260325t153041z",
+            "sess-fraud-apex-db-narr05-20260325t153041z",
+            "sess-compliance-apex-db-narr05-20260325t153041z",
+            "sess-orch-apex-db-narr05-20260325t153041z"
           ],
           "last_event_type": "ApplicationApproved",
-          "last_event_at": "2026-03-25T14:36:22.802013+00:00",
+          "last_event_at": "2026-03-25T15:35:20.286477+00:00",
           "human_reviewer_id": "LO-Sarah-Chen",
-          "final_decision_at": "2026-03-25T14:36:22.795295+00:00"
+          "final_decision_at": "2026-03-25T15:35:20.279711+00:00"
         },
         "compliance_audit": {
-          "application_id": "APEX-DB-NARR05-20260325T143107Z",
-          "session_id": "sess-compliance-apex-db-narr05-20260325t143107z",
+          "application_id": "APEX-DB-NARR05-20260325T153041Z",
+          "session_id": "sess-compliance-apex-db-narr05-20260325t153041z",
           "regulation_set_version": "2026-Q1",
           "required_rules": [
             "REG-001",
@@ -343,7 +343,7 @@
               "rule_version": "1",
               "evidence_hash": "e1",
               "evaluation_notes": "Customer cleared sanctions screening.",
-              "evaluated_at": "2026-03-25T14:36:22.686519Z"
+              "evaluated_at": "2026-03-25T15:35:20.168316Z"
             },
             {
               "rule_id": "REG-002",
@@ -351,7 +351,7 @@
               "rule_version": "1",
               "evidence_hash": "e2",
               "evaluation_notes": "No OFAC match.",
-              "evaluated_at": "2026-03-25T14:36:22.686519Z"
+              "evaluated_at": "2026-03-25T15:35:20.168316Z"
             },
             {
               "rule_id": "REG-003",
@@ -359,7 +359,7 @@
               "rule_version": "1",
               "evidence_hash": "e3",
               "evaluation_notes": "Jurisdiction allowed.",
-              "evaluated_at": "2026-03-25T14:36:22.686519Z"
+              "evaluated_at": "2026-03-25T15:35:20.168316Z"
             },
             {
               "rule_id": "REG-004",
@@ -367,7 +367,7 @@
               "rule_version": "1",
               "evidence_hash": "e4",
               "evaluation_notes": "Entity type is eligible.",
-              "evaluated_at": "2026-03-25T14:36:22.686519Z"
+              "evaluated_at": "2026-03-25T15:35:20.168316Z"
             },
             {
               "rule_id": "REG-005",
@@ -375,7 +375,7 @@
               "rule_version": "1",
               "evidence_hash": "e5",
               "evaluation_notes": "Operating history satisfies the policy.",
-              "evaluated_at": "2026-03-25T14:36:22.686519Z"
+              "evaluated_at": "2026-03-25T15:35:20.168316Z"
             }
           ],
           "failed_rules": [],
@@ -385,15 +385,15 @@
               "rule_name": "CRA",
               "note_type": "CRA",
               "note_text": "CRA consideration recorded.",
-              "evaluated_at": "2026-03-25T14:36:22.686519Z"
+              "evaluated_at": "2026-03-25T15:35:20.168316Z"
             }
           ],
           "hard_block_rules": [],
           "completed": true,
           "overall_verdict": "CLEAR",
           "last_event_type": "ComplianceCheckCompleted",
-          "as_of": "2026-03-25T14:36:22.699005+00:00",
-          "checkpoint_position": 3406,
+          "as_of": "2026-03-25T15:35:20.181395+00:00",
+          "checkpoint_position": 3721,
           "snapshot_version": 8
         }
       }
@@ -403,22 +403,22 @@
         "projection_name": "application_summary",
         "lag_positions": 0,
         "lag_ms": 0,
-        "next_position": 3418,
-        "latest_store_position": 3417
+        "next_position": 3733,
+        "latest_store_position": 3732
       },
       "agent_performance": {
         "projection_name": "agent_performance",
         "lag_positions": 0,
         "lag_ms": 0,
-        "next_position": 3418,
-        "latest_store_position": 3417
+        "next_position": 3733,
+        "latest_store_position": 3732
       },
       "compliance_audit": {
         "projection_name": "compliance_audit",
         "lag_positions": 0,
         "lag_ms": 0,
-        "next_position": 3418,
-        "latest_store_position": 3417
+        "next_position": 3733,
+        "latest_store_position": 3732
       }
     }
   },

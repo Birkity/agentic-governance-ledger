@@ -211,10 +211,22 @@ Example environment values:
 DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost/apex_ledger
 TEST_DB_URL=postgresql://postgres:YOUR_PASSWORD@localhost/apex_ledger
 DOCUMENTS_DIR=./documents
+LEDGER_AGENT_BACKEND=deterministic
+LEDGER_CRUCIAL_AGENT_BACKEND=openrouter
+LEDGER_CRUCIAL_AGENT_MODEL=openai/gpt-4.1
+OPENROUTER_API_KEY=YOUR_OPENROUTER_API_KEY
+OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
 OLLAMA_BASE_URL=http://127.0.0.1:11434
 OLLAMA_PART_MODEL=qwen3-coder:480b-cloud
 OLLAMA_PACKAGE_MODEL=deepseek-v3.1:671b-cloud
 ```
+
+For a local paid-provider setup, the runtime now supports OpenRouter on the three crucial agent stages:
+- `credit_analysis`
+- `fraud_detection`
+- `decision_orchestrator`
+
+The default document-quality stage can remain deterministic or local Ollama. The loader also accepts local `.env` aliases `api_key` and `api_model`, but the committed example only uses the standard OpenRouter variable names.
 
 If you want Docling support for richer PDF extraction:
 
@@ -298,16 +310,30 @@ Generate the projection lag artifact:
 .\.venv\Scripts\python.exe scripts\generate_projection_lag_report.py
 ```
 
-Generate the API cost attribution artifact:
+Generate the demo proxy API cost artifact:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\generate_api_cost_report.py
+```
+
+Generate a live billable cost report for one or more real PostgreSQL-backed applications:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\generate_api_cost_report.py --mode live --db-url $env:DATABASE_URL --application-id APEX-CLIENT-068-ABC123
 ```
 
 Run one application through the demo pipeline:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\run_pipeline.py --application-id APEX-DEMO-024 --company-id COMP-024 --phase full
+```
+
+Run one live client-style application through the LangGraph runtime and then resolve human review if required:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\ui_workflow.py start-application --company-id COMP-068 --phase full
+.\.venv\Scripts\python.exe scripts\ui_workflow.py record-human-review --application-id APEX-CLIENT-068-ABC123 --reviewer-id LO-Sarah-Chen --final-decision APPROVE --override --override-reason "Relationship depth and collateral support approval" --approved-amount-usd 146580 --interest-rate-pct 9.1 --term-months 36 --condition "Monthly revenue reporting for 12 months" --condition "Personal guarantee from CEO"
+.\.venv\Scripts\python.exe scripts\generate_api_cost_report.py --mode live --db-url $env:DATABASE_URL --application-id APEX-CLIENT-068-ABC123
 ```
 
 Generate the NARR-05 submission artifacts:

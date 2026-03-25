@@ -11,6 +11,8 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
+from dotenv import load_dotenv
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src.demo import (  # noqa: E402
@@ -30,6 +32,8 @@ from src.projections import (  # noqa: E402
 )
 from src.regulatory import generate_regulatory_package, verify_regulatory_package  # noqa: E402
 
+load_dotenv()
+
 
 SUPPORT_DOC_COMPANIES: dict[str, str | None] = {
     "narr01": "COMP-031",
@@ -41,7 +45,7 @@ SUPPORT_DOC_COMPANIES: dict[str, str | None] = {
 
 RUNTIME_COMPANIES: dict[str, str | None] = {
     "narr01": "COMP-031",
-    "narr02": "COMP-001",
+    "narr02": "COMP-044",
     "narr03": "COMP-057",
     "narr04": None,
     "narr05": "COMP-068",
@@ -265,7 +269,7 @@ async def main() -> None:
         narr02_result = await narr02_missing_ebitda(
             store,
             application_id=application_ids["narr02"],
-            company_id=RUNTIME_COMPANIES["narr02"] or "COMP-001",
+            company_id=RUNTIME_COMPANIES["narr02"] or "COMP-044",
         )
         results["narr02"] = {
             "application_id": application_ids["narr02"],

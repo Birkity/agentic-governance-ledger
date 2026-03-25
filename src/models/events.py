@@ -501,6 +501,8 @@ class AgentNodeExecuted(BaseEvent):
     input_keys: list[str]
     output_keys: list[str]
     llm_called: bool
+    llm_provider: str | None = None
+    llm_model: str | None = None
     llm_tokens_input: int | None = None
     llm_tokens_output: int | None = None
     llm_cost_usd: float | None = None

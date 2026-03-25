@@ -59,7 +59,7 @@ ARTIFACTS_ROOT = ROOT / "artifacts"
 
 NARRATIVE_COMPANIES = {
     "NARR-01": "COMP-031",
-    "NARR-02": "COMP-001",
+    "NARR-02": "COMP-044",
     "NARR-03": "COMP-057",
     "NARR-05": "COMP-068",
 }
@@ -416,15 +416,31 @@ def _quality_caveats(analysis: DocumentPackageAnalysis) -> list[str]:
     return caveats
 
 
+def _confidence_cap_from_quality(
+    analysis: DocumentPackageAnalysis,
+    caveats: list[str] | None = None,
+) -> float | None:
+    quality_caveats = caveats if caveats is not None else _quality_caveats(analysis)
+    if analysis.merged_financial_facts.ebitda is None or analysis.merged_financial_facts.total_revenue is None:
+        return 0.58
+    if len(quality_caveats) >= 3:
+        return 0.70
+    if quality_caveats:
+        return 0.75
+    return None
+
+
 def _credit_decision_from_profile(
     company_id: str,
     profile: dict[str, Any],
     analysis: DocumentPackageAnalysis,
     requested_amount_usd: Decimal,
+    *,
+    quality_caveats: list[str] | None = None,
 ) -> CreditDecision:
     risk_segment = str(profile.get("risk_segment", "MEDIUM")).upper()
     trajectory = str(profile.get("trajectory", "STABLE")).upper()
-    caveats = _quality_caveats(analysis)
+    caveats = quality_caveats if quality_caveats is not None else _quality_caveats(analysis)
 
     if risk_segment == "HIGH" or trajectory == "DECLINING":
         risk_tier = RiskTier.HIGH
@@ -441,6 +457,9 @@ def _credit_decision_from_profile(
 
     if caveats:
         confidence = max(0.62, confidence - 0.08)
+        quality_cap = _confidence_cap_from_quality(analysis, caveats)
+        if quality_cap is not None:
+            confidence = min(confidence, quality_cap)
     recommended_limit = (requested_amount_usd * limit_factor).quantize(Decimal("1"))
     rationale_parts = [
         f"Trajectory={trajectory}",
@@ -537,6 +556,7 @@ async def run_document_phase(
 ) -> dict[str, Any]:
     processor = DocumentPackageProcessor(documents_root=DOCUMENTS_ROOT)
     analysis = processor.process_company(company_id, include_summaries=include_summaries)
+    quality_caveats = _quality_caveats(analysis)
     stream_id = f"docpkg-{application_id}"
     existing_version = await store.stream_version(stream_id)
     positions: list[int] = []
@@ -576,7 +596,6 @@ async def run_document_phase(
             duration_ms=240,
         )
         caveat_count = sum(len(document.extraction_notes) for document in analysis.documents) + len(analysis.consistency_notes)
-        llm_cost = round(0.012 + (0.0025 * caveat_count), 6)
         await _record_node(
             store,
             AgentType.DOCUMENT_PROCESSING,
@@ -617,7 +636,7 @@ async def run_document_phase(
         "company_id": company_id,
         "analysis": analysis,
         "positions": positions,
-        "quality_caveats": _quality_caveats(analysis),
+        "quality_caveats": quality_caveats,
         "document_session_stream_id": session_stream_id,
     }
 
@@ -632,6 +651,7 @@ async def run_credit_phase(
     company = company_id or default_company_for_application(application_id)
     doc_result = await run_document_phase(store, application_id, company)
     analysis = doc_result["analysis"]
+    quality_caveats = list(doc_result["quality_caveats"])
     company_context = await _resolve_company_context(store, company)
     profile = company_context.as_profile_dict()
 
@@ -673,11 +693,17 @@ async def run_credit_phase(
     )
 
     requested = requested_amount_usd or _requested_amount_from_analysis(analysis, company)
-    decision = _credit_decision_from_profile(company, profile, analysis, requested)
+    decision = _credit_decision_from_profile(
+        company,
+        profile,
+        analysis,
+        requested,
+        quality_caveats=quality_caveats,
+    )
     credit_llm_cost = round(
         0.18
         + (0.08 if decision.risk_tier == RiskTier.HIGH else 0.04 if decision.risk_tier == RiskTier.MEDIUM else 0.02)
-        + (0.03 if _quality_caveats(analysis) else 0.0),
+        + (0.03 if quality_caveats else 0.0),
         4,
     )
     await _record_node(
@@ -690,7 +716,7 @@ async def run_credit_phase(
         input_keys=["financial_facts", "registry_profile", "quality_caveats"],
         output_keys=["credit_decision"],
         duration_ms=760,
-        llm_tokens_input=2400 + (180 * len(_quality_caveats(analysis))),
+        llm_tokens_input=2400 + (180 * len(quality_caveats)),
         llm_tokens_output=360,
         llm_cost_usd=credit_llm_cost,
     )
@@ -703,7 +729,7 @@ async def run_credit_phase(
             model_deployment_id="credit-dep-v1",
             input_data_hash=f"credit-{application_id.lower()}",
             analysis_duration_ms=640,
-            regulatory_basis=_quality_caveats(analysis),
+            regulatory_basis=quality_caveats,
         ),
         store,
     )
@@ -725,7 +751,7 @@ async def run_credit_phase(
         next_agent_triggered="fraud_detection",
         total_nodes=2,
         total_llm_calls=1,
-        total_tokens_used=2600 + (180 * len(_quality_caveats(analysis))),
+        total_tokens_used=2600 + (180 * len(quality_caveats)),
         total_cost_usd=credit_llm_cost,
     )
     return {
@@ -737,7 +763,7 @@ async def run_credit_phase(
         "credit_session_stream_id": stream_id,
         "credit_decision": decision,
         "requested_amount_usd": requested,
-        "quality_caveats": _quality_caveats(analysis),
+        "quality_caveats": quality_caveats,
     }
 
 
@@ -1358,7 +1384,7 @@ async def narr01_occ_collision(
 async def narr02_missing_ebitda(
     store: EventStore | InMemoryEventStore,
     application_id: str = "APEX-NARR02",
-    company_id: str = "COMP-001",
+    company_id: str = "COMP-044",
 ) -> dict[str, Any]:
     result = await run_credit_phase(store, application_id, company_id)
     income = result["analysis"].get_document(DocumentType.INCOME_STATEMENT)

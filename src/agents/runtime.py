@@ -71,7 +71,7 @@ DOCUMENTS_ROOT = ROOT / "documents"
 
 NARRATIVE_COMPANIES = {
     "NARR-01": "COMP-031",
-    "NARR-02": "COMP-001",
+    "NARR-02": "COMP-044",
     "NARR-03": "COMP-057",
     "NARR-05": "COMP-068",
 }
@@ -716,6 +716,8 @@ async def _record_node(
             input_keys=input_keys or [],
             output_keys=output_keys or [],
             llm_called=bool(llm_result and llm_result.called),
+            llm_provider=(llm_result.provider if llm_result else None),
+            llm_model=(llm_result.model if llm_result else None),
             llm_tokens_input=(llm_result.tokens_input if llm_result else None),
             llm_tokens_output=(llm_result.tokens_output if llm_result else None),
             llm_cost_usd=(llm_result.cost_usd if llm_result else 0.0),
@@ -862,6 +864,11 @@ class LedgerAgentRuntime:
         self.llm_backend = llm_backend or build_llm_backend()
         self._daemon: ProjectionDaemon | None = None
 
+    def _stage_model_version(self, stage: str, fallback: str) -> str:
+        descriptor = self.llm_backend.describe(stage)
+        model = descriptor.model.strip()
+        return model or fallback
+
     async def sync(self) -> None:
         if self._daemon is None:
             summary = ApplicationSummaryProjection(self.store)
@@ -886,7 +893,7 @@ class LedgerAgentRuntime:
             AgentType.DOCUMENT_PROCESSING,
             session_id,
             agent_id=f"doc-{company_id.lower()}",
-            model_version="docproc-v2",
+            model_version=self._stage_model_version("document_processing", "docproc-v2"),
             context_token_count=0,
         )
         compiled = self._build_document_graph()
@@ -990,7 +997,7 @@ class LedgerAgentRuntime:
             AgentType.CREDIT_ANALYSIS,
             session_id,
             agent_id=f"credit-{company_id.lower()}",
-            model_version="credit-v2",
+            model_version=self._stage_model_version("credit_analysis", "credit-v2"),
             context_source=company_context.source,
             context_token_count=len(json.dumps(_serialize(company_context.as_profile_dict()))),
         )
@@ -1051,7 +1058,7 @@ class LedgerAgentRuntime:
             AgentType.FRAUD_DETECTION,
             session_id,
             agent_id=f"fraud-{company_id.lower()}",
-            model_version="fraud-v2",
+            model_version=self._stage_model_version("fraud_detection", "fraud-v2"),
             context_source=company_context.source,
             context_token_count=len(json.dumps(_serialize(company_context.as_profile_dict()))),
         )
@@ -1155,7 +1162,7 @@ class LedgerAgentRuntime:
             AgentType.DECISION_ORCHESTRATOR,
             session_id,
             agent_id=f"orch-{company_id.lower()}",
-            model_version="orch-v2",
+            model_version=self._stage_model_version("decision_orchestrator", "orch-v2"),
             context_source=company_context.source,
             context_token_count=len(json.dumps(_serialize(company_context.as_profile_dict()))),
         )
@@ -1818,7 +1825,7 @@ class LedgerAgentRuntime:
                 application_id=state["application_id"],
                 session_id=state["session_id"],
                 decision=state["credit_decision"],
-                model_version="credit-v2",
+                model_version=self._stage_model_version("credit_analysis", "credit-v2"),
                 model_deployment_id=state.get("llm_result", fallback_llm).model,
                 input_data_hash=_hash_payload(
                     {
@@ -2047,7 +2054,7 @@ class LedgerAgentRuntime:
                 risk_level=state["risk_level"],
                 anomalies_found=len(state.get("anomalies", [])),
                 recommendation=state["recommendation"],
-                screening_model_version="fraud-v2",
+                screening_model_version=self._stage_model_version("fraud_detection", "fraud-v2"),
                 input_data_hash=_hash_payload(
                     {
                         "company_context": state["company_context"].as_profile_dict(),
@@ -2253,7 +2260,7 @@ class LedgerAgentRuntime:
                     state["fraud_session_stream_id"],
                     state["compliance_session_stream_id"],
                 ],
-                model_versions={"decision_orchestrator": "orch-v2"},
+                model_versions={"decision_orchestrator": self._stage_model_version("decision_orchestrator", "orch-v2")},
             ),
             self.store,
         )

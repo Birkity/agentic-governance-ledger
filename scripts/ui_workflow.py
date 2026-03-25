@@ -10,10 +10,15 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
+from dotenv import load_dotenv
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src.agents import LedgerAgentRuntime, build_client_application_id, list_document_companies
 from src.event_store import EventStore
+
+
+load_dotenv()
 
 
 def _json_default(value: Any) -> Any:
@@ -55,6 +60,9 @@ def _parser() -> argparse.ArgumentParser:
     review.add_argument("--conditions-json", default="[]")
     review.add_argument("--decline-reasons-json", default="[]")
     review.add_argument("--adverse-action-codes-json", default="[]")
+    review.add_argument("--condition", action="append", default=None)
+    review.add_argument("--decline-reason", action="append", default=None)
+    review.add_argument("--adverse-action-code", action="append", default=None)
 
     integrity = subparsers.add_parser("run-integrity")
     integrity.add_argument("--application-id", required=True)
@@ -91,6 +99,11 @@ async def main() -> None:
             )
             payload = {"ok": True, "application_id": application_id, **result}
         elif args.command == "record-human-review":
+            conditions = args.condition if args.condition is not None else json.loads(args.conditions_json)
+            decline_reasons = args.decline_reason if args.decline_reason is not None else json.loads(args.decline_reasons_json)
+            adverse_action_codes = (
+                args.adverse_action_code if args.adverse_action_code is not None else json.loads(args.adverse_action_codes_json)
+            )
             payload = {
                 "ok": True,
                 **(
@@ -103,9 +116,9 @@ async def main() -> None:
                         approved_amount_usd=Decimal(args.approved_amount_usd) if args.approved_amount_usd else None,
                         interest_rate_pct=args.interest_rate_pct,
                         term_months=args.term_months,
-                        conditions=json.loads(args.conditions_json),
-                        decline_reasons=json.loads(args.decline_reasons_json),
-                        adverse_action_codes=json.loads(args.adverse_action_codes_json),
+                        conditions=conditions,
+                        decline_reasons=decline_reasons,
+                        adverse_action_codes=adverse_action_codes,
                     )
                 ),
             }

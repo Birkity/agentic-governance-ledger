@@ -46,7 +46,7 @@ def test_document_processor_extracts_pdf_excel_and_csv_sources():
 
 def test_missing_ebitda_from_pdf_is_preserved_and_backfilled():
     processor = DocumentPackageProcessor(documents_root="documents")
-    analysis = processor.process_company("COMP-001", include_summaries=False)
+    analysis = processor.process_company("COMP-044", include_summaries=False)
     income = analysis.get_document(DocumentType.INCOME_STATEMENT)
 
     assert income is not None

@@ -4,8 +4,25 @@ import pytest
 
 import src.document_processing.pipeline as pipeline_module
 from src.agents import LedgerAgentRuntime
+from src.agents.llm import AgentLLMBackend, AgentLLMResult
 from src.event_store import InMemoryEventStore
 from src.outbox import OutboxPublisher
+
+
+class FakeAgentLLM(AgentLLMBackend):
+    provider = "test"
+
+    async def infer(self, *, system_prompt: str, user_prompt: str, metadata=None) -> AgentLLMResult:
+        stage = str((metadata or {}).get("stage", "unknown"))
+        return AgentLLMResult(
+            summary=f"{stage} summary",
+            provider=self.provider,
+            model=f"test-{stage}",
+            called=True,
+            tokens_input=120,
+            tokens_output=30,
+            cost_usd=0.0125,
+        )
 
 
 @pytest.mark.asyncio
@@ -44,7 +61,7 @@ async def test_langgraph_runtime_creates_reviewable_application_and_snapshot(mon
     monkeypatch.setattr(pipeline_module, "_try_docling_extract", lambda path: None)
 
     store = InMemoryEventStore()
-    runtime = LedgerAgentRuntime(store)
+    runtime = LedgerAgentRuntime(store, llm_backend=FakeAgentLLM())
     application_id = "APEX-CLIENT-RUNTIME-001"
 
     result = await runtime.start_application(
