@@ -16,6 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src.agents import LedgerAgentRuntime, build_client_application_id, list_document_companies
 from src.event_store import EventStore
+from src.models.events import DomainError, OptimisticConcurrencyError
 
 
 load_dotenv()
@@ -75,59 +76,75 @@ async def _build_runtime(db_url: str) -> tuple[EventStore, LedgerAgentRuntime]:
     return store, LedgerAgentRuntime(store)
 
 
-async def main() -> None:
+async def main() -> int:
     args = _parser().parse_args()
-    if args.command == "list-companies":
-        print(json.dumps({"companies": [company.__dict__ for company in list_document_companies()]}, default=_json_default))
-        return
-
-    if not args.db_url:
-        raise RuntimeError("DATABASE_URL is required for UI workflow actions")
-
-    store, runtime = await _build_runtime(args.db_url)
     try:
-        if args.command == "start-application":
-            application_id = args.application_id or build_client_application_id(args.company_id)
-            requested_amount = Decimal(args.requested_amount_usd) if args.requested_amount_usd else None
-            result = await runtime.start_application(
-                application_id,
-                args.company_id,
-                phase=args.phase,
-                requested_amount_usd=requested_amount,
-                auto_finalize_human_review=bool(args.auto_finalize_human_review),
-                reviewer_id=args.reviewer_id,
+        if args.command == "list-companies":
+            payload = {"companies": [company.__dict__ for company in list_document_companies()]}
+            print(json.dumps(payload, default=_json_default))
+            return 0
+
+        if not args.db_url:
+            raise RuntimeError("DATABASE_URL is required for UI workflow actions")
+
+        store, runtime = await _build_runtime(args.db_url)
+        try:
+            if args.command == "start-application":
+                application_id = args.application_id or build_client_application_id(args.company_id)
+                requested_amount = Decimal(args.requested_amount_usd) if args.requested_amount_usd else None
+                result = await runtime.start_application(
+                    application_id,
+                    args.company_id,
+                    phase=args.phase,
+                    requested_amount_usd=requested_amount,
+                    auto_finalize_human_review=bool(args.auto_finalize_human_review),
+                    reviewer_id=args.reviewer_id,
+                )
+                payload = {"ok": True, "application_id": application_id, **result}
+            elif args.command == "record-human-review":
+                conditions = args.condition if args.condition is not None else json.loads(args.conditions_json)
+                decline_reasons = args.decline_reason if args.decline_reason is not None else json.loads(args.decline_reasons_json)
+                adverse_action_codes = (
+                    args.adverse_action_code if args.adverse_action_code is not None else json.loads(args.adverse_action_codes_json)
+                )
+                payload = {
+                    "ok": True,
+                    **(
+                        await runtime.complete_human_review(
+                            args.application_id,
+                            reviewer_id=args.reviewer_id,
+                            final_decision=args.final_decision,
+                            override=bool(args.override),
+                            override_reason=args.override_reason,
+                            approved_amount_usd=Decimal(args.approved_amount_usd) if args.approved_amount_usd else None,
+                            interest_rate_pct=args.interest_rate_pct,
+                            term_months=args.term_months,
+                            conditions=conditions,
+                            decline_reasons=decline_reasons,
+                            adverse_action_codes=adverse_action_codes,
+                        )
+                    ),
+                }
+            else:
+                payload = {"ok": True, **(await runtime.run_integrity(args.application_id))}
+        finally:
+            await store.close()
+    except (DomainError, OptimisticConcurrencyError, RuntimeError, ValueError) as exc:
+        print(
+            json.dumps(
+                {
+                    "ok": False,
+                    "error": str(exc),
+                    "error_type": exc.__class__.__name__,
+                },
+                default=_json_default,
             )
-            payload = {"ok": True, "application_id": application_id, **result}
-        elif args.command == "record-human-review":
-            conditions = args.condition if args.condition is not None else json.loads(args.conditions_json)
-            decline_reasons = args.decline_reason if args.decline_reason is not None else json.loads(args.decline_reasons_json)
-            adverse_action_codes = (
-                args.adverse_action_code if args.adverse_action_code is not None else json.loads(args.adverse_action_codes_json)
-            )
-            payload = {
-                "ok": True,
-                **(
-                    await runtime.complete_human_review(
-                        args.application_id,
-                        reviewer_id=args.reviewer_id,
-                        final_decision=args.final_decision,
-                        override=bool(args.override),
-                        override_reason=args.override_reason,
-                        approved_amount_usd=Decimal(args.approved_amount_usd) if args.approved_amount_usd else None,
-                        interest_rate_pct=args.interest_rate_pct,
-                        term_months=args.term_months,
-                        conditions=conditions,
-                        decline_reasons=decline_reasons,
-                        adverse_action_codes=adverse_action_codes,
-                    )
-                ),
-            }
-        else:
-            payload = {"ok": True, **(await runtime.run_integrity(args.application_id))}
-        print(json.dumps(payload, default=_json_default))
-    finally:
-        await store.close()
+        )
+        return 1
+
+    print(json.dumps(payload, default=_json_default))
+    return 0
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    raise SystemExit(asyncio.run(main()))

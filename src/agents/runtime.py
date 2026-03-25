@@ -46,6 +46,7 @@ from src.models.events import (
     CreditAnalysisDeferred,
     CreditDecision,
     CreditRecordOpened,
+    DomainError,
     DocumentType,
     ExtractedFactsConsumed,
     FraudAnomaly,
@@ -1223,8 +1224,12 @@ class LedgerAgentRuntime:
         decision_event = next((event for event in reversed(loan_events) if event.event_type == "DecisionGenerated"), None)
         if decision_event is None:
             raise RuntimeError(f"No DecisionGenerated event found for {application_id}")
-
-        original_recommendation = str(decision_event.payload["recommendation"])
+        original_recommendation = decision_event.payload.get("recommendation")
+        if not isinstance(original_recommendation, str):
+            raise DomainError(
+                f"Malformed event DecisionGenerated in loan-{application_id}: "
+                "missing required payload field 'recommendation'"
+            )
         if override is None:
             override = final_decision.upper() != original_recommendation.upper()
         recommended_amount = decision_event.payload.get("approved_amount_usd")

@@ -51,6 +51,9 @@ def _to_decimal(value: str | int | float | Decimal | None) -> Decimal | None:
     return Decimal(str(value))
 
 
+_MISSING = object()
+
+
 @dataclass
 class LoanApplicationAggregate:
     application_id: str
@@ -109,20 +112,29 @@ class LoanApplicationAggregate:
             raise DomainError(f"Invalid transition {self.state.value} -> {target.value}")
         self.state = target
 
+    def _required_payload_value(self, event: StoredEvent, field: str) -> object:
+        value = event.payload.get(field, _MISSING)
+        if value is _MISSING:
+            raise DomainError(
+                f"Malformed event {event.event_type} in loan-{self.application_id}: "
+                f"missing required payload field '{field}'"
+            )
+        return value
+
     def _on_ApplicationSubmitted(self, event: StoredEvent) -> None:
         self._transition(LoanLifecycleState.SUBMITTED)
-        self.applicant_id = event.payload["applicant_id"]
-        self.requested_amount_usd = _to_decimal(event.payload["requested_amount_usd"])
-        self.loan_term_months = int(event.payload["loan_term_months"])
-        self.loan_purpose = event.payload["loan_purpose"]
-        self.submission_channel = event.payload["submission_channel"]
-        self.application_reference = event.payload["application_reference"]
+        self.applicant_id = str(self._required_payload_value(event, "applicant_id"))
+        self.requested_amount_usd = _to_decimal(self._required_payload_value(event, "requested_amount_usd"))
+        self.loan_term_months = int(self._required_payload_value(event, "loan_term_months"))
+        self.loan_purpose = str(self._required_payload_value(event, "loan_purpose"))
+        self.submission_channel = str(self._required_payload_value(event, "submission_channel"))
+        self.application_reference = str(self._required_payload_value(event, "application_reference"))
 
     def _on_DocumentUploadRequested(self, event: StoredEvent) -> None:
         self.documents_requested = True
 
     def _on_DocumentUploaded(self, event: StoredEvent) -> None:
-        self.documents_uploaded.add(event.payload["document_id"])
+        self.documents_uploaded.add(str(self._required_payload_value(event, "document_id")))
 
     def _on_CreditAnalysisRequested(self, event: StoredEvent) -> None:
         self.credit_requested = True
@@ -141,9 +153,9 @@ class LoanApplicationAggregate:
         self._transition(LoanLifecycleState.PENDING_DECISION)
 
     def _on_DecisionGenerated(self, event: StoredEvent) -> None:
-        recommendation = event.payload["recommendation"]
+        recommendation = str(self._required_payload_value(event, "recommendation"))
         self.recommendation = recommendation
-        self.decision_confidence = float(event.payload["confidence"])
+        self.decision_confidence = float(self._required_payload_value(event, "confidence"))
         self.contributing_sessions = list(event.payload.get("contributing_sessions", []))
         if recommendation == "APPROVE":
             self._transition(LoanLifecycleState.APPROVED_PENDING_HUMAN)
@@ -161,12 +173,12 @@ class LoanApplicationAggregate:
 
     def _on_HumanReviewCompleted(self, event: StoredEvent) -> None:
         self.human_review_completed = True
-        self.human_override = bool(event.payload["override"])
-        self.final_decision = event.payload["final_decision"]
+        self.human_override = bool(self._required_payload_value(event, "override"))
+        self.final_decision = str(self._required_payload_value(event, "final_decision"))
 
     def _on_ApplicationApproved(self, event: StoredEvent) -> None:
         self._transition(LoanLifecycleState.FINAL_APPROVED)
-        self.approved_amount_usd = _to_decimal(event.payload["approved_amount_usd"])
+        self.approved_amount_usd = _to_decimal(self._required_payload_value(event, "approved_amount_usd"))
         self.final_decision = "APPROVE"
 
     def _on_ApplicationDeclined(self, event: StoredEvent) -> None:

@@ -5,7 +5,9 @@ import pytest
 import src.document_processing.pipeline as pipeline_module
 from src.agents import LedgerAgentRuntime
 from src.agents.llm import AgentLLMBackend, AgentLLMResult
+from src.aggregates import LoanApplicationAggregate
 from src.event_store import InMemoryEventStore
+from src.models.events import DomainError
 from src.outbox import OutboxPublisher
 
 
@@ -108,3 +110,96 @@ async def test_langgraph_runtime_creates_reviewable_application_and_snapshot(mon
     loan_events = await store.load_stream(f"loan-{application_id}")
     assert loan_events[-2].event_type == "HumanReviewCompleted"
     assert loan_events[-1].event_type == "ApplicationDeclined"
+
+
+@pytest.mark.asyncio
+async def test_malformed_legacy_loan_stream_raises_domain_error_on_replay():
+    store = InMemoryEventStore()
+    application_id = "APEX-LEGACY-BROKEN-001"
+
+    await store.append(
+        f"loan-{application_id}",
+        [
+            {
+                "event_type": "ApplicationSubmitted",
+                "event_version": 1,
+                "payload": {"application_id": application_id},
+            }
+        ],
+        expected_version=-1,
+    )
+
+    with pytest.raises(DomainError, match="Malformed event ApplicationSubmitted.*applicant_id"):
+        await LoanApplicationAggregate.load(store, application_id)
+
+
+@pytest.mark.asyncio
+async def test_runtime_review_rejects_malformed_legacy_application_history():
+    store = InMemoryEventStore()
+    runtime = LedgerAgentRuntime(store, llm_backend=FakeAgentLLM())
+    application_id = "APEX-LEGACY-BROKEN-REVIEW"
+
+    await store.append(
+        f"loan-{application_id}",
+        [
+            {
+                "event_type": "ApplicationSubmitted",
+                "event_version": 1,
+                "payload": {"application_id": application_id},
+            },
+            {
+                "event_type": "DecisionGenerated",
+                "event_version": 2,
+                "payload": {"marker": "legacy"},
+            },
+        ],
+        expected_version=-1,
+    )
+
+    with pytest.raises(DomainError, match="Malformed event ApplicationSubmitted.*applicant_id"):
+        await runtime.complete_human_review(
+            application_id,
+            reviewer_id="loan-ops",
+            final_decision="APPROVE",
+            approved_amount_usd=None,
+        )
+
+
+@pytest.mark.asyncio
+async def test_runtime_review_rejects_decision_events_missing_recommendation():
+    store = InMemoryEventStore()
+    runtime = LedgerAgentRuntime(store, llm_backend=FakeAgentLLM())
+    application_id = "APEX-LEGACY-BROKEN-DECISION"
+
+    await store.append(
+        f"loan-{application_id}",
+        [
+            {
+                "event_type": "ApplicationSubmitted",
+                "event_version": 1,
+                "payload": {
+                    "application_id": application_id,
+                    "applicant_id": "COMP-024",
+                    "requested_amount_usd": "450000",
+                    "loan_term_months": 36,
+                    "loan_purpose": "working_capital",
+                    "submission_channel": "portal",
+                    "application_reference": application_id,
+                },
+            },
+            {
+                "event_type": "DecisionGenerated",
+                "event_version": 2,
+                "payload": {"model_versions": {}},
+            },
+        ],
+        expected_version=-1,
+    )
+
+    with pytest.raises(DomainError, match="Malformed event DecisionGenerated.*recommendation"):
+        await runtime.complete_human_review(
+            application_id,
+            reviewer_id="loan-ops",
+            final_decision="APPROVE",
+            approved_amount_usd=None,
+        )

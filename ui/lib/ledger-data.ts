@@ -647,14 +647,17 @@ function summarizeApplication(
     } else if (event.eventType === "DecisionRequested") {
       state = "PENDING_DECISION";
     } else if (event.eventType === "DecisionGenerated") {
-      decision = typeof payload.recommendation === "string" ? payload.recommendation : decision;
-      approvedAmountUsd = toMoneyString(payload.approved_amount_usd) ?? approvedAmountUsd;
-      if (decision === "APPROVE") {
-        state = "APPROVED_PENDING_HUMAN";
-      } else if (decision === "DECLINE") {
-        state = "DECLINED_PENDING_HUMAN";
-      } else {
-        state = "PENDING_HUMAN_REVIEW";
+      const generatedRecommendation = typeof payload.recommendation === "string" ? payload.recommendation : null;
+      if (generatedRecommendation) {
+        decision = generatedRecommendation;
+        approvedAmountUsd = toMoneyString(payload.approved_amount_usd) ?? approvedAmountUsd;
+        if (generatedRecommendation === "APPROVE") {
+          state = "APPROVED_PENDING_HUMAN";
+        } else if (generatedRecommendation === "DECLINE") {
+          state = "DECLINED_PENDING_HUMAN";
+        } else {
+          state = "PENDING_HUMAN_REVIEW";
+        }
       }
     } else if (event.eventType === "HumanReviewRequested") {
       state = "PENDING_HUMAN_REVIEW";

@@ -41,19 +41,27 @@ export async function runWorkflowCommand(args: string[]): Promise<Record<string,
   }
   commandArgs.push(...args);
 
-  const { stdout, stderr } = await execFileAsync(resolvePythonExecutable(), commandArgs, {
-    cwd: PROJECT_ROOT,
-    maxBuffer: 10 * 1024 * 1024
-  });
-
-  const output = stdout.trim() || stderr.trim();
-  if (!output) {
-    throw new Error("Workflow command returned no output");
-  }
   try {
+    const { stdout, stderr } = await execFileAsync(resolvePythonExecutable(), commandArgs, {
+      cwd: PROJECT_ROOT,
+      maxBuffer: 10 * 1024 * 1024
+    });
+
+    const output = stdout.trim() || stderr.trim();
+    if (!output) {
+      throw new Error("Workflow command returned no output");
+    }
     return JSON.parse(output) as Record<string, unknown>;
-  } catch {
-    throw new Error(output);
+  } catch (error) {
+    const stdout = typeof error === "object" && error && "stdout" in error ? String(error.stdout ?? "") : "";
+    const stderr = typeof error === "object" && error && "stderr" in error ? String(error.stderr ?? "") : "";
+    const output = stdout.trim() || stderr.trim() || (error instanceof Error ? error.message : "Workflow command failed");
+
+    try {
+      return JSON.parse(output) as Record<string, unknown>;
+    } catch {
+      throw new Error(output);
+    }
   }
 }
 
