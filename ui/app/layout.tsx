@@ -6,7 +6,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "The Ledger Review Workspace",
-  description: "A read-heavy demo interface for ledger timelines, evidence, and operational artifacts."
+  description: "A workspace for reviewing application state, evidence, and operational signals from the ledger."
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -28,7 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
 
             <div className="header-copy">
-              <p>Event history, evidence, and oversight for demos, review, and technical walkthroughs.</p>
+              <p>Application state, evidence, and review signals in one auditable workspace.</p>
             </div>
           </header>
 

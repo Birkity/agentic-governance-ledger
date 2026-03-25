@@ -390,19 +390,16 @@ The main benefit would be operational clarity: each service would scale, fail, a
 
 ### The Most Honest “We Got This Wrong” Reflection
 
-The biggest mismatch between the final codebase and the original support document is the AI-agent layer. The starter kit emphasized five LangGraph agents as first-class runtime components. The cleaned repository instead centers deterministic command handlers, MCP tools, and the document-processing boundary, and it removed the unused starter-only agent scaffolding.
+The earlier repo snapshot was too light on the AI-agent layer compared with the support document. The codebase now includes a real `src/agents/` package built on `StateGraph`, stage-specific runtime nodes, durable session telemetry, snapshot support, and UI or MCP entry points that execute the runtime instead of only describing it.
 
-That made the repository leaner and more honest, but it also means the final codebase is stronger on event-sourcing, projections, integrity, and MCP than it is on fully realized in-repo LangGraph prompt orchestration.
+The remaining honest constraint is that the runtime still keeps hard policy enforcement in deterministic Python. That is deliberate. Optional LLM calls can summarize and synthesize for document quality, credit, fraud, and decision stages, but they do not decide compliance outcomes and they do not bypass aggregate or handler rules.
 
-Given another full day, I would not bring back the old dead scaffolding. I would add one real production-grade agent module with:
+Given another full day, I would deepen this runtime with:
 
-- typed input contract
-- prompt versioning
-- explicit prompt iteration history
-- node-by-node event capture
-- cost attribution
-
-That would provide the prompt-design evidence the support rubric wants without polluting the core repository with placeholder classes.
+- persisted prompt versions per stage
+- richer node-by-node latency and token analytics
+- more direct provider billing capture
+- stronger live tool orchestration around the same append-only event guarantees
 
 ## 7. Current Maturity Framing
 
@@ -417,14 +414,15 @@ This repository already proves the challenge architecture at the code and test l
 - MCP command/query separation
 - counterfactual replay and self-verifiable regulatory packaging
 - live-backed runtime preference for the read-only Applicant Registry adapter
-- a thin evented pipeline runner that records durable telemetry for five modeled agent roles
+- a LangGraph-backed runtime that records durable telemetry for five modeled agent roles and exposes client-safe workflow actions
 
 ### What Remains Production Hardening
 
 The following items should be described as next steps rather than as finished production guarantees:
 
 - auth and RBAC for UI and MCP access
-- a real outbox publisher and snapshot compaction strategy
+- stronger downstream delivery infrastructure beyond the current JSONL outbox publisher helper
+- broader snapshot compaction policy for long-lived streams
 - distributed projection ownership beyond the single-process daemon model
 - browser end-to-end tests, failover drills, and longer-running soak tests
 - external provider billing telemetry instead of workflow cost proxies when paid model APIs are used
@@ -465,7 +463,14 @@ The downstream implication is that credit logic must react to uncertainty, not e
 
 ## Appendix C. Prompt Design And Iteration Notes
 
-The cleaned repository no longer ships the unused LangGraph starter stubs. The only live LLM-facing component in the codebase is the optional document summarizer. That means I cannot honestly claim a production-grade in-repo `CreditAnalysisAgent` prompt history today.
+The current repository includes a real in-repo agent runtime. LLM usage remains intentionally scoped:
+
+- document quality and package summary
+- credit explanation
+- fraud narrative
+- decision summary
+
+Compliance remains deterministic and final event enforcement remains in Python handlers and aggregates.
 
 The prompt boundary I would use for a real `CreditAnalysisAgent` is:
 

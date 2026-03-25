@@ -13,3 +13,4 @@ ui/node_modules/
 ui/.next/
 ui/.next-local/
 ui/*.tsbuildinfo
+reports/

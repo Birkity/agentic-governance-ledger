@@ -316,7 +316,7 @@ Taken together, the correct Phase 0 conclusion is this:
 
 For presentation accuracy, the strongest honest phrasing is:
 
-- challenge-complete today: event store, OCC, replay-driven domain logic, projections, upcasting, integrity checks, Gas Town recovery, MCP surfaces, counterfactual replay, regulatory packaging, and a read-heavy demo UI
+- challenge-complete today: event store, OCC, replay-driven domain logic, projections, upcasting, integrity checks, Gas Town recovery, MCP surfaces, counterfactual replay, regulatory packaging, a LangGraph-backed five-agent runtime, and an interactive review workspace
 - production-hardening next steps: auth and RBAC, outbox publishing, snapshot compaction, distributed projection ownership, browser end-to-end testing, operational failover drills, and external billing telemetry when paid providers are used
 
 That framing keeps the core architectural claims strong without overclaiming production readiness in areas the repository does not yet operationalize.

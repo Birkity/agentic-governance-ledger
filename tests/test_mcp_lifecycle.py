@@ -4,6 +4,7 @@ from uuid import uuid4
 
 import pytest
 
+import src.document_processing.pipeline as pipeline_module
 from src.event_store import InMemoryEventStore
 from src.mcp.server import build_gateway_from_store
 
@@ -234,3 +235,34 @@ async def test_mcp_tools_return_structured_errors():
     assert failed["ok"] is False
     assert failed["error"]["error_type"] == "DomainError"
     assert "suggested_action" in failed["error"]
+
+
+@pytest.mark.asyncio
+async def test_mcp_runtime_workflow_tool_and_company_catalog_resource(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(pipeline_module, "_try_docling_extract", lambda path: None)
+
+    store = InMemoryEventStore()
+    await store.connect()
+    gateway = await build_gateway_from_store(store)
+
+    catalog = await gateway.call_tool("list_document_companies")
+    assert catalog["ok"] is True
+    assert catalog["count"] >= 80
+
+    catalog_resource = await gateway.read_resource("ledger://companies/catalog")
+    assert len(catalog_resource["data"]) == catalog["count"]
+
+    application_id = f"APEX-CLIENT-{uuid4().hex[:8].upper()}"
+    workflow = await gateway.call_tool(
+        "run_application_workflow",
+        {
+            "application_id": application_id,
+            "company_id": "COMP-024",
+            "phase": "credit",
+        },
+    )
+
+    assert workflow["ok"] is True
+    assert workflow["application_id"] == application_id
+    assert workflow["final_event_type"] == "CreditAnalysisCompleted"
+    assert workflow["profile_source"] in {"seed_profiles", "applicant_registry"}

@@ -6,6 +6,7 @@ from typing import Any
 
 from fastmcp import FastMCP
 
+from src.agents import list_document_companies
 from src.mcp.runtime import MCPRuntime, parse_iso_datetime, parse_resource_query, to_json_text
 
 
@@ -140,6 +141,14 @@ async def read_health_resource(runtime: MCPRuntime) -> dict[str, Any]:
     }
 
 
+async def read_company_catalog_resource(runtime: MCPRuntime) -> dict[str, Any]:
+    _ = runtime
+    return {
+        "resource_uri": "ledger://companies/catalog",
+        "data": [item.__dict__ for item in list_document_companies()],
+    }
+
+
 async def read_resource_uri(runtime: MCPRuntime, uri: str) -> dict[str, Any]:
     base_uri, query = parse_resource_query(uri)
     if base_uri.startswith("ledger://applications/") and base_uri.endswith("/compliance"):
@@ -168,6 +177,8 @@ async def read_resource_uri(runtime: MCPRuntime, uri: str) -> dict[str, Any]:
         return await read_agent_session_resource(runtime, parts[3], parts[5])
     if base_uri == "ledger://ledger/health":
         return await read_health_resource(runtime)
+    if base_uri == "ledger://companies/catalog":
+        return await read_company_catalog_resource(runtime)
     raise ValueError(f"Unknown MCP resource URI: {uri}")
 
 
@@ -228,3 +239,11 @@ def register_resources(app: FastMCP, runtime: MCPRuntime) -> None:
     )
     async def health_resource() -> str:
         return to_json_text(await read_health_resource(runtime))
+
+    @app.resource(
+        "ledger://companies/catalog",
+        name="ledger_company_catalog",
+        description="Read the company document catalog that can be launched into the workflow runtime.",
+    )
+    async def company_catalog_resource() -> str:
+        return to_json_text(await read_company_catalog_resource(runtime))

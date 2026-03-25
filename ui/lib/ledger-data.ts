@@ -19,12 +19,25 @@ export interface ApplicantProfile {
   complianceFlags: Array<Record<string, unknown>>;
 }
 
+export interface CompanyCatalogItem {
+  companyId: string;
+  name: string;
+  industry: string;
+  jurisdiction: string;
+  legalType: string;
+  riskSegment: string;
+  trajectory: string;
+  documentCount: number;
+  hasCompletePackage: boolean;
+}
+
 export interface ApplicationListItem {
   applicationId: string;
   applicantId: string | null;
   companyName: string;
   industry: string | null;
   jurisdiction: string | null;
+  origin: "seeded" | "live";
   state: string;
   requestedAmountUsd: string | null;
   approvedAmountUsd: string | null;
@@ -32,6 +45,8 @@ export interface ApplicationListItem {
   complianceStatus: string | null;
   riskTier: string | null;
   fraudScore: number | null;
+  humanReviewerId: string | null;
+  reviewState: "not_required" | "pending" | "completed";
   hasHumanReview: boolean;
   eventCount: number;
   lastEventAt: string | null;
@@ -122,6 +137,7 @@ export interface OperationsSnapshot {
   sourceMode: DataSourceMode;
   projectionLagReport: string;
   concurrencyReport: string;
+  outboxPending: number | null;
 }
 
 export interface DocumentPreviewModel {
@@ -154,6 +170,19 @@ interface RawEventRow {
   payload: Record<string, unknown>;
   metadata: Record<string, unknown>;
   recordedAt: string;
+}
+
+interface ProjectionSummaryRow {
+  applicationId: string;
+  state: string;
+  applicantId: string | null;
+  requestedAmountUsd: string | null;
+  approvedAmountUsd: string | null;
+  riskTier: string | null;
+  fraudScore: number | null;
+  complianceStatus: string | null;
+  decision: string | null;
+  humanReviewerId: string | null;
 }
 
 interface EventGroupingContext {
@@ -195,6 +224,20 @@ function resolveProjectRoot(): string {
 }
 
 const PROJECT_ROOT = resolveProjectRoot();
+const TECHNICAL_APPLICATION_PATTERNS = [
+  /^APEX-AUDIT-/,
+  /^APEX-GAS-/,
+  /^APEX-INTEGRITY-/,
+  /^APEX-MCP-/,
+  /^APEX-NOSESSION$/,
+  /^APEX-P2$/,
+  /^APEX-P3/,
+  /^APEX-TEST-/,
+  /^APEX-UPCAST-/,
+  /^APEX-BAD$/,
+  /^APEX-MISSING$/,
+  /^APEX-OK$/
+];
 
 function getPool(): Pool | null {
   if (!process.env.DATABASE_URL) {
@@ -238,6 +281,48 @@ async function loadApplicants(): Promise<Map<string, ApplicantProfile>> {
       }
     ])
   );
+}
+
+async function loadCompanyCatalog(): Promise<CompanyCatalogItem[]> {
+  const applicants = await loadApplicants();
+  const documentsRoot = path.join(PROJECT_ROOT, "documents");
+  try {
+    const entries = await fs.readdir(documentsRoot, { withFileTypes: true });
+    const companies = (
+      await Promise.all(
+        entries.filter((entry) => entry.isDirectory()).map(async (entry) => {
+          const applicant = applicants.get(entry.name);
+          if (!applicant) {
+            return null;
+          }
+          const companyDir = path.join(documentsRoot, entry.name);
+          const files = new Set(await fs.readdir(companyDir));
+          return {
+            companyId: applicant.companyId,
+            name: applicant.name,
+            industry: applicant.industry,
+            jurisdiction: applicant.jurisdiction,
+            legalType: applicant.legalType,
+            riskSegment: applicant.riskSegment,
+            trajectory: applicant.trajectory,
+            documentCount: files.size,
+            hasCompletePackage: [
+              "application_proposal.pdf",
+              "income_statement_2024.pdf",
+              "balance_sheet_2024.pdf",
+              "financial_statements.xlsx",
+              "financial_summary.csv"
+            ].every((fileName) => files.has(fileName))
+          } satisfies CompanyCatalogItem;
+        })
+      )
+    )
+      .filter((item): item is CompanyCatalogItem => item !== null)
+      .sort((left, right) => left.companyId.localeCompare(right.companyId));
+    return companies;
+  } catch {
+    return [];
+  }
 }
 
 async function loadEvents(mode: DataSourceMode): Promise<RawEventRow[]> {
@@ -294,6 +379,75 @@ async function loadEvents(mode: DataSourceMode): Promise<RawEventRow[]> {
         recordedAt: String(row.recorded_at)
       };
     });
+}
+
+async function loadApplicationSummaries(mode: DataSourceMode): Promise<Map<string, ProjectionSummaryRow>> {
+  if (mode !== "database") {
+    return new Map();
+  }
+
+  const pool = getPool();
+  if (!pool) {
+    return new Map();
+  }
+
+  try {
+    const result = await pool.query(
+      `
+      SELECT
+        application_id,
+        state,
+        applicant_id,
+        requested_amount_usd,
+        approved_amount_usd,
+        risk_tier,
+        fraud_score,
+        compliance_status,
+        decision,
+        human_reviewer_id
+      FROM application_summary
+      ORDER BY application_id ASC
+      `
+    );
+
+    return new Map(
+      result.rows.map((row) => [
+        String(row.application_id),
+        {
+          applicationId: String(row.application_id),
+          state: String(row.state ?? "NEW"),
+          applicantId: row.applicant_id === null ? null : String(row.applicant_id),
+          requestedAmountUsd: toMoneyString(row.requested_amount_usd),
+          approvedAmountUsd: toMoneyString(row.approved_amount_usd),
+          riskTier: row.risk_tier === null ? null : String(row.risk_tier),
+          fraudScore: row.fraud_score === null ? null : Number(row.fraud_score),
+          complianceStatus: row.compliance_status === null ? null : String(row.compliance_status),
+          decision: row.decision === null ? null : String(row.decision),
+          humanReviewerId: row.human_reviewer_id === null ? null : String(row.human_reviewer_id)
+        }
+      ])
+    );
+  } catch {
+    return new Map();
+  }
+}
+
+async function loadOutboxPending(mode: DataSourceMode): Promise<number | null> {
+  if (mode !== "database") {
+    return null;
+  }
+
+  const pool = getPool();
+  if (!pool) {
+    return null;
+  }
+
+  try {
+    const result = await pool.query("SELECT COUNT(*)::int AS count FROM outbox WHERE published_at IS NULL");
+    return Number(result.rows[0]?.count ?? 0);
+  } catch {
+    return null;
+  }
 }
 
 function extractApplicationId(event: RawEventRow, context?: EventGroupingContext): string | null {
@@ -403,20 +557,67 @@ function toMoneyString(value: unknown): string | null {
   return String(value);
 }
 
+function isTechnicalApplicationId(applicationId: string): boolean {
+  return TECHNICAL_APPLICATION_PATTERNS.some((pattern) => pattern.test(applicationId));
+}
+
+function hasSubmissionAnchor(timeline: TimelineEvent[]): boolean {
+  return timeline.some((event) => event.eventType === "ApplicationSubmitted");
+}
+
+function requiresHumanReview(state: string): boolean {
+  return state.includes("HUMAN") || state.endsWith("_PENDING_HUMAN");
+}
+
+function classifyApplicationOrigin(
+  mode: DataSourceMode,
+  applicationId: string,
+  timeline: TimelineEvent[]
+): "seeded" | "live" {
+  if (mode === "seed") {
+    return "seeded";
+  }
+
+  if (timeline.some((event) => event.metadata?.seed === true)) {
+    return "seeded";
+  }
+
+  if (/^APEX-\d{4}$/.test(applicationId)) {
+    return "seeded";
+  }
+
+  return "live";
+}
+
+function isClientVisibleApplication(applicationId: string, timeline: TimelineEvent[]): boolean {
+  if (isTechnicalApplicationId(applicationId)) {
+    return false;
+  }
+
+  if (!applicationId.startsWith("APEX-")) {
+    return false;
+  }
+
+  return hasSubmissionAnchor(timeline);
+}
+
 function summarizeApplication(
+  mode: DataSourceMode,
   applicationId: string,
   timeline: TimelineEvent[],
-  applicants: Map<string, ApplicantProfile>
+  applicants: Map<string, ApplicantProfile>,
+  projection?: ProjectionSummaryRow
 ): ApplicationListItem {
-  let state = "NEW";
-  let applicantId: string | null = null;
-  let requestedAmountUsd: string | null = null;
-  let approvedAmountUsd: string | null = null;
-  let decision: string | null = null;
-  let complianceStatus: string | null = null;
-  let riskTier: string | null = null;
-  let fraudScore: number | null = null;
-  let hasHumanReview = false;
+  let state = projection?.state ?? "NEW";
+  let applicantId: string | null = projection?.applicantId ?? null;
+  let requestedAmountUsd: string | null = projection?.requestedAmountUsd ?? null;
+  let approvedAmountUsd: string | null = projection?.approvedAmountUsd ?? null;
+  let decision: string | null = projection?.decision ?? null;
+  let complianceStatus: string | null = projection?.complianceStatus ?? null;
+  let riskTier: string | null = projection?.riskTier ?? null;
+  let fraudScore: number | null = projection?.fraudScore ?? null;
+  let humanReviewerId: string | null = projection?.humanReviewerId ?? null;
+  let reviewState: ApplicationListItem["reviewState"] = requiresHumanReview(state) ? "pending" : "not_required";
 
   for (const event of timeline) {
     const payload = event.payload;
@@ -456,10 +657,9 @@ function summarizeApplication(
         state = "PENDING_HUMAN_REVIEW";
       }
     } else if (event.eventType === "HumanReviewRequested") {
-      hasHumanReview = true;
       state = "PENDING_HUMAN_REVIEW";
     } else if (event.eventType === "HumanReviewCompleted") {
-      hasHumanReview = true;
+      humanReviewerId = typeof payload.reviewer_id === "string" ? payload.reviewer_id : humanReviewerId;
       decision = typeof payload.final_decision === "string" ? payload.final_decision : decision;
     } else if (event.eventType === "ApplicationApproved") {
       approvedAmountUsd = toMoneyString(payload.approved_amount_usd) ?? approvedAmountUsd;
@@ -472,6 +672,15 @@ function summarizeApplication(
     }
   }
 
+  const reviewCompleted = timeline.some((event) => event.eventType === "HumanReviewCompleted") || Boolean(humanReviewerId);
+  if (reviewCompleted) {
+    reviewState = "completed";
+  } else if (requiresHumanReview(state) || timeline.some((event) => event.eventType === "HumanReviewRequested")) {
+    reviewState = "pending";
+  } else {
+    reviewState = "not_required";
+  }
+
   const company = applicantId ? applicants.get(applicantId) : null;
   return {
     applicationId,
@@ -479,6 +688,7 @@ function summarizeApplication(
     companyName: company?.name ?? applicantId ?? applicationId,
     industry: company?.industry ?? null,
     jurisdiction: company?.jurisdiction ?? null,
+    origin: classifyApplicationOrigin(mode, applicationId, timeline),
     state,
     requestedAmountUsd,
     approvedAmountUsd,
@@ -486,7 +696,9 @@ function summarizeApplication(
     complianceStatus,
     riskTier,
     fraudScore,
-    hasHumanReview,
+    humanReviewerId,
+    reviewState,
+    hasHumanReview: reviewState !== "not_required",
     eventCount: timeline.length,
     lastEventAt: timeline.at(-1)?.recordedAt ?? null,
     streamFamilies: Array.from(new Set(timeline.map((event) => event.streamFamily)))
@@ -543,13 +755,15 @@ function buildStages(item: ApplicationListItem): StageState[] {
   }));
 }
 
-function buildReview(timeline: TimelineEvent[]): ReviewSummary {
-  const requested = timeline.some((event) => event.eventType === "HumanReviewRequested");
+function buildReview(item: ApplicationListItem, timeline: TimelineEvent[]): ReviewSummary {
   const completedEvent = timeline.findLast((event) => event.eventType === "HumanReviewCompleted");
   return {
-    requested,
+    requested: item.reviewState !== "not_required" || timeline.some((event) => event.eventType === "HumanReviewRequested"),
     completed: Boolean(completedEvent),
-    reviewerId: typeof completedEvent?.payload.reviewer_id === "string" ? String(completedEvent.payload.reviewer_id) : null,
+    reviewerId:
+      typeof completedEvent?.payload.reviewer_id === "string"
+        ? String(completedEvent.payload.reviewer_id)
+        : item.humanReviewerId,
     override: Boolean(completedEvent?.payload.override),
     finalDecision: typeof completedEvent?.payload.final_decision === "string" ? String(completedEvent.payload.final_decision) : null,
     overrideReason:
@@ -732,6 +946,7 @@ const loadWorld = cache(async () => {
   const mode = await detectMode();
   const applicants = await loadApplicants();
   const rawEvents = (await loadEvents(mode)).sort(eventSort);
+  const projectionSummaries = await loadApplicationSummaries(mode);
   const groupingContext = buildGroupingContext(rawEvents);
   const grouped = new Map<string, TimelineEvent[]>();
 
@@ -746,7 +961,10 @@ const loadWorld = cache(async () => {
   }
 
   const applications = Array.from(grouped.entries())
-    .map(([applicationId, timeline]) => summarizeApplication(applicationId, timeline, applicants))
+    .filter(([applicationId, timeline]) => isClientVisibleApplication(applicationId, timeline))
+    .map(([applicationId, timeline]) =>
+      summarizeApplication(mode, applicationId, timeline, applicants, projectionSummaries.get(applicationId))
+    )
     .sort((a, b) => (b.lastEventAt ?? "").localeCompare(a.lastEventAt ?? ""));
 
   return { mode, applicants, grouped, applications };
@@ -754,6 +972,7 @@ const loadWorld = cache(async () => {
 
 export const getDashboardData = cache(async () => {
   const world = await loadWorld();
+  const outboxPending = await loadOutboxPending(world.mode);
   const projectionLagReport = await readArtifact(
     "projection_lag_report.txt",
     "Projection lag artifact not found. Run scripts/generate_projection_lag_report.py to generate it."
@@ -782,26 +1001,33 @@ export const getDashboardData = cache(async () => {
     applications: world.applications,
     totals: {
       applications: world.applications.length,
+      seededApplications: world.applications.filter((item) => item.origin === "seeded").length,
+      liveApplications: world.applications.filter((item) => item.origin === "live").length,
       finalApproved: world.applications.filter((item) => item.state === "FINAL_APPROVED").length,
       finalDeclined: world.applications.filter((item) => item.state === "FINAL_DECLINED" || item.state === "DECLINED_COMPLIANCE").length,
-      humanReview: world.applications.filter((item) => item.hasHumanReview || item.state.includes("HUMAN")).length
+      humanReview: world.applications.filter((item) => item.reviewState !== "not_required").length
     },
     operations: {
       sourceMode: world.mode,
       projectionLagReport,
-      concurrencyReport
+      concurrencyReport,
+      outboxPending
     } satisfies OperationsSnapshot
   };
 });
 
+export const getCompanyCatalogData = cache(async () => loadCompanyCatalog());
+
 export const getApplicationDetail = cache(async (applicationId: string, selectedDocumentName?: string) => {
   const world = await loadWorld();
   const timeline = world.grouped.get(applicationId) ?? [];
-  if (timeline.length === 0) {
+  if (timeline.length === 0 || !isClientVisibleApplication(applicationId, timeline)) {
     return null;
   }
 
-  const item = summarizeApplication(applicationId, timeline, world.applicants);
+  const item =
+    world.applications.find((entry) => entry.applicationId === applicationId) ??
+    summarizeApplication(world.mode, applicationId, timeline, world.applicants);
   const company = item.applicantId ? world.applicants.get(item.applicantId) ?? null : null;
   const documents = await listDocuments(item.applicantId);
   const document =
@@ -840,12 +1066,13 @@ export const getApplicationDetail = cache(async (applicationId: string, selected
     },
     agentSessions: buildAgentSessions(timeline),
     compliance: buildCompliance(timeline),
-    review: buildReview(timeline),
+    review: buildReview(item, timeline),
     audit: buildAuditSummary(timeline),
     operations: {
       sourceMode: world.mode,
       projectionLagReport,
-      concurrencyReport
+      concurrencyReport,
+      outboxPending: await loadOutboxPending(world.mode)
     }
   } satisfies ApplicationDetail;
 });

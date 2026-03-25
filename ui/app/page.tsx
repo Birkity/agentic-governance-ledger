@@ -1,7 +1,8 @@
 import Link from "next/link";
 
+import { ApplicationLaunchPanel } from "../components/ApplicationLaunchPanel";
 import { QueueIndex } from "../components/QueueIndex";
-import { getDashboardData } from "../lib/ledger-data";
+import { getCompanyCatalogData, getDashboardData } from "../lib/ledger-data";
 import { QUEUE_LABELS, getQueueCounts, queueHref, type QueueLane } from "../lib/queues";
 
 export const dynamic = "force-dynamic";
@@ -15,6 +16,7 @@ function share(part: number, total: number): number {
 
 export default async function HomePage() {
   const dashboard = await getDashboardData();
+  const companies = await getCompanyCatalogData();
   const counts = getQueueCounts(dashboard.applications);
   const queueSignals: QueueLane[] = ["human", "open", "approved", "declined"];
   const primaryLane = queueSignals.reduce((best, lane) => (counts[lane] > counts[best] ? lane : best), "open");
@@ -26,11 +28,7 @@ export default async function HomePage() {
           <div className="hero-copy">
             <p className="eyebrow">The Ledger</p>
             <h1>Review Workspace</h1>
-            <p className="hero-body">
-              Review lending activity from a calmer front door, then move into a queue, application workspace, or
-              operations view when you need more detail. This surface is designed for demos and investigation, not as a
-              production control plane.
-            </p>
+            <p className="hero-body">Track applications, evidence, review status, and final decisions in one auditable workspace.</p>
           </div>
 
           <div className="hero-action-row">
@@ -46,7 +44,7 @@ export default async function HomePage() {
             <article className="hero-signal-card">
               <span className="queue-label">Human review load</span>
               <strong>{share(counts.human, counts.all)}%</strong>
-              <p>{counts.human} applications have manual intervention in the path.</p>
+              <p>{counts.human} client-visible applications currently touch the manual review path.</p>
             </article>
 
             <article className="hero-signal-card">
@@ -74,12 +72,12 @@ export default async function HomePage() {
               <strong>{dashboard.totals.applications}</strong>
             </div>
             <div className="metric-card">
-              <span>Approved</span>
-              <strong>{dashboard.totals.finalApproved}</strong>
+              <span>Seeded</span>
+              <strong>{dashboard.totals.seededApplications}</strong>
             </div>
             <div className="metric-card">
-              <span>Declined</span>
-              <strong>{dashboard.totals.finalDeclined}</strong>
+              <span>Live workflow</span>
+              <strong>{dashboard.totals.liveApplications}</strong>
             </div>
             <div className="metric-card">
               <span>Human review</span>
@@ -111,17 +109,21 @@ export default async function HomePage() {
         </article>
 
         <article className="ribbon-card">
-          <span className="queue-label">Operational mode</span>
-          <strong>{dashboard.mode === "database" ? "Connected live" : "Seeded replay"}</strong>
-          <p>Queue and application views are rendering from the current ledger source.</p>
+          <span className="queue-label">Portfolio origin</span>
+          <strong>
+            {dashboard.totals.seededApplications} seeded / {dashboard.totals.liveApplications} live
+          </strong>
+          <p>Every visible application now shows whether it came from the seeded portfolio or live workflow activity.</p>
         </article>
 
         <article className="ribbon-card">
           <span className="queue-label">Focus</span>
           <strong>{counts.open} active applications</strong>
-          <p>Open work remains separated from final outcomes so review stays action-oriented.</p>
+          <p>Active pipeline work stays separate from manual review and final outcomes.</p>
         </article>
       </section>
+
+      <ApplicationLaunchPanel companies={companies} canLaunch={dashboard.mode === "database"} />
 
       <QueueIndex counts={counts} />
     </div>

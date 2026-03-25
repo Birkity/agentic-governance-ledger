@@ -1,0 +1,93 @@
+from __future__ import annotations
+
+import pytest
+
+import src.document_processing.pipeline as pipeline_module
+from src.agents import LedgerAgentRuntime
+from src.event_store import InMemoryEventStore
+from src.outbox import OutboxPublisher
+
+
+@pytest.mark.asyncio
+async def test_outbox_publisher_marks_pending_records_as_published():
+    store = InMemoryEventStore()
+    await store.append(
+        "loan-APEX-OUTBOX",
+        [
+            {
+                "event_type": "ApplicationSubmitted",
+                "event_version": 1,
+                "payload": {"application_id": "APEX-OUTBOX"},
+            }
+        ],
+        expected_version=-1,
+        metadata={"outbox_destinations": ["ledger.downstream"]},
+    )
+
+    pending = await store.list_outbox_pending(destination="ledger.downstream")
+    assert len(pending) == 1
+
+    published_ids: list[int] = []
+
+    async def capture(record):
+        published_ids.append(record.id)
+
+    result = await OutboxPublisher(store).publish_pending(capture, destination="ledger.downstream")
+
+    assert result["published"] == 1
+    assert published_ids == [pending[0].id]
+    assert await store.list_outbox_pending(destination="ledger.downstream") == []
+
+
+@pytest.mark.asyncio
+async def test_langgraph_runtime_creates_reviewable_application_and_snapshot(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(pipeline_module, "_try_docling_extract", lambda path: None)
+
+    store = InMemoryEventStore()
+    runtime = LedgerAgentRuntime(store)
+    application_id = "APEX-CLIENT-RUNTIME-001"
+
+    result = await runtime.start_application(
+        application_id,
+        "COMP-024",
+        phase="full",
+        auto_finalize_human_review=False,
+    )
+
+    assert result["application_id"] == application_id
+    assert result["final_event_type"] == "HumanReviewRequested"
+    assert result["requires_human_review"] is True
+
+    loan_events = await store.load_stream(f"loan-{application_id}")
+    assert loan_events[-1].event_type == "HumanReviewRequested"
+
+    session_streams = sorted(
+        stream_id for stream_id in getattr(store, "_streams", {}) if stream_id.startswith("agent-")
+    )
+    assert len(session_streams) == 5
+    for stream_id in session_streams:
+        events = await store.load_stream(stream_id)
+        assert events[0].event_type == "AgentSessionStarted"
+
+    snapshot = await store.load_latest_snapshot(f"loan-{application_id}")
+    assert snapshot is not None
+    assert snapshot.aggregate_type == "LoanApplication"
+    assert snapshot.stream_position == loan_events[-1].stream_position
+    assert snapshot.snapshot_version == 1
+
+    pending = await store.list_outbox_pending(destination="ledger.downstream")
+    assert pending
+
+    review_result = await runtime.complete_human_review(
+        application_id,
+        reviewer_id="loan-ops",
+        final_decision="DECLINE",
+        decline_reasons=["Manual decline confirmed"],
+        adverse_action_codes=["MANUAL-DECLINE"],
+    )
+
+    assert review_result["final_decision"] == "DECLINE"
+
+    loan_events = await store.load_stream(f"loan-{application_id}")
+    assert loan_events[-2].event_type == "HumanReviewCompleted"
+    assert loan_events[-1].event_type == "ApplicationDeclined"

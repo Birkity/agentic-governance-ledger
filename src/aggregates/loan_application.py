@@ -81,8 +81,15 @@ class LoanApplicationAggregate:
 
     @classmethod
     async def load(cls, store, application_id: str) -> "LoanApplicationAggregate":
-        aggregate = cls(application_id=application_id)
-        events = await store.load_stream(f"loan-{application_id}")
+        stream_id = f"loan-{application_id}"
+        snapshot = await store.load_latest_snapshot(stream_id) if hasattr(store, "load_latest_snapshot") else None
+        if snapshot is not None:
+            aggregate = cls.from_snapshot(application_id=application_id, snapshot=snapshot.state)
+            from_position = snapshot.stream_position + 1
+        else:
+            aggregate = cls(application_id=application_id)
+            from_position = 0
+        events = await store.load_stream(stream_id, from_position=from_position)
         for event in events:
             aggregate._apply(event)
         return aggregate
@@ -231,3 +238,59 @@ class LoanApplicationAggregate:
             raise DomainError("DecisionGenerated must reference contributing agent sessions")
         if len(session_ids) != len(set(session_ids)):
             raise DomainError("DecisionGenerated contains duplicate contributing sessions")
+
+    def to_snapshot(self) -> dict[str, object]:
+        return {
+            "version": self.version,
+            "state": self.state.value,
+            "applicant_id": self.applicant_id,
+            "requested_amount_usd": str(self.requested_amount_usd) if self.requested_amount_usd is not None else None,
+            "loan_term_months": self.loan_term_months,
+            "loan_purpose": self.loan_purpose,
+            "submission_channel": self.submission_channel,
+            "application_reference": self.application_reference,
+            "documents_requested": self.documents_requested,
+            "documents_uploaded": sorted(self.documents_uploaded),
+            "credit_requested": self.credit_requested,
+            "fraud_requested": self.fraud_requested,
+            "compliance_requested": self.compliance_requested,
+            "decision_requested": self.decision_requested,
+            "recommendation": self.recommendation,
+            "decision_confidence": self.decision_confidence,
+            "contributing_sessions": list(self.contributing_sessions),
+            "approved_amount_usd": str(self.approved_amount_usd) if self.approved_amount_usd is not None else None,
+            "final_decision": self.final_decision,
+            "human_review_completed": self.human_review_completed,
+            "human_override": self.human_override,
+            "compliance_declined": self.compliance_declined,
+            "decline_reasons": list(self.decline_reasons),
+        }
+
+    @classmethod
+    def from_snapshot(cls, *, application_id: str, snapshot: dict[str, object]) -> "LoanApplicationAggregate":
+        return cls(
+            application_id=application_id,
+            version=int(snapshot.get("version", -1)),
+            state=LoanLifecycleState(str(snapshot.get("state", LoanLifecycleState.NEW.value))),
+            applicant_id=str(snapshot["applicant_id"]) if snapshot.get("applicant_id") is not None else None,
+            requested_amount_usd=_to_decimal(snapshot.get("requested_amount_usd")),
+            loan_term_months=int(snapshot["loan_term_months"]) if snapshot.get("loan_term_months") is not None else None,
+            loan_purpose=str(snapshot["loan_purpose"]) if snapshot.get("loan_purpose") is not None else None,
+            submission_channel=str(snapshot["submission_channel"]) if snapshot.get("submission_channel") is not None else None,
+            application_reference=str(snapshot["application_reference"]) if snapshot.get("application_reference") is not None else None,
+            documents_requested=bool(snapshot.get("documents_requested", False)),
+            documents_uploaded=set(snapshot.get("documents_uploaded", [])),
+            credit_requested=bool(snapshot.get("credit_requested", False)),
+            fraud_requested=bool(snapshot.get("fraud_requested", False)),
+            compliance_requested=bool(snapshot.get("compliance_requested", False)),
+            decision_requested=bool(snapshot.get("decision_requested", False)),
+            recommendation=str(snapshot["recommendation"]) if snapshot.get("recommendation") is not None else None,
+            decision_confidence=float(snapshot["decision_confidence"]) if snapshot.get("decision_confidence") is not None else None,
+            contributing_sessions=list(snapshot.get("contributing_sessions", [])),
+            approved_amount_usd=_to_decimal(snapshot.get("approved_amount_usd")),
+            final_decision=str(snapshot["final_decision"]) if snapshot.get("final_decision") is not None else None,
+            human_review_completed=bool(snapshot.get("human_review_completed", False)),
+            human_override=bool(snapshot.get("human_override", False)),
+            compliance_declined=bool(snapshot.get("compliance_declined", False)),
+            decline_reasons=list(snapshot.get("decline_reasons", [])),
+        )

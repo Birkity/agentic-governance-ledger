@@ -58,6 +58,10 @@ export default async function OperationsPage() {
             <span>Last projection report</span>
             <strong>{formatArtifactTimestamp(generatedAt)}</strong>
           </div>
+          <div className="metric-card">
+            <span>Pending outbox</span>
+            <strong>{dashboard.operations.outboxPending ?? "N/A"}</strong>
+          </div>
         </div>
       </section>
 

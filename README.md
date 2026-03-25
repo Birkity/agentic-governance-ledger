@@ -29,10 +29,14 @@ The Ledger is an event-sourced lending platform for document-to-decision workflo
   - command handlers that follow load -> replay -> validate -> determine -> append
 - `src/document_processing/`
   - PDF/XLSX/CSV parsing, normalization, event writing, and optional local-model summarization
+- `src/agents/`
+  - LangGraph-backed workflow runtime for document processing, credit, fraud, compliance, and decision orchestration
 - `src/registry/`
   - read-only adapter for the seeded Applicant Registry schema
 - `src/projections/`
   - application summary, agent performance, compliance audit, daemon, and seed validation helpers
+- `src/outbox.py`
+  - outbox publisher helper and JSONL sink for downstream publication demos
 - `src/upcasting/`
   - version-chain registry and concrete upcasters for evolved events
 - `src/integrity/`
@@ -170,17 +174,29 @@ The repository already proves the Week 5 core architecture:
 - audit-chain verification and Gas Town recovery
 - MCP tools/resources, counterfactual replay, and regulatory package verification
 - live-backed runtime preference for the read-only Applicant Registry boundary when PostgreSQL is available
-- durable session telemetry for five modeled agent roles through a thin evented pipeline runner
+- LangGraph-backed runtime for five modeled agent roles with durable session telemetry and optional LLM summaries outside compliance
+- interactive review workspace actions for launching applications, continuing workflow, recording human review, and running integrity checks
 
 ### Production-Hardening Next Steps
 
 The repository does not claim that everything is production-hardened yet. The clearest next steps are:
 
 - add auth and RBAC for MCP and UI access
-- add a real outbox publisher and snapshot compaction strategy
+- move from the JSONL outbox publisher helper to durable downstream delivery infrastructure
+- add a broader snapshot compaction policy for very long-lived streams
 - harden multi-worker projection ownership and operational monitoring
 - add browser end-to-end tests, backup/restore drills, and soak testing
 - replace workflow cost proxies with true external billing telemetry when paid providers are introduced
+
+## Operating Rules
+
+The runtime follows a few non-negotiable rules:
+
+- do not overwrite events
+- do not skip `AgentSessionStarted`
+- do not fabricate missing data
+- do not use LLM logic for compliance
+- do not ignore hard blocks
 
 ## Setup
 
@@ -257,7 +273,8 @@ $env:DATABASE_URL='postgresql://postgres:YOUR_PASSWORD@localhost/apex_ledger'
 The exposed interface includes:
 
 - command tools for application submission, session start, credit/fraud/compliance recording, decision generation, human review, and integrity checks
-- resources for applications, compliance, audit trails, agent performance, agent sessions, and ledger health
+- workflow tools for listing document companies and launching an application through the runtime
+- resources for applications, compliance, audit trails, agent performance, agent sessions, company catalog, and ledger health
 
 ## Counterfactual Replay And Regulatory Packages
 
@@ -306,6 +323,13 @@ Build the final report source if TeX is installed locally:
 .\scripts\build_final_report.ps1
 ```
 
+Publish pending outbox records to a JSONL sink:
+
+```powershell
+$env:DATABASE_URL='postgresql://postgres:YOUR_PASSWORD@localhost/apex_ledger'
+.\.venv\Scripts\python.exe scripts\publish_outbox.py --output-path artifacts\outbox_published.jsonl
+```
+
 ## Final Report Source
 
 The versioned final report source lives at `reports/final_submission.tex`. The compiled PDF is treated as a build artifact derived from that source rather than as the only versioned copy of the report.
@@ -318,6 +342,9 @@ The repository also includes a Next.js interface in `ui/` for demos, investigati
 - the full immutable event timeline for one application
 - source documents and evidence previews
 - human review state and override details
+- interactive application launch from the seeded document corpus
+- live workflow continuation for in-flight applications
+- integrity checks from the oversight workspace
 - audit integrity status
 - projection lag and optimistic concurrency guardrail reports
 
@@ -352,9 +379,9 @@ npm.cmd run clean
 npm.cmd run dev
 ```
 
-The default `npm.cmd run dev` and `npm.cmd run build` commands now clear stale output automatically before starting. The UI also uses a dedicated Next build directory, `.next-local`, to avoid collisions with stale `.next` artifacts in this Windows/OneDrive workspace.
+The default `npm.cmd run dev` and `npm.cmd run build` commands now clear stale output automatically before starting. The UI uses the default `.next` directory again, which is more reliable in this Windows/OneDrive workspace when paired with the automatic clean step.
 
-The UI dev server is configured to run with webpack as well, because Turbopack was intermittently producing missing-manifest and missing-runtime errors in this workspace under `.next-local/dev`.
+The UI dev server is configured to run with webpack as well, because Turbopack was intermittently producing missing-manifest and missing-runtime errors in this workspace.
 
 When `DATABASE_URL` is configured, the live-backed demo/runtime path prefers the read-only Applicant Registry adapter for company context. The seeded JSON profiles remain as a fallback for in-memory tests and seed-only demos.
 
@@ -371,6 +398,12 @@ Document-processing and seed-generation checks:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest tests\test_document_processing.py tests\test_schema_and_generator.py tests\test_registry_client.py tests\test_demo_runtime.py -q
+```
+
+Agent runtime, outbox, and MCP workflow checks:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests\test_agent_runtime_and_outbox.py tests\test_mcp_lifecycle.py -q
 ```
 
 Domain logic checks:

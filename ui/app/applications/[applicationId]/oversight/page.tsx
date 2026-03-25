@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
 
 import { CompactInfoCard } from "../../../../components/CompactInfoCard";
+import { IntegrityActionCard } from "../../../../components/IntegrityActionCard";
 import { SectionDataList } from "../../../../components/SectionDataList";
 import { getApplicationDetail } from "../../../../lib/ledger-data";
-import { formatDateTime } from "../../../../lib/presenters";
+import { formatComplianceLabel, formatDateTime } from "../../../../lib/presenters";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +27,7 @@ export default async function OversightPage({ params }: OversightPageProps) {
         <CompactInfoCard title="Compliance">
           <SectionDataList
             items={[
-              { label: "Verdict", value: detail.compliance.overallVerdict ?? "In progress" },
+              { label: "Verdict", value: formatComplianceLabel(detail.compliance.overallVerdict) },
               { label: "Regulation set", value: detail.compliance.regulationSetVersion ?? "Not recorded" },
               { label: "Passed rules", value: detail.compliance.passedRules.length },
               { label: "Failed rules", value: detail.compliance.failedRules.length },
@@ -58,6 +59,15 @@ export default async function OversightPage({ params }: OversightPageProps) {
               { label: "Integrity hash", value: detail.audit.latestIntegrityHash ?? "Not recorded" }
             ]}
             columns={2}
+          />
+        </CompactInfoCard>
+
+        <CompactInfoCard title="Integrity Action">
+          <IntegrityActionCard
+            applicationId={detail.item.applicationId}
+            sourceMode={detail.sourceMode}
+            latestCheckAt={detail.audit.latestCheckAt}
+            chainValid={detail.audit.chainValid}
           />
         </CompactInfoCard>
       </div>

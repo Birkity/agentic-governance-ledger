@@ -42,9 +42,10 @@ def _now() -> datetime:
 
 
 def _metadata(correlation_id: str | None) -> dict | None:
-    if not correlation_id:
-        return None
-    return {"correlation_id": correlation_id}
+    payload: dict[str, object] = {"outbox_destinations": ["ledger.downstream"]}
+    if correlation_id:
+        payload["correlation_id"] = correlation_id
+    return payload
 
 
 def _to_decimal(value: Decimal | str | int | float | None) -> Decimal | None:

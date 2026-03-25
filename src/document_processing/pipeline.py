@@ -85,6 +85,36 @@ def _extract_first(text: str, patterns: tuple[str, ...]) -> str | None:
     return None
 
 
+def _normalize_docling_markdown(text: str) -> str:
+    lines: list[str] = []
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+
+        if line.startswith("|") and line.endswith("|"):
+            cells = [cell.strip() for cell in line.strip("|").split("|")]
+            if not cells or all(not cell or set(cell) <= {"-"} for cell in cells):
+                continue
+            if len(cells) == 2:
+                left, right = cells
+                if left.endswith(":") and right:
+                    lines.append(f"{left} {right}")
+                    continue
+                if right.endswith(":") and left:
+                    lines.append(f"{right} {left}")
+                    continue
+            lines.append(" ".join(cell for cell in cells if cell))
+            continue
+
+        if line.startswith("#"):
+            line = line.lstrip("#").strip()
+        if line:
+            lines.append(line)
+
+    return "\n".join(lines).strip()
+
+
 def _try_docling_extract(path: Path) -> str | None:
     try:
         from docling.document_converter import DocumentConverter
@@ -98,7 +128,7 @@ def _try_docling_extract(path: Path) -> str | None:
         if document is None:
             return None
         if hasattr(document, "export_to_markdown"):
-            text = document.export_to_markdown()
+            text = _normalize_docling_markdown(document.export_to_markdown())
         elif hasattr(document, "export_to_text"):
             text = document.export_to_text()
         else:
