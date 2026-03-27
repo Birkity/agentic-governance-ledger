@@ -44,7 +44,7 @@ def _parser() -> argparse.ArgumentParser:
     start = subparsers.add_parser("start-application")
     start.add_argument("--company-id", required=True)
     start.add_argument("--application-id", default=None)
-    start.add_argument("--phase", choices=["document", "credit", "full"], default="full")
+    start.add_argument("--phase", choices=["document", "credit", "fraud", "compliance", "decision", "full"], default="full")
     start.add_argument("--requested-amount-usd", default=None)
     start.add_argument("--auto-finalize-human-review", action="store_true")
     start.add_argument("--reviewer-id", default="loan-ops")
