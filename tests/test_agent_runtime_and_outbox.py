@@ -113,6 +113,46 @@ async def test_langgraph_runtime_creates_reviewable_application_and_snapshot(mon
 
 
 @pytest.mark.asyncio
+async def test_continue_application_resumes_from_document_stage(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(pipeline_module, "_try_docling_extract", lambda path: None)
+
+    store = InMemoryEventStore()
+    runtime = LedgerAgentRuntime(store, llm_backend=FakeAgentLLM())
+    application_id = "APEX-CLIENT-CONTINUE-001"
+
+    initial = await runtime.start_application(
+        application_id,
+        "COMP-024",
+        phase="document",
+    )
+    resumed = await runtime.continue_application(application_id, "COMP-024")
+
+    assert initial["final_event_type"] in {"DocumentUploadRequested", "CreditAnalysisRequested"}
+    assert resumed["application_id"] == application_id
+    assert resumed["final_event_type"] == "HumanReviewRequested"
+    assert resumed["requires_human_review"] is True
+
+
+@pytest.mark.asyncio
+async def test_continue_application_rejects_pending_manual_review(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(pipeline_module, "_try_docling_extract", lambda path: None)
+
+    store = InMemoryEventStore()
+    runtime = LedgerAgentRuntime(store, llm_backend=FakeAgentLLM())
+    application_id = "APEX-CLIENT-CONTINUE-REVIEW"
+
+    await runtime.start_application(
+        application_id,
+        "COMP-024",
+        phase="full",
+        auto_finalize_human_review=False,
+    )
+
+    with pytest.raises(RuntimeError, match="awaiting manual review"):
+        await runtime.continue_application(application_id, "COMP-024")
+
+
+@pytest.mark.asyncio
 async def test_malformed_legacy_loan_stream_raises_domain_error_on_replay():
     store = InMemoryEventStore()
     application_id = "APEX-LEGACY-BROKEN-001"

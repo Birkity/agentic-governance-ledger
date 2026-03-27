@@ -21,23 +21,30 @@ export async function POST(
     }
 
     const args = [
-      "start-application",
+      "continue-application",
       "--application-id",
-      applicationId,
-      "--company-id",
-      body.companyId,
-      "--phase",
-      body.phase ?? "full"
+      applicationId
     ];
+    if (body.companyId) {
+      args.push("--company-id", body.companyId);
+    }
     if (body.autoFinalizeHumanReview) {
       args.push("--auto-finalize-human-review");
     }
 
     const result = await runWorkflowCommand(args);
+    if (result.ok === false) {
+      return Response.json(result, { status: 400 });
+    }
     revalidatePath("/");
     revalidatePath("/queues/open");
     revalidatePath("/queues/human");
+    revalidatePath("/queues/approved");
+    revalidatePath("/queues/declined");
     revalidatePath(`/applications/${applicationId}`);
+    revalidatePath(`/applications/${applicationId}/timeline`);
+    revalidatePath(`/applications/${applicationId}/oversight`);
+    revalidatePath(`/applications/${applicationId}/agents`);
     return Response.json(result);
   } catch (error) {
     return Response.json(

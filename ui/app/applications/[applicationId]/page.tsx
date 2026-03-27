@@ -84,6 +84,23 @@ export default async function ApplicationPage({ params }: ApplicationPageProps) 
               ))}
             </div>
           </CompactInfoCard>
+
+          <CompactInfoCard title="Oversight Snapshot">
+            <SectionDataList
+              items={[
+                { label: "Verdict", value: formatComplianceLabel(detail.compliance.overallVerdict) },
+                { label: "Passed rules", value: detail.compliance.passedRules.length },
+                { label: "Failed rules", value: detail.compliance.failedRules.length },
+                { label: "Hard blocks", value: detail.compliance.hardBlockRules.join(", ") || "None recorded" },
+                {
+                  label: "Integrity",
+                  value: detail.audit.chainValid === null ? "Not checked yet" : detail.audit.chainValid ? "Healthy" : "Attention"
+                },
+                { label: "Last check", value: formatDateTime(detail.audit.latestCheckAt) }
+              ]}
+              columns={2}
+            />
+          </CompactInfoCard>
         </div>
 
         <div className="stack-lg">
@@ -133,29 +150,12 @@ export default async function ApplicationPage({ params }: ApplicationPageProps) 
             />
           </CompactInfoCard>
 
-          <CompactInfoCard title="Review Action">
+          <CompactInfoCard title="Review Action" className="compact-card-tight">
             <HumanReviewActionCard
               applicationId={detail.item.applicationId}
               currentRecommendation={detail.item.decision}
               approvedAmountUsd={detail.item.approvedAmountUsd}
               reviewPending={detail.item.reviewState === "pending"}
-            />
-          </CompactInfoCard>
-
-          <CompactInfoCard title="Oversight Snapshot">
-            <SectionDataList
-              items={[
-                { label: "Verdict", value: formatComplianceLabel(detail.compliance.overallVerdict) },
-                { label: "Passed rules", value: detail.compliance.passedRules.length },
-                { label: "Failed rules", value: detail.compliance.failedRules.length },
-                { label: "Hard blocks", value: detail.compliance.hardBlockRules.join(", ") || "None recorded" },
-                {
-                  label: "Integrity",
-                  value: detail.audit.chainValid === null ? "Not checked yet" : detail.audit.chainValid ? "Healthy" : "Attention"
-                },
-                { label: "Last check", value: formatDateTime(detail.audit.latestCheckAt) }
-              ]}
-              columns={2}
             />
           </CompactInfoCard>
         </div>
