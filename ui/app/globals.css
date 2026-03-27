@@ -1068,92 +1068,6 @@ main {
   line-height: 1.5;
 }
 
-.pipeline-stage-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.pipeline-stage-card {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 14px;
-}
-
-.pipeline-stage-card strong {
-  display: block;
-  margin-top: 4px;
-  font-size: 0.94rem;
-  line-height: 1.45;
-}
-
-.pipeline-stage-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.pipeline-stage-meta {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  color: var(--muted);
-  font-size: 0.82rem;
-}
-
-.pipeline-stage-meta strong {
-  margin-top: 0;
-  font-size: 0.82rem;
-  color: var(--ink);
-}
-
-.pipeline-stage-facts {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  margin: 0;
-}
-
-.pipeline-stage-facts div {
-  min-width: 0;
-  padding: 10px 11px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: white;
-}
-
-.pipeline-stage-facts dt {
-  margin: 0 0 5px;
-  color: var(--muted);
-  font-size: 0.66rem;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-}
-
-.pipeline-stage-facts dd {
-  margin: 0;
-  font-size: 0.87rem;
-  line-height: 1.42;
-  overflow-wrap: anywhere;
-}
-
-.pipeline-stage-complete {
-  border-color: rgba(28, 139, 97, 0.18);
-  background: rgba(28, 139, 97, 0.06);
-}
-
-.pipeline-stage-current {
-  border-color: rgba(51, 88, 212, 0.2);
-  background: rgba(51, 88, 212, 0.06);
-}
-
-.pipeline-stage-upcoming {
-  background: rgba(255, 255, 255, 0.82);
-}
-
 .mini-timeline {
   display: grid;
   gap: 10px;
@@ -1348,7 +1262,6 @@ th {
   .hero-signal-strip,
   .queue-index-grid,
   .shortcut-grid,
-  .pipeline-stage-grid,
   .application-row-metrics,
   .compact-facts-three,
   .data-grid-3 {
@@ -1408,17 +1321,12 @@ th {
   .stage-strip,
   .overview-grid,
   .shortcut-grid,
-  .pipeline-stage-grid,
   .application-row-metrics,
   .compact-facts,
   .compact-facts-three,
   .data-grid,
   .data-grid-3,
   .application-shell-metrics {
-    grid-template-columns: 1fr;
-  }
-
-  .pipeline-stage-facts {
     grid-template-columns: 1fr;
   }
 

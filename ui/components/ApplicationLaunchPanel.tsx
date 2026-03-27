@@ -10,15 +10,45 @@ interface ApplicationLaunchPanelProps {
   canLaunch: boolean;
 }
 
+type ApplicationStartPhase = "document" | "credit" | "fraud" | "compliance" | "decision" | "full";
+
+const PHASE_COPY: Record<ApplicationStartPhase, { title: string; description: string }> = {
+  document: {
+    title: "Document package only",
+    description: "Parse the five-file company package and stop after the evidence is ready for analysis."
+  },
+  credit: {
+    title: "Through credit analysis",
+    description: "Process documents, submit the case, and stop after credit analysis is recorded."
+  },
+  fraud: {
+    title: "Through fraud screening",
+    description: "Continue from credit, record fraud screening, and stop before compliance begins."
+  },
+  compliance: {
+    title: "Through compliance check",
+    description: "Run documents, credit, fraud, and compliance, then stop before decision orchestration."
+  },
+  decision: {
+    title: "Through decision recommendation",
+    description: "Generate the automated recommendation and stop before a human-review request is written."
+  },
+  full: {
+    title: "Full pipeline to manual review",
+    description: "Run documents, credit, fraud, compliance, and decisioning, then hand off for human review."
+  }
+};
+
 export function ApplicationLaunchPanel({ companies, canLaunch }: ApplicationLaunchPanelProps) {
   const router = useRouter();
   const [applicationId, setApplicationId] = useState("");
   const [companyId, setCompanyId] = useState(companies[0]?.companyId ?? "");
-  const [phase, setPhase] = useState<"document" | "credit" | "full">("full");
+  const [phase, setPhase] = useState<ApplicationStartPhase>("full");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const selectedCompany = companies.find((company) => company.companyId === companyId) ?? null;
+  const selectedPhase = PHASE_COPY[phase];
 
   async function submit() {
     setSubmitting(true);
@@ -77,11 +107,15 @@ export function ApplicationLaunchPanel({ companies, canLaunch }: ApplicationLaun
 
         <label className="field-shell">
           <span className="field-label">Pipeline depth</span>
-          <select className="text-input" value={phase} onChange={(event) => setPhase(event.target.value as "document" | "credit" | "full")} disabled={!canLaunch || submitting}>
+          <select className="text-input" value={phase} onChange={(event) => setPhase(event.target.value as ApplicationStartPhase)} disabled={!canLaunch || submitting}>
             <option value="document">Document package only</option>
             <option value="credit">Through credit analysis</option>
+            <option value="fraud">Through fraud screening</option>
+            <option value="compliance">Through compliance check</option>
+            <option value="decision">Through decision recommendation</option>
             <option value="full">Full pipeline to manual review</option>
           </select>
+          <p className="muted-copy">{selectedPhase.description}</p>
         </label>
 
         <label className="field-shell">
@@ -112,6 +146,11 @@ export function ApplicationLaunchPanel({ companies, canLaunch }: ApplicationLaun
             <span className="fact-label">Document package</span>
             <strong>{selectedCompany.documentCount} files</strong>
             <p>{selectedCompany.hasCompletePackage ? "Full package present." : "Package is incomplete."}</p>
+          </article>
+          <article className="shortcut-card">
+            <span className="fact-label">Pipeline depth</span>
+            <strong>{selectedPhase.title}</strong>
+            <p>{selectedPhase.description}</p>
           </article>
         </div>
       ) : null}

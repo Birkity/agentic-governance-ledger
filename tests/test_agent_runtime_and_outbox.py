@@ -134,6 +134,56 @@ async def test_continue_application_resumes_from_document_stage(monkeypatch: pyt
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("phase", "expected_final_event"),
+    [
+        ("fraud", "FraudScreeningCompleted"),
+        ("compliance", "ComplianceCheckCompleted"),
+        ("decision", "DecisionGenerated"),
+    ],
+)
+async def test_start_application_supports_intermediate_pipeline_depths(
+    monkeypatch: pytest.MonkeyPatch,
+    phase: str,
+    expected_final_event: str,
+):
+    monkeypatch.setattr(pipeline_module, "_try_docling_extract", lambda path: None)
+
+    store = InMemoryEventStore()
+    runtime = LedgerAgentRuntime(store, llm_backend=FakeAgentLLM())
+    application_id = f"APEX-CLIENT-PHASE-{phase.upper()}"
+
+    result = await runtime.start_application(
+        application_id,
+        "COMP-024",
+        phase=phase,
+        auto_finalize_human_review=False,
+    )
+
+    assert result["application_id"] == application_id
+    assert result["phase"] == phase
+    assert result["final_event_type"] == expected_final_event
+
+    loan_events = await store.load_stream(f"loan-{application_id}")
+    compliance_events = await store.load_stream(f"compliance-{application_id}")
+
+    if phase == "fraud":
+        fraud_events = await store.load_stream(f"fraud-{application_id}")
+        assert fraud_events[-1].event_type == "FraudScreeningCompleted"
+        assert compliance_events == []
+        assert all(event.event_type != "DecisionGenerated" for event in loan_events)
+
+    if phase == "compliance":
+        assert compliance_events[-1].event_type == "ComplianceCheckCompleted"
+        assert all(event.event_type != "DecisionGenerated" for event in loan_events)
+
+    if phase == "decision":
+        assert any(event.event_type == "DecisionGenerated" for event in loan_events)
+        assert all(event.event_type != "HumanReviewRequested" for event in loan_events)
+        assert all(event.event_type not in {"ApplicationApproved", "ApplicationDeclined"} for event in loan_events)
+
+
+@pytest.mark.asyncio
 async def test_continue_application_rejects_pending_manual_review(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(pipeline_module, "_try_docling_extract", lambda path: None)
 

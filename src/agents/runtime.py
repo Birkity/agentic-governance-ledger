@@ -78,6 +78,8 @@ NARRATIVE_COMPANIES = {
     "NARR-05": "COMP-068",
 }
 
+START_APPLICATION_PHASES = ("document", "credit", "fraud", "compliance", "decision", "full")
+
 
 @dataclass(frozen=True)
 class RuntimeApplicantContext:
@@ -984,6 +986,9 @@ class LedgerAgentRuntime:
         auto_finalize_human_review: bool = False,
         reviewer_id: str = "loan-ops",
     ) -> dict[str, Any]:
+        if phase not in START_APPLICATION_PHASES:
+            raise RuntimeError(f"Unsupported phase '{phase}'")
+
         if phase == "document":
             doc_result = await self.run_document_stage(application_id, company_id)
             await self._ensure_submitted(
@@ -1001,12 +1006,13 @@ class LedgerAgentRuntime:
                 "final_event_type": loan_events[-1].event_type if loan_events else None,
                 "quality_caveats": doc_result["quality_caveats"],
             }
-        if phase == "credit":
-            credit_result = await self.run_credit_stage(
-                application_id,
-                company_id,
-                requested_amount_usd=requested_amount_usd,
-            )
+
+        credit_result = await self.run_credit_stage(
+            application_id,
+            company_id,
+            requested_amount_usd=requested_amount_usd,
+        )
+        if phase == "credit" or credit_result.get("deferred"):
             return {
                 "application_id": application_id,
                 "company_id": company_id,
@@ -1014,11 +1020,67 @@ class LedgerAgentRuntime:
                 "final_event_type": "CreditAnalysisDeferred" if credit_result.get("deferred") else "CreditAnalysisCompleted",
                 "quality_caveats": credit_result["quality_caveats"],
                 "profile_source": credit_result["profile_source"],
+                "requires_human_review": bool(credit_result.get("deferred")),
             }
-        return await self.run_full_pipeline(
+
+        fraud_result = await self.run_fraud_stage(application_id, company_id, credit_result=credit_result)
+        if phase == "fraud":
+            return {
+                "application_id": application_id,
+                "company_id": company_id,
+                "phase": phase,
+                "final_event_type": "FraudScreeningCompleted",
+                "quality_caveats": credit_result["quality_caveats"],
+                "profile_source": credit_result["profile_source"],
+                "fraud_score": fraud_result["fraud_score"],
+                "requires_human_review": False,
+            }
+
+        compliance_result = await self.run_compliance_stage(application_id, company_id)
+        if phase == "compliance":
+            await self._snapshot_loan(application_id)
+            await self.sync()
+            loan_events = await self.store.load_stream(f"loan-{application_id}")
+            return {
+                "application_id": application_id,
+                "company_id": company_id,
+                "phase": phase,
+                "final_event_type": loan_events[-1].event_type if compliance_result["hard_block"] else "ComplianceCheckCompleted",
+                "quality_caveats": credit_result["quality_caveats"],
+                "profile_source": credit_result["profile_source"],
+                "credit_risk_tier": credit_result["credit_decision"].risk_tier.value,
+                "requires_human_review": False,
+            }
+
+        if phase == "decision":
+            decision_result = await self.run_decision_stage(
+                application_id,
+                company_id,
+                credit_result=credit_result,
+                fraud_result=fraud_result,
+                compliance_result=compliance_result,
+                auto_request_review=False,
+            )
+            await self._snapshot_loan(application_id)
+            await self.sync()
+            return {
+                "application_id": application_id,
+                "company_id": company_id,
+                "phase": phase,
+                "final_event_type": "DecisionGenerated",
+                "quality_caveats": credit_result["quality_caveats"],
+                "profile_source": credit_result["profile_source"],
+                "credit_risk_tier": credit_result["credit_decision"].risk_tier.value,
+                "decision_recommendation": decision_result["recommendation"],
+                "requires_human_review": True,
+            }
+
+        return await self._finish_from_compliance(
             application_id,
             company_id,
-            requested_amount_usd=requested_amount_usd,
+            credit_result=credit_result,
+            fraud_result=fraud_result,
+            compliance_result=compliance_result,
             auto_finalize_human_review=auto_finalize_human_review,
             reviewer_id=reviewer_id,
         )
@@ -1426,7 +1488,7 @@ class LedgerAgentRuntime:
             loan_events = await self.store.load_stream(f"loan-{application_id}")
             return {
                 "application_id": application_id,
-                "company_id": company,
+                "company_id": company_id,
                 "profile_source": credit_result["profile_source"],
                 "final_event_type": loan_events[-1].event_type if loan_events else None,
                 "credit_risk_tier": credit_result["credit_decision"].risk_tier.value,

@@ -37,7 +37,7 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Run one application through the ledger demo pipeline.")
     parser.add_argument("--application-id", required=True)
     parser.add_argument("--company-id", default=None)
-    parser.add_argument("--phase", choices=["document", "credit", "full"], default="full")
+    parser.add_argument("--phase", choices=["document", "credit", "fraud", "compliance", "decision", "full"], default="full")
     parser.add_argument(
         "--scenario",
         choices=["default", "narr01", "narr02", "narr03", "narr04", "narr05"],

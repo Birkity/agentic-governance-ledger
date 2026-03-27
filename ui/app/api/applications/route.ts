@@ -9,7 +9,7 @@ export async function POST(request: Request) {
     const body = (await request.json()) as {
       applicationId?: string;
       companyId?: string;
-      phase?: "document" | "credit" | "full";
+      phase?: "document" | "credit" | "fraud" | "compliance" | "decision" | "full";
       requestedAmountUsd?: string | null;
       autoFinalizeHumanReview?: boolean;
     };
