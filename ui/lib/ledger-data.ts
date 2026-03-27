@@ -573,6 +573,15 @@ function hasClientSubmissionPayload(timeline: TimelineEvent[]): boolean {
   return typeof submitted.payload.applicant_id === "string" && submitted.payload.requested_amount_usd !== undefined;
 }
 
+function hasMalformedDecisionPayload(timeline: TimelineEvent[]): boolean {
+  return timeline.some((event) => {
+    if (event.eventType !== "DecisionGenerated") {
+      return false;
+    }
+    return typeof event.payload.recommendation !== "string";
+  });
+}
+
 function requiresHumanReview(state: string): boolean {
   return state.includes("HUMAN") || state.endsWith("_PENDING_HUMAN");
 }
@@ -603,6 +612,10 @@ function isClientVisibleApplication(applicationId: string, timeline: TimelineEve
   }
 
   if (!applicationId.startsWith("APEX-")) {
+    return false;
+  }
+
+  if (hasMalformedDecisionPayload(timeline)) {
     return false;
   }
 
