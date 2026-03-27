@@ -13,7 +13,7 @@ from uuid import uuid4
 
 from langgraph.graph import END, START, StateGraph
 
-from src.aggregates import LoanApplicationAggregate
+from src.aggregates import LoanApplicationAggregate, LoanLifecycleState
 from src.commands.handlers import (
     ComplianceCheckCommand,
     ComplianceRuleEvaluation,
@@ -1023,6 +1023,86 @@ class LedgerAgentRuntime:
             reviewer_id=reviewer_id,
         )
 
+    async def continue_application(
+        self,
+        application_id: str,
+        company_id: str | None = None,
+        *,
+        auto_finalize_human_review: bool = False,
+        reviewer_id: str = "loan-ops",
+    ) -> dict[str, Any]:
+        loan = await LoanApplicationAggregate.load(self.store, application_id)
+        company = company_id or loan.applicant_id or default_company_for_application(application_id)
+        loan_events = await self.store.load_stream(f"loan-{application_id}")
+
+        if loan.state in {
+            LoanLifecycleState.FINAL_APPROVED,
+            LoanLifecycleState.FINAL_DECLINED,
+            LoanLifecycleState.DECLINED_COMPLIANCE,
+        }:
+            raise RuntimeError(f"Application {application_id} is already final")
+        if loan.state in {
+            LoanLifecycleState.APPROVED_PENDING_HUMAN,
+            LoanLifecycleState.DECLINED_PENDING_HUMAN,
+            LoanLifecycleState.PENDING_HUMAN_REVIEW,
+        }:
+            raise RuntimeError(f"Application {application_id} is awaiting manual review")
+
+        if any(event.event_type == "DecisionRequested" for event in loan_events) and not any(
+            event.event_type == "DecisionGenerated" for event in loan_events
+        ):
+            credit_result = await self._load_existing_credit_result(application_id, company)
+            fraud_result = await self._load_existing_fraud_result(application_id)
+            compliance_result = await self._load_existing_compliance_result(application_id)
+            return await self._finish_from_decision(
+                application_id,
+                company,
+                credit_result=credit_result,
+                fraud_result=fraud_result,
+                compliance_result=compliance_result,
+                auto_finalize_human_review=auto_finalize_human_review,
+                reviewer_id=reviewer_id,
+            )
+
+        if any(event.event_type == "ComplianceCheckRequested" for event in loan_events) and not any(
+            event.event_type == "ComplianceCheckCompleted" for event in loan_events
+        ):
+            credit_result = await self._load_existing_credit_result(application_id, company)
+            fraud_result = await self._load_existing_fraud_result(application_id)
+            compliance_result = await self.run_compliance_stage(application_id, company)
+            return await self._finish_from_compliance(
+                application_id,
+                company,
+                credit_result=credit_result,
+                fraud_result=fraud_result,
+                compliance_result=compliance_result,
+                auto_finalize_human_review=auto_finalize_human_review,
+                reviewer_id=reviewer_id,
+            )
+
+        if any(event.event_type == "FraudScreeningRequested" for event in loan_events) and not any(
+            event.event_type == "FraudScreeningCompleted" for event in loan_events
+        ):
+            credit_result = await self._load_existing_credit_result(application_id, company)
+            fraud_result = await self.run_fraud_stage(application_id, company, credit_result=credit_result)
+            compliance_result = await self.run_compliance_stage(application_id, company)
+            return await self._finish_from_compliance(
+                application_id,
+                company,
+                credit_result=credit_result,
+                fraud_result=fraud_result,
+                compliance_result=compliance_result,
+                auto_finalize_human_review=auto_finalize_human_review,
+                reviewer_id=reviewer_id,
+            )
+
+        return await self.run_full_pipeline(
+            application_id,
+            company,
+            auto_finalize_human_review=auto_finalize_human_review,
+            reviewer_id=reviewer_id,
+        )
+
     async def run_credit_stage(
         self,
         application_id: str,
@@ -1319,6 +1399,27 @@ class LedgerAgentRuntime:
 
         fraud_result = await self.run_fraud_stage(application_id, company, credit_result=credit_result)
         compliance_result = await self.run_compliance_stage(application_id, company)
+        return await self._finish_from_compliance(
+            application_id,
+            company,
+            credit_result=credit_result,
+            fraud_result=fraud_result,
+            compliance_result=compliance_result,
+            auto_finalize_human_review=auto_finalize_human_review,
+            reviewer_id=reviewer_id,
+        )
+
+    async def _finish_from_compliance(
+        self,
+        application_id: str,
+        company_id: str,
+        *,
+        credit_result: dict[str, Any],
+        fraud_result: dict[str, Any],
+        compliance_result: dict[str, Any],
+        auto_finalize_human_review: bool,
+        reviewer_id: str,
+    ) -> dict[str, Any]:
         if compliance_result["hard_block"]:
             await self._snapshot_loan(application_id)
             await self.sync()
@@ -1332,10 +1433,30 @@ class LedgerAgentRuntime:
                 "quality_caveats": credit_result["quality_caveats"],
                 "requires_human_review": False,
             }
+        return await self._finish_from_decision(
+            application_id,
+            company_id,
+            credit_result=credit_result,
+            fraud_result=fraud_result,
+            compliance_result=compliance_result,
+            auto_finalize_human_review=auto_finalize_human_review,
+            reviewer_id=reviewer_id,
+        )
 
+    async def _finish_from_decision(
+        self,
+        application_id: str,
+        company_id: str,
+        *,
+        credit_result: dict[str, Any],
+        fraud_result: dict[str, Any],
+        compliance_result: dict[str, Any],
+        auto_finalize_human_review: bool,
+        reviewer_id: str,
+    ) -> dict[str, Any]:
         decision_result = await self.run_decision_stage(
             application_id,
-            company,
+            company_id,
             credit_result=credit_result,
             fraud_result=fraud_result,
             compliance_result=compliance_result,
@@ -1367,13 +1488,76 @@ class LedgerAgentRuntime:
         loan_events = await self.store.load_stream(f"loan-{application_id}")
         return {
             "application_id": application_id,
-            "company_id": company,
+            "company_id": company_id,
             "profile_source": credit_result["profile_source"],
             "final_event_type": loan_events[-1].event_type if loan_events else None,
             "credit_risk_tier": credit_result["credit_decision"].risk_tier.value,
             "quality_caveats": credit_result["quality_caveats"],
             "requires_human_review": not auto_finalize_human_review,
             "decision_recommendation": decision_result["recommendation"],
+        }
+
+    async def _load_existing_credit_result(self, application_id: str, company_id: str) -> dict[str, Any]:
+        credit_events = await self.store.load_stream(f"credit-{application_id}")
+        completed = next((event for event in reversed(credit_events) if event.event_type == "CreditAnalysisCompleted"), None)
+        if completed is None:
+            raise RuntimeError(f"No completed credit analysis found for {application_id}")
+
+        analysis = DocumentPackageProcessor(documents_root=DOCUMENTS_ROOT).process_company(
+            company_id,
+            include_summaries=False,
+            application_id=application_id,
+        )
+        company_context = await _resolve_company_context(self.store, company_id)
+        decision_payload = completed.payload.get("decision")
+        if not isinstance(decision_payload, dict):
+            raise DomainError(
+                f"Malformed event CreditAnalysisCompleted in credit-{application_id}: missing decision payload"
+            )
+        credit_decision = CreditDecision(**decision_payload)
+        return {
+            "application_id": application_id,
+            "company_id": company_id,
+            "analysis": analysis,
+            "profile": company_context.as_profile_dict(),
+            "profile_source": company_context.source,
+            "credit_session_stream_id": f"agent-credit_analysis-{completed.payload['session_id']}",
+            "credit_decision": credit_decision,
+            "quality_caveats": credit_decision.data_quality_caveats or _quality_caveats(analysis),
+        }
+
+    async def _load_existing_fraud_result(self, application_id: str) -> dict[str, Any]:
+        fraud_events = await self.store.load_stream(f"fraud-{application_id}")
+        completed = next((event for event in reversed(fraud_events) if event.event_type == "FraudScreeningCompleted"), None)
+        if completed is None:
+            raise RuntimeError(f"No completed fraud screening found for {application_id}")
+        session_id = completed.payload.get("session_id")
+        if not isinstance(session_id, str):
+            raise DomainError(
+                f"Malformed event FraudScreeningCompleted in fraud-{application_id}: missing session_id"
+            )
+        return {
+            "fraud_session_stream_id": f"agent-fraud_detection-{session_id}",
+            "fraud_score": float(completed.payload.get("fraud_score") or 0.0),
+            "risk_level": str(completed.payload.get("risk_level") or ""),
+            "recommendation": str(completed.payload.get("recommendation") or ""),
+            "anomalies": [],
+        }
+
+    async def _load_existing_compliance_result(self, application_id: str) -> dict[str, Any]:
+        compliance_events = await self.store.load_stream(f"compliance-{application_id}")
+        completed = next((event for event in reversed(compliance_events) if event.event_type == "ComplianceCheckCompleted"), None)
+        if completed is None:
+            raise RuntimeError(f"No completed compliance check found for {application_id}")
+        session_id = completed.payload.get("session_id")
+        if not isinstance(session_id, str):
+            raise DomainError(
+                f"Malformed event ComplianceCheckCompleted in compliance-{application_id}: missing session_id"
+            )
+        return {
+            "compliance_session_stream_id": f"agent-compliance-{session_id}",
+            "hard_block": bool(completed.payload.get("has_hard_block")),
+            "rule_ids": [],
         }
 
     async def run_integrity(self, application_id: str) -> dict[str, Any]:

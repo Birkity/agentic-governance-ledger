@@ -1,0 +1,17 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.13.7, pytest-9.0.2, pluggy-1.6.0 -- C:\Users\Ab\OneDrive\Desktop\10 Academy\Week 5\agentic-governance-ledger\.venv\Scripts\python.exe
+rootdir: C:\Users\Ab\OneDrive\Desktop\10 Academy\Week 5\agentic-governance-ledger
+configfile: pytest.ini (WARNING: ignoring pytest config in pyproject.toml!)
+plugins: anyio-4.12.1, Faker-40.11.0, langsmith-0.7.22, asyncio-1.3.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 7 items
+
+tests/test_upcasting.py::test_credit_analysis_upcast_leaves_raw_row_immutable PASSED
+tests/test_upcasting.py::test_decision_generated_upcast_reconstructs_model_versions_from_sessions PASSED
+tests/test_integrity.py::test_integrity_check_appends_audit_event_and_links_hash_chain PASSED
+tests/test_integrity.py::test_integrity_check_detects_tampering_against_previous_hash PASSED
+tests/test_audit_ledger.py::test_audit_ledger_preserves_append_only_integrity_chain PASSED
+tests/test_audit_ledger.py::test_audit_ledger_accepts_valid_cross_stream_causal_chain PASSED
+tests/test_audit_ledger.py::test_audit_ledger_detects_out_of_order_cross_stream_causation PASSED
+
+============================== 7 passed in 3.04s ==============================

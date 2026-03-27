@@ -49,6 +49,12 @@ def _parser() -> argparse.ArgumentParser:
     start.add_argument("--auto-finalize-human-review", action="store_true")
     start.add_argument("--reviewer-id", default="loan-ops")
 
+    cont = subparsers.add_parser("continue-application")
+    cont.add_argument("--application-id", required=True)
+    cont.add_argument("--company-id", default=None)
+    cont.add_argument("--auto-finalize-human-review", action="store_true")
+    cont.add_argument("--reviewer-id", default="loan-ops")
+
     review = subparsers.add_parser("record-human-review")
     review.add_argument("--application-id", required=True)
     review.add_argument("--reviewer-id", required=True)
@@ -101,6 +107,18 @@ async def main() -> int:
                     reviewer_id=args.reviewer_id,
                 )
                 payload = {"ok": True, "application_id": application_id, **result}
+            elif args.command == "continue-application":
+                payload = {
+                    "ok": True,
+                    **(
+                        await runtime.continue_application(
+                            args.application_id,
+                            company_id=args.company_id,
+                            auto_finalize_human_review=bool(args.auto_finalize_human_review),
+                            reviewer_id=args.reviewer_id,
+                        )
+                    ),
+                }
             elif args.command == "record-human-review":
                 conditions = args.condition if args.condition is not None else json.loads(args.conditions_json)
                 decline_reasons = args.decline_reason if args.decline_reason is not None else json.loads(args.decline_reasons_json)

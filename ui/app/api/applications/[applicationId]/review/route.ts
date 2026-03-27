@@ -56,11 +56,17 @@ export async function POST(
     args.push("--adverse-action-codes-json", JSON.stringify(body.adverseActionCodes ?? []));
 
     const result = await runWorkflowCommand(args);
+    if (result.ok === false) {
+      return Response.json(result, { status: 400 });
+    }
     revalidatePath("/");
     revalidatePath("/queues/human");
     revalidatePath("/queues/approved");
     revalidatePath("/queues/declined");
     revalidatePath(`/applications/${applicationId}`);
+    revalidatePath(`/applications/${applicationId}/timeline`);
+    revalidatePath(`/applications/${applicationId}/oversight`);
+    revalidatePath(`/applications/${applicationId}/agents`);
     return Response.json(result);
   } catch (error) {
     return Response.json(

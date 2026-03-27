@@ -146,19 +146,19 @@ export function ApplicationExplorer({ applications, sourceMode, queue }: Applica
             <div className="application-row-metrics">
               <div>
                 <span className="fact-label">Requested</span>
-                <strong>{formatCurrency(item.requestedAmountUsd)}</strong>
+                <strong className="queue-metric-value">{formatCurrency(item.requestedAmountUsd)}</strong>
               </div>
               <div>
                 <span className="fact-label">Decision</span>
-                <strong>{formatDecisionLabel(item.decision, item.state)}</strong>
+                <strong className="queue-metric-value queue-metric-value-decision">{formatDecisionLabel(item.decision, item.state)}</strong>
               </div>
               <div>
                 <span className="fact-label">Compliance</span>
-                <strong>{formatComplianceLabel(item.complianceStatus)}</strong>
+                <strong className="queue-metric-value queue-metric-value-compliance">{formatComplianceLabel(item.complianceStatus)}</strong>
               </div>
               <div>
                 <span className="fact-label">Risk tier</span>
-                <strong>{item.riskTier ?? "Not recorded"}</strong>
+                <strong className="queue-metric-value queue-metric-value-risk">{item.riskTier ?? "Not recorded"}</strong>
               </div>
             </div>
 

@@ -5,16 +5,24 @@ import { useRouter } from "next/navigation";
 
 interface HumanReviewActionCardProps {
   applicationId: string;
+  state: string;
   currentRecommendation: string | null;
   approvedAmountUsd: string | null;
   reviewPending: boolean;
+  reviewCompleted: boolean;
+  recordedReviewerId: string | null;
+  recordedFinalDecision: string | null;
 }
 
 export function HumanReviewActionCard({
   applicationId,
+  state,
   currentRecommendation,
   approvedAmountUsd,
-  reviewPending
+  reviewPending,
+  reviewCompleted,
+  recordedReviewerId,
+  recordedFinalDecision
 }: HumanReviewActionCardProps) {
   const router = useRouter();
   const [reviewerId, setReviewerId] = useState("loan-ops");
@@ -28,12 +36,51 @@ export function HumanReviewActionCard({
   const [declineReasons, setDeclineReasons] = useState(currentRecommendation === "DECLINE" ? "Manual decline confirmed" : "");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const override = currentRecommendation ? currentRecommendation !== finalDecision : false;
+  const isFinalState = state.startsWith("FINAL") || state.startsWith("DECLINED_");
+
+  function validateSubmission(): string | null {
+    if (!reviewerId.trim()) {
+      return "Enter the reviewer ID before recording the review.";
+    }
+    if (override && !overrideReason.trim()) {
+      return "Explain why the final decision differs from the automated recommendation.";
+    }
+    if (finalDecision === "APPROVE") {
+      if (!approvedAmount.trim()) {
+        return "Enter the approved amount for a manual approval.";
+      }
+      if (!interestRate.trim() || Number.isNaN(Number(interestRate))) {
+        return "Enter a valid interest rate percentage.";
+      }
+      if (!termMonths.trim() || Number.isNaN(Number(termMonths))) {
+        return "Enter a valid loan term in months.";
+      }
+      return null;
+    }
+    if (
+      declineReasons
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean).length === 0
+    ) {
+      return "Add at least one decline reason before recording a decline.";
+    }
+    return null;
+  }
 
   async function submit() {
+    const validationError = validateSubmission();
+    if (validationError) {
+      setError(validationError);
+      setSuccess(null);
+      return;
+    }
     setSubmitting(true);
     setError(null);
+    setSuccess(null);
     try {
       const response = await fetch(`/api/applications/${applicationId}/review`, {
         method: "POST",
@@ -56,18 +103,48 @@ export function HumanReviewActionCard({
           adverseActionCodes: finalDecision === "DECLINE" ? ["MANUAL-REVIEW"] : []
         })
       });
-      const payload = (await response.json()) as { ok?: boolean; error?: string };
+      const payload = (await response.json()) as {
+        ok?: boolean;
+        error?: string;
+        final_decision?: string;
+        reviewer_id?: string;
+      };
       if (!response.ok || payload.ok === false) {
         throw new Error(payload.error ?? "Unable to record human review");
       }
+      setSuccess(
+        `Review recorded by ${payload.reviewer_id ?? reviewerId}. Final decision: ${payload.final_decision ?? finalDecision}. Refreshing the application snapshot.`
+      );
       startTransition(() => {
         router.refresh();
       });
     } catch (cause) {
+      setSuccess(null);
       setError(cause instanceof Error ? cause.message : "Unable to record human review");
     } finally {
       setSubmitting(false);
     }
+  }
+
+  if (isFinalState) {
+    return (
+      <div className="stack-md">
+        <div>
+          <p className="eyebrow">Manual Review Action</p>
+          <h3>Read-Only Review History</h3>
+          <p className="muted-copy">
+            This application already has a final recorded outcome, so the workspace keeps human review read-only to preserve the append-only decision history.
+          </p>
+          {reviewCompleted ? (
+            <p className="muted-copy">
+              Reviewer: {recordedReviewerId ?? "Not recorded"}. Final decision: {recordedFinalDecision ?? "Not recorded"}.
+            </p>
+          ) : (
+            <p className="muted-copy">No human review was recorded before the application closed.</p>
+          )}
+        </div>
+      </div>
+    );
   }
 
   if (!reviewPending) {
@@ -88,6 +165,9 @@ export function HumanReviewActionCard({
         <p className="eyebrow">Manual Review Action</p>
         <h3>Resolve Pending Review</h3>
         <p className="muted-copy">Confirm the recommendation or override it through the normal human-review command path.</p>
+        {override ? (
+          <p className="muted-copy">This choice changes the automated recommendation, so an override reason is required.</p>
+        ) : null}
       </div>
 
       <div className="toolbar-grid">
@@ -143,7 +223,16 @@ export function HumanReviewActionCard({
         />
       </label>
 
-      {error ? <p className="muted-copy">{error}</p> : null}
+      {error ? (
+        <p className="muted-copy" role="alert">
+          {error}
+        </p>
+      ) : null}
+      {success ? (
+        <p className="muted-copy" role="status">
+          {success}
+        </p>
+      ) : null}
 
       <div className="hero-action-row">
         <button type="button" className="hero-button hero-button-primary" onClick={submit} disabled={submitting || !reviewerId.trim()}>
