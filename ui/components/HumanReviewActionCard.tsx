@@ -5,16 +5,24 @@ import { useRouter } from "next/navigation";
 
 interface HumanReviewActionCardProps {
   applicationId: string;
+  state: string;
   currentRecommendation: string | null;
   approvedAmountUsd: string | null;
   reviewPending: boolean;
+  reviewCompleted: boolean;
+  recordedReviewerId: string | null;
+  recordedFinalDecision: string | null;
 }
 
 export function HumanReviewActionCard({
   applicationId,
+  state,
   currentRecommendation,
   approvedAmountUsd,
-  reviewPending
+  reviewPending,
+  reviewCompleted,
+  recordedReviewerId,
+  recordedFinalDecision
 }: HumanReviewActionCardProps) {
   const router = useRouter();
   const [reviewerId, setReviewerId] = useState("loan-ops");
@@ -31,6 +39,7 @@ export function HumanReviewActionCard({
   const [success, setSuccess] = useState<string | null>(null);
 
   const override = currentRecommendation ? currentRecommendation !== finalDecision : false;
+  const isFinalState = state.startsWith("FINAL") || state.startsWith("DECLINED_");
 
   function validateSubmission(): string | null {
     if (!reviewerId.trim()) {
@@ -115,6 +124,27 @@ export function HumanReviewActionCard({
     } finally {
       setSubmitting(false);
     }
+  }
+
+  if (isFinalState) {
+    return (
+      <div className="stack-md">
+        <div>
+          <p className="eyebrow">Manual Review Action</p>
+          <h3>Read-Only Review History</h3>
+          <p className="muted-copy">
+            This application already has a final recorded outcome, so the workspace keeps human review read-only to preserve the append-only decision history.
+          </p>
+          {reviewCompleted ? (
+            <p className="muted-copy">
+              Reviewer: {recordedReviewerId ?? "Not recorded"}. Final decision: {recordedFinalDecision ?? "Not recorded"}.
+            </p>
+          ) : (
+            <p className="muted-copy">No human review was recorded before the application closed.</p>
+          )}
+        </div>
+      </div>
+    );
   }
 
   if (!reviewPending) {

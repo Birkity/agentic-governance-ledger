@@ -73,6 +73,18 @@ export interface StageState {
   hint: string;
 }
 
+export interface PipelineStageSnapshot {
+  key: "documents" | "credit" | "fraud" | "compliance" | "decision" | "human" | "final";
+  label: string;
+  status: StageState["status"];
+  recordedAt: string | null;
+  summary: string;
+  highlights: Array<{
+    label: string;
+    value: string;
+  }>;
+}
+
 export interface DocumentResource {
   name: string;
   path: string;
@@ -151,6 +163,7 @@ export interface ApplicationDetail {
   company: ApplicantProfile | null;
   timeline: TimelineEvent[];
   stages: StageState[];
+  pipelineDepth: PipelineStageSnapshot[];
   documents: DocumentResource[];
   documentPreview: DocumentPreviewModel;
   agentSessions: AgentSessionCard[];
@@ -779,6 +792,292 @@ function buildStages(item: ApplicationListItem): StageState[] {
   }));
 }
 
+function latestEventOfType(timeline: TimelineEvent[], eventType: string): TimelineEvent | null {
+  return timeline.findLast((event) => event.eventType === eventType) ?? null;
+}
+
+function listPayloadStrings(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value.map((item) => String(item).trim()).filter(Boolean);
+}
+
+function formatPercent(value: unknown): string {
+  if (value === null || value === undefined || value === "") {
+    return "Not recorded";
+  }
+  const numeric = Number(value);
+  if (Number.isNaN(numeric)) {
+    return String(value);
+  }
+  return `${Math.round(numeric * 100)}%`;
+}
+
+function formatScore(value: unknown): string {
+  if (value === null || value === undefined || value === "") {
+    return "Not recorded";
+  }
+  const numeric = Number(value);
+  if (Number.isNaN(numeric)) {
+    return String(value);
+  }
+  return numeric.toFixed(2);
+}
+
+function joinOrFallback(values: string[], fallback: string): string {
+  return values.length > 0 ? values.join(", ") : fallback;
+}
+
+function buildPipelineDepth(
+  item: ApplicationListItem,
+  timeline: TimelineEvent[],
+  stages: StageState[],
+  compliance: ComplianceView,
+  review: ReviewSummary
+): PipelineStageSnapshot[] {
+  const stageStatus = new Map(stages.map((stage) => [stage.key, stage.status]));
+  const latestPackageReady = latestEventOfType(timeline, "PackageReadyForAnalysis");
+  const latestCredit = latestEventOfType(timeline, "CreditAnalysisCompleted");
+  const latestFraud = latestEventOfType(timeline, "FraudScreeningCompleted");
+  const latestDecision = latestEventOfType(timeline, "DecisionGenerated");
+  const latestReviewRequest = latestEventOfType(timeline, "HumanReviewRequested");
+  const latestReview = latestEventOfType(timeline, "HumanReviewCompleted");
+  const latestApproval = latestEventOfType(timeline, "ApplicationApproved");
+  const latestDecline = latestEventOfType(timeline, "ApplicationDeclined");
+  const extractionEvents = timeline.filter((event) => event.eventType === "ExtractionCompleted");
+  const qualityEvents = timeline.filter((event) => event.eventType === "QualityAssessmentCompleted");
+  const parserNames = Array.from(
+    new Set(
+      extractionEvents
+        .map((event) => event.metadata.parser_used)
+        .filter((value): value is string => typeof value === "string" && value.length > 0)
+    )
+  );
+  const criticalMissingFields = Array.from(
+    new Set(qualityEvents.flatMap((event) => listPayloadStrings(event.payload.critical_missing_fields)))
+  );
+  const documentAnomalies = Array.from(new Set(qualityEvents.flatMap((event) => listPayloadStrings(event.payload.anomalies))));
+  const creditDecision = latestCredit?.payload.decision as Record<string, unknown> | undefined;
+  const fraudAnomalies = timeline.filter((event) => event.eventType === "FraudAnomalyDetected");
+  const decisionRisks = listPayloadStrings(latestDecision?.payload.key_risks);
+  const declineReasons = listPayloadStrings(latestDecline?.payload.decline_reasons);
+
+  return [
+    {
+      key: "documents",
+      label: "Documents",
+      status: stageStatus.get("documents") ?? "upcoming",
+      recordedAt: latestPackageReady?.recordedAt ?? extractionEvents.at(-1)?.recordedAt ?? null,
+      summary: latestPackageReady
+        ? `${latestPackageReady.payload.documents_processed ?? extractionEvents.length} documents processed and ready for downstream analysis.`
+        : extractionEvents.length > 0
+          ? `${extractionEvents.length} extraction results are recorded while the package is still moving to readiness.`
+          : "The evidence package has not finished document processing yet.",
+      highlights: [
+        {
+          label: "Processed",
+          value: String(latestPackageReady?.payload.documents_processed ?? extractionEvents.length ?? 0)
+        },
+        {
+          label: "Quality flags",
+          value: String(latestPackageReady?.payload.quality_flag_count ?? criticalMissingFields.length + documentAnomalies.length)
+        },
+        {
+          label: "Critical missing",
+          value: joinOrFallback(criticalMissingFields, "None recorded")
+        },
+        {
+          label: "Parser",
+          value: joinOrFallback(parserNames, "Not recorded")
+        }
+      ]
+    },
+    {
+      key: "credit",
+      label: "Credit",
+      status: stageStatus.get("credit") ?? "upcoming",
+      recordedAt: latestCredit?.recordedAt ?? null,
+      summary: latestCredit
+        ? `${String(creditDecision?.risk_tier ?? item.riskTier ?? "Unknown")} risk with a recommended limit of ${formatCurrency(
+            String(creditDecision?.recommended_limit_usd ?? "")
+          )}.`
+        : "No completed credit analysis is recorded yet.",
+      highlights: [
+        {
+          label: "Risk tier",
+          value: typeof creditDecision?.risk_tier === "string" ? creditDecision.risk_tier : item.riskTier ?? "Not recorded"
+        },
+        {
+          label: "Limit",
+          value: formatCurrency(
+            typeof creditDecision?.recommended_limit_usd === "string" || typeof creditDecision?.recommended_limit_usd === "number"
+              ? String(creditDecision.recommended_limit_usd)
+              : null
+          )
+        },
+        {
+          label: "Confidence",
+          value: formatPercent(creditDecision?.confidence)
+        },
+        {
+          label: "Caveats",
+          value: joinOrFallback(listPayloadStrings(creditDecision?.data_quality_caveats), "None recorded")
+        }
+      ]
+    },
+    {
+      key: "fraud",
+      label: "Fraud",
+      status: stageStatus.get("fraud") ?? "upcoming",
+      recordedAt: latestFraud?.recordedAt ?? fraudAnomalies.at(-1)?.recordedAt ?? null,
+      summary: latestFraud
+        ? `${latestFraud.payload.risk_level ?? "Unknown"} fraud posture with score ${formatScore(latestFraud.payload.fraud_score)}.`
+        : "No completed fraud screening is recorded yet.",
+      highlights: [
+        {
+          label: "Fraud score",
+          value: formatScore(latestFraud?.payload.fraud_score ?? item.fraudScore)
+        },
+        {
+          label: "Risk level",
+          value: typeof latestFraud?.payload.risk_level === "string" ? String(latestFraud.payload.risk_level) : "Not recorded"
+        },
+        {
+          label: "Anomalies",
+          value: String(latestFraud?.payload.anomalies_found ?? fraudAnomalies.length)
+        },
+        {
+          label: "Recommendation",
+          value: typeof latestFraud?.payload.recommendation === "string" ? String(latestFraud.payload.recommendation) : "Not recorded"
+        }
+      ]
+    },
+    {
+      key: "compliance",
+      label: "Compliance",
+      status: stageStatus.get("compliance") ?? "upcoming",
+      recordedAt: compliance.snapshots.at(-1)?.asOf ?? null,
+      summary: compliance.completed
+        ? `${compliance.overallVerdict ?? "Unknown"} after ${compliance.passedRules.length + compliance.failedRules.length + compliance.notedRules.length} rule evaluations.`
+        : "Compliance checks are still in progress.",
+      highlights: [
+        {
+          label: "Verdict",
+          value: compliance.overallVerdict ?? "In progress"
+        },
+        {
+          label: "Passed / failed",
+          value: `${compliance.passedRules.length} / ${compliance.failedRules.length}`
+        },
+        {
+          label: "Hard blocks",
+          value: joinOrFallback(compliance.hardBlockRules, "None recorded")
+        },
+        {
+          label: "Regulation set",
+          value: compliance.regulationSetVersion ?? "Not recorded"
+        }
+      ]
+    },
+    {
+      key: "decision",
+      label: "Decision",
+      status: stageStatus.get("decision") ?? "upcoming",
+      recordedAt: latestDecision?.recordedAt ?? null,
+      summary: latestDecision
+        ? `${String(latestDecision.payload.recommendation ?? "Unknown")} recommendation with confidence ${formatPercent(
+            latestDecision.payload.confidence
+          )}.`
+        : "No orchestrated recommendation is recorded yet.",
+      highlights: [
+        {
+          label: "Recommendation",
+          value: typeof latestDecision?.payload.recommendation === "string" ? String(latestDecision.payload.recommendation) : "Not recorded"
+        },
+        {
+          label: "Confidence",
+          value: formatPercent(latestDecision?.payload.confidence)
+        },
+        {
+          label: "Amount",
+          value: formatCurrency(
+            typeof latestDecision?.payload.approved_amount_usd === "string" || typeof latestDecision?.payload.approved_amount_usd === "number"
+              ? String(latestDecision.payload.approved_amount_usd)
+              : null
+          )
+        },
+        {
+          label: "Key risks",
+          value: joinOrFallback(decisionRisks, "None recorded")
+        }
+      ]
+    },
+    {
+      key: "human",
+      label: "Human review",
+      status: stageStatus.get("human") ?? "upcoming",
+      recordedAt: latestReview?.recordedAt ?? latestReviewRequest?.recordedAt ?? null,
+      summary: review.completed
+        ? `Manual review is complete${review.reviewerId ? ` by ${review.reviewerId}` : ""}.`
+        : review.requested
+          ? "The application is on the manual-review path."
+          : "No manual review has been requested.",
+      highlights: [
+        {
+          label: "Status",
+          value: review.completed ? "Completed" : review.requested ? "Awaiting review" : "Not required"
+        },
+        {
+          label: "Reviewer",
+          value: review.reviewerId ?? "Not recorded"
+        },
+        {
+          label: "Override",
+          value: review.override ? "Yes" : "No"
+        },
+        {
+          label: "Decision",
+          value: review.finalDecision ?? (typeof latestReviewRequest?.payload.reason === "string" ? String(latestReviewRequest.payload.reason) : "Not recorded")
+        }
+      ]
+    },
+    {
+      key: "final",
+      label: "Final outcome",
+      status: stageStatus.get("final") ?? "upcoming",
+      recordedAt: latestApproval?.recordedAt ?? latestDecline?.recordedAt ?? null,
+      summary: latestApproval
+        ? "The application is closed as approved."
+        : latestDecline
+          ? "The application is closed as declined."
+          : "No final approval or decline is recorded yet.",
+      highlights: [
+        {
+          label: "Outcome",
+          value: latestApproval ? "Approved" : latestDecline ? "Declined" : "Open"
+        },
+        {
+          label: "Approved amount",
+          value: formatCurrency(
+            typeof latestApproval?.payload.approved_amount_usd === "string" || typeof latestApproval?.payload.approved_amount_usd === "number"
+              ? String(latestApproval.payload.approved_amount_usd)
+              : item.approvedAmountUsd
+          )
+        },
+        {
+          label: "Decline reasons",
+          value: joinOrFallback(declineReasons, "Not recorded")
+        },
+        {
+          label: "Adverse action",
+          value: latestDecline?.payload.adverse_action_notice_required ? "Required" : latestDecline ? "Not required" : "Not recorded"
+        }
+      ]
+    }
+  ];
+}
+
 function buildReview(item: ApplicationListItem, timeline: TimelineEvent[]): ReviewSummary {
   const completedEvent = timeline.findLast((event) => event.eventType === "HumanReviewCompleted");
   return {
@@ -1052,6 +1351,9 @@ export const getApplicationDetail = cache(async (applicationId: string, selected
   const item =
     world.applications.find((entry) => entry.applicationId === applicationId) ??
     summarizeApplication(world.mode, applicationId, timeline, world.applicants);
+  const stages = buildStages(item);
+  const compliance = buildCompliance(timeline);
+  const review = buildReview(item, timeline);
   const company = item.applicantId ? world.applicants.get(item.applicantId) ?? null : null;
   const documents = await listDocuments(item.applicantId);
   const document =
@@ -1082,15 +1384,16 @@ export const getApplicationDetail = cache(async (applicationId: string, selected
     item,
     company,
     timeline,
-    stages: buildStages(item),
+    stages,
+    pipelineDepth: buildPipelineDepth(item, timeline, stages, compliance, review),
     documents,
     documentPreview: {
       document,
       selectedCsvRows: await readCsvPreview(document)
     },
     agentSessions: buildAgentSessions(timeline),
-    compliance: buildCompliance(timeline),
-    review: buildReview(item, timeline),
+    compliance,
+    review,
     audit: buildAuditSummary(timeline),
     operations: {
       sourceMode: world.mode,

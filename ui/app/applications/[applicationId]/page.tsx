@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ApplicationActionsPanel } from "../../../components/ApplicationActionsPanel";
 import { CompactInfoCard } from "../../../components/CompactInfoCard";
 import { HumanReviewActionCard } from "../../../components/HumanReviewActionCard";
+import { PipelineDepthCard } from "../../../components/PipelineDepthCard";
 import { SectionDataList } from "../../../components/SectionDataList";
 import { StageRail } from "../../../components/StageRail";
 import { getApplicationDetail } from "../../../lib/ledger-data";
@@ -44,6 +45,13 @@ export default async function ApplicationPage({ params }: ApplicationPageProps) 
               ]}
               columns={3}
             />
+          </CompactInfoCard>
+
+          <CompactInfoCard
+            title="Pipeline Depth"
+            description="Latest durable output from each backend stage so you can see how the application moved from documents through final outcome."
+          >
+            <PipelineDepthCard stages={detail.pipelineDepth} />
           </CompactInfoCard>
 
           <CompactInfoCard title="Quick Links" description="Jump straight into the next useful workspace.">
@@ -153,9 +161,13 @@ export default async function ApplicationPage({ params }: ApplicationPageProps) 
           <CompactInfoCard title="Review Action" className="compact-card-tight">
             <HumanReviewActionCard
               applicationId={detail.item.applicationId}
+              state={detail.item.state}
               currentRecommendation={detail.item.decision}
               approvedAmountUsd={detail.item.approvedAmountUsd}
               reviewPending={detail.item.reviewState === "pending"}
+              reviewCompleted={detail.review.completed}
+              recordedReviewerId={detail.review.reviewerId}
+              recordedFinalDecision={detail.review.finalDecision}
             />
           </CompactInfoCard>
         </div>
