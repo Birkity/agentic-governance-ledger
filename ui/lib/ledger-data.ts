@@ -133,11 +133,54 @@ export interface AuditSummary {
   eventTypes: string[];
 }
 
+export interface ProjectionLiveHealth {
+  projectionName: string;
+  checkpointPosition: number;
+  lastProcessedGlobalPosition: number | null;
+  lastProcessedAt: string | null;
+  checkpointUpdatedAt: string | null;
+  lagPositions: number;
+  lagMs: number;
+  latestStorePosition: number | null;
+  sloTargetMs: number;
+  status: "healthy" | "lagging" | "stalled" | "idle" | "not_started";
+  rowCount: number | null;
+  historyRowCount: number | null;
+}
+
+export interface EventStoreLiveHealth {
+  totalEvents: number;
+  totalStreams: number;
+  archivedStreams: number;
+  aggregateSnapshots: number;
+  latestGlobalPosition: number | null;
+  latestRecordedAt: string | null;
+}
+
+export interface OutboxLiveHealth {
+  pending: number;
+  oldestPendingAt: string | null;
+  oldestPendingAgeMinutes: number | null;
+  maxAttempts: number | null;
+  destinations: Array<{
+    destination: string;
+    pending: number;
+  }>;
+}
+
+export interface LiveOperationsTelemetry {
+  capturedAt: string;
+  eventStore: EventStoreLiveHealth;
+  projections: ProjectionLiveHealth[];
+  outbox: OutboxLiveHealth;
+}
+
 export interface OperationsSnapshot {
   sourceMode: DataSourceMode;
   projectionLagReport: string;
   concurrencyReport: string;
   outboxPending: number | null;
+  liveTelemetry: LiveOperationsTelemetry | null;
 }
 
 export interface DocumentPreviewModel {
@@ -239,6 +282,12 @@ const TECHNICAL_APPLICATION_PATTERNS = [
   /^APEX-OK$/
 ];
 
+const LIVE_PROJECTION_SLOS: Record<string, number> = {
+  application_summary: 500,
+  agent_performance: 1000,
+  compliance_audit: 2000
+};
+
 function getPool(): Pool | null {
   if (!process.env.DATABASE_URL) {
     return null;
@@ -247,6 +296,53 @@ function getPool(): Pool | null {
     dbPool = new Pool({ connectionString: process.env.DATABASE_URL });
   }
   return dbPool;
+}
+
+function toNullableNumber(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
+  const numeric = Number(value);
+  return Number.isNaN(numeric) ? null : numeric;
+}
+
+function toIsoString(value: unknown): string | null {
+  if (!value) {
+    return null;
+  }
+  const parsed = value instanceof Date ? value : new Date(String(value));
+  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+}
+
+function classifyProjectionStatus(input: {
+  latestStorePosition: number | null;
+  checkpointPosition: number;
+  lagPositions: number;
+  lagMs: number;
+  checkpointUpdatedAt: string | null;
+  sloTargetMs: number;
+}): ProjectionLiveHealth["status"] {
+  if (input.latestStorePosition === null) {
+    return "idle";
+  }
+
+  if (input.checkpointPosition === 0) {
+    return "not_started";
+  }
+
+  if (input.lagPositions === 0 && input.lagMs <= input.sloTargetMs) {
+    return "healthy";
+  }
+
+  if (input.checkpointUpdatedAt) {
+    const updatedAt = new Date(input.checkpointUpdatedAt).getTime();
+    const ageMs = Date.now() - updatedAt;
+    if (!Number.isNaN(updatedAt) && ageMs > Math.max(input.sloTargetMs * 4, 60_000) && input.lagPositions > 0) {
+      return "stalled";
+    }
+  }
+
+  return "lagging";
 }
 
 async function detectMode(): Promise<DataSourceMode> {
@@ -445,6 +541,178 @@ async function loadOutboxPending(mode: DataSourceMode): Promise<number | null> {
   try {
     const result = await pool.query("SELECT COUNT(*)::int AS count FROM outbox WHERE published_at IS NULL");
     return Number(result.rows[0]?.count ?? 0);
+  } catch {
+    return null;
+  }
+}
+
+async function loadLiveOperationsTelemetry(mode: DataSourceMode): Promise<LiveOperationsTelemetry | null> {
+  if (mode !== "database") {
+    return null;
+  }
+
+  const pool = getPool();
+  if (!pool) {
+    return null;
+  }
+
+  try {
+    const capturedAt = new Date().toISOString();
+
+    const [eventStoreResult, checkpointResult, projectionCountResult, outboxResult, destinationResult] = await Promise.all([
+      pool.query(
+        `
+        SELECT
+          COALESCE((SELECT COUNT(*)::int FROM events), 0) AS total_events,
+          COALESCE((SELECT COUNT(*)::int FROM event_streams), 0) AS total_streams,
+          COALESCE((SELECT COUNT(*)::int FROM event_streams WHERE archived_at IS NOT NULL), 0) AS archived_streams,
+          COALESCE((SELECT COUNT(*)::int FROM snapshots), 0) AS aggregate_snapshots,
+          MAX(global_position)::bigint AS latest_global_position,
+          MAX(recorded_at) AS latest_recorded_at
+        FROM events
+        `
+      ),
+      pool.query(
+        `
+        SELECT
+          c.projection_name,
+          c.last_position,
+          c.updated_at,
+          e.recorded_at AS last_processed_at
+        FROM projection_checkpoints c
+        LEFT JOIN events e
+          ON e.global_position = CASE WHEN c.last_position > 0 THEN c.last_position - 1 ELSE NULL END
+        ORDER BY c.projection_name ASC
+        `
+      ),
+      pool.query(
+        `
+        SELECT
+          COALESCE((SELECT COUNT(*)::int FROM application_summary), 0) AS application_summary_rows,
+          COALESCE((SELECT COUNT(*)::int FROM compliance_audit_current), 0) AS compliance_audit_rows,
+          COALESCE((SELECT COUNT(*)::int FROM compliance_audit_history), 0) AS compliance_audit_history_rows,
+          COALESCE((SELECT COUNT(*)::int FROM agent_performance_ledger), 0) AS agent_performance_rows
+        `
+      ),
+      pool.query(
+        `
+        SELECT
+          COUNT(*)::int AS pending,
+          MIN(created_at) AS oldest_pending_at,
+          MAX(attempts)::int AS max_attempts
+        FROM outbox
+        WHERE published_at IS NULL
+        `
+      ),
+      pool.query(
+        `
+        SELECT destination, COUNT(*)::int AS pending
+        FROM outbox
+        WHERE published_at IS NULL
+        GROUP BY destination
+        ORDER BY pending DESC, destination ASC
+        `
+      )
+    ]);
+
+    const eventStoreRow = eventStoreResult.rows[0] ?? {};
+    const latestStorePosition = toNullableNumber(eventStoreRow.latest_global_position);
+    const latestStoreRecordedAt = toIsoString(eventStoreRow.latest_recorded_at);
+    const projectionCountRow = projectionCountResult.rows[0] ?? {};
+
+    const rowCounts: Record<string, { rowCount: number | null; historyRowCount: number | null }> = {
+      application_summary: {
+        rowCount: toNullableNumber(projectionCountRow.application_summary_rows),
+        historyRowCount: null
+      },
+      agent_performance: {
+        rowCount: toNullableNumber(projectionCountRow.agent_performance_rows),
+        historyRowCount: null
+      },
+      compliance_audit: {
+        rowCount: toNullableNumber(projectionCountRow.compliance_audit_rows),
+        historyRowCount: toNullableNumber(projectionCountRow.compliance_audit_history_rows)
+      }
+    };
+
+    const checkpoints = new Map(
+      checkpointResult.rows.map((row) => [
+        String(row.projection_name),
+        {
+          checkpointPosition: toNullableNumber(row.last_position) ?? 0,
+          checkpointUpdatedAt: toIsoString(row.updated_at),
+          lastProcessedAt: toIsoString(row.last_processed_at)
+        }
+      ])
+    );
+
+    const projections = Object.entries(LIVE_PROJECTION_SLOS).map(([projectionName, sloTargetMs]) => {
+      const checkpoint = checkpoints.get(projectionName);
+      const checkpointPosition = checkpoint?.checkpointPosition ?? 0;
+      const lastProcessedGlobalPosition = checkpointPosition > 0 ? checkpointPosition - 1 : null;
+      const lagPositions =
+        latestStorePosition === null
+          ? 0
+          : lastProcessedGlobalPosition === null
+            ? latestStorePosition
+            : Math.max(0, latestStorePosition - lastProcessedGlobalPosition);
+      const lagMs =
+        !latestStoreRecordedAt || !checkpoint?.lastProcessedAt
+          ? 0
+          : Math.max(0, new Date(latestStoreRecordedAt).getTime() - new Date(checkpoint.lastProcessedAt).getTime());
+
+      return {
+        projectionName,
+        checkpointPosition,
+        lastProcessedGlobalPosition,
+        lastProcessedAt: checkpoint?.lastProcessedAt ?? null,
+        checkpointUpdatedAt: checkpoint?.checkpointUpdatedAt ?? null,
+        lagPositions,
+        lagMs,
+        latestStorePosition,
+        sloTargetMs,
+        status: classifyProjectionStatus({
+          latestStorePosition,
+          checkpointPosition,
+          lagPositions,
+          lagMs,
+          checkpointUpdatedAt: checkpoint?.checkpointUpdatedAt ?? null,
+          sloTargetMs
+        }),
+        rowCount: rowCounts[projectionName]?.rowCount ?? null,
+        historyRowCount: rowCounts[projectionName]?.historyRowCount ?? null
+      } satisfies ProjectionLiveHealth;
+    });
+
+    const outboxRow = outboxResult.rows[0] ?? {};
+    const oldestPendingAt = toIsoString(outboxRow.oldest_pending_at);
+    const oldestPendingAgeMinutes =
+      oldestPendingAt === null
+        ? null
+        : Math.max(0, Math.round((new Date(capturedAt).getTime() - new Date(oldestPendingAt).getTime()) / 60000));
+
+    return {
+      capturedAt,
+      eventStore: {
+        totalEvents: toNullableNumber(eventStoreRow.total_events) ?? 0,
+        totalStreams: toNullableNumber(eventStoreRow.total_streams) ?? 0,
+        archivedStreams: toNullableNumber(eventStoreRow.archived_streams) ?? 0,
+        aggregateSnapshots: toNullableNumber(eventStoreRow.aggregate_snapshots) ?? 0,
+        latestGlobalPosition: latestStorePosition,
+        latestRecordedAt: latestStoreRecordedAt
+      },
+      projections,
+      outbox: {
+        pending: toNullableNumber(outboxRow.pending) ?? 0,
+        oldestPendingAt,
+        oldestPendingAgeMinutes,
+        maxAttempts: toNullableNumber(outboxRow.max_attempts),
+        destinations: destinationResult.rows.map((row) => ({
+          destination: String(row.destination),
+          pending: toNullableNumber(row.pending) ?? 0
+        }))
+      }
+    };
   } catch {
     return null;
   }
@@ -994,9 +1262,10 @@ const loadWorld = cache(async () => {
   return { mode, applicants, grouped, applications };
 });
 
-export const getDashboardData = cache(async () => {
-  const world = await loadWorld();
-  const outboxPending = await loadOutboxPending(world.mode);
+export async function getOperationsData() {
+  const mode = await detectMode();
+  const outboxPending = await loadOutboxPending(mode);
+  const liveTelemetry = await loadLiveOperationsTelemetry(mode);
   const projectionLagReport = await readArtifact(
     "projection_lag_report.txt",
     "Projection lag artifact not found. Run scripts/generate_projection_lag_report.py to generate it."
@@ -1021,6 +1290,19 @@ export const getDashboardData = cache(async () => {
   );
 
   return {
+    sourceMode: mode,
+    projectionLagReport,
+    concurrencyReport,
+    outboxPending,
+    liveTelemetry
+  } satisfies OperationsSnapshot;
+}
+
+export const getDashboardData = cache(async () => {
+  const world = await loadWorld();
+  const operations = await getOperationsData();
+
+  return {
     mode: world.mode,
     applications: world.applications,
     totals: {
@@ -1032,10 +1314,7 @@ export const getDashboardData = cache(async () => {
       humanReview: world.applications.filter((item) => item.reviewState !== "not_required").length
     },
     operations: {
-      sourceMode: world.mode,
-      projectionLagReport,
-      concurrencyReport,
-      outboxPending
+      ...operations
     } satisfies OperationsSnapshot
   };
 });
@@ -1099,7 +1378,8 @@ export const getApplicationDetail = cache(async (applicationId: string, selected
       sourceMode: world.mode,
       projectionLagReport,
       concurrencyReport,
-      outboxPending: await loadOutboxPending(world.mode)
+      outboxPending: await loadOutboxPending(world.mode),
+      liveTelemetry: null
     }
   } satisfies ApplicationDetail;
 });
